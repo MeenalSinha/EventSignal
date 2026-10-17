@@ -12,3 +12,5 @@ alembic==1.16.1
 # (httpx is also required by FastAPI's TestClient).
 httpx==0.28.1
 beautifulsoup4==4.15.0
+# Phase 8: Pydantic EmailStr validation support.
+email-validator>=2.0.0
