@@ -1,36 +1,45 @@
 @import "tailwindcss";
 
 @theme {
-  --color-ink: #0f1f3d;
-  --color-ink-soft: #46556f;
+  --color-page: #f3f6f8;
+  --color-card: #ffffff;
+  --color-ink: #10264a;
+  --color-ink-soft: #526581;
+  --color-ink-muted: #8e9bae;
   --color-paper: #ffffff;
-  --color-mist: #f3f6f9;
-  --color-line: #d5dde6;
-  --color-teal: #0e7c86;
-  --color-teal-deep: #0a5d65;
-  --color-teal-wash: #e3f3f4;
+  --color-paper-warm: #f8fafc;
+  --color-mist: #f3f6f8;
+  --color-line: #dfe6ed;
+  --color-teal: #07879a;
+  --color-teal-deep: #056675;
+  --color-teal-wash: #e7f5f6;
+  --color-teal-border: #bce2e6;
   --color-alert: #b42318;
   --color-alert-wash: #fdeceb;
   --color-caution: #9a5a00;
   --color-caution-wash: #fdf1dc;
+  --color-success: #027a48;
+  --color-success-wash: #ecfdf3;
 
-  --font-display: Charter, "Bitstream Charter", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
 @layer base {
   html {
     color: var(--color-ink);
-    background: var(--color-mist);
+    background: var(--color-page);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
   body {
     margin: 0;
     min-height: 100vh;
+    background-color: var(--color-page);
   }
   :focus-visible {
-    outline: 3px solid var(--color-teal);
+    outline: 2px solid var(--color-teal);
     outline-offset: 2px;
   }
 }
+
