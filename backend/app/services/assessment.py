@@ -1,58 +1,52 @@
 """Phase 4: Opportunity assessment engine.
 
-Evaluates a persisted opportunity against five explainable dimensions:
+Evaluates an ingested opportunity against explainable dimensions according
+to a validated, declarative AssessmentPolicy:
 
-  1. Completeness      — fraction of expected fields that have values.
-  2. Evidence quality  — weighted reliability of the extraction methods used.
-  3. Consistency       — absence of source conflicts across FieldEvidence records.
-  4. Missing fields    — which critical and optional fields are absent.
-  5. Ambiguous/conflicting — which fields carry NEEDS_VERIFICATION or SOURCES_DISAGREE status.
+  1. Completeness      — weighted fraction of applicable fields established.
+  2. Evidence quality  — weighted reliability of extraction methods used.
+  3. Consistency       — cross-source consistency / absence of conflicts.
+  4. Missing fields    — explicit classification of missing critical vs optional.
+  5. Uncertainty       — transparent disclosure of limitations and single-source caveats.
 
 Design principles:
-  - Operates exclusively on persisted data: Opportunity + FieldEvidence rows.
-  - No network calls; no LLM calls; no fabrication.
-  - Every score and explanation is derived deterministically from the evidence layer.
-  - Limitations are explicit when the system cannot distinguish absence-of-information
-    from genuine absence of the attribute.
-  - Replaces any prior assessment for the same opportunity (upsert semantics).
-
-Entry point:
-  assess_opportunity(opportunity_id, session) -> OpportunityAssessment
+  - Operates exclusively on persisted data: Opportunity, SourceReference, FieldEvidence.
+  - Business rules, weights, and applicability rules are driven by AssessmentPolicy.
+  - Modifying the policy configuration changes assessment results without code modifications.
+  - Fully supports multi-source evaluation and detailed conflict analysis.
+  - No network calls, no LLM hallucinations, deterministic and explainable.
 """
 
 from __future__ import annotations
 
 import logging
+from collections import defaultdict
 from dataclasses import dataclass, field
+from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.assessment_policy import AssessmentPolicy, load_assessment_policy
 from app.models.field_evidence import EvidenceStatus, ExtractionMethod, FieldEvidence
 from app.models.opportunity import Opportunity
 from app.models.opportunity_assessment import OpportunityAssessment
+from app.models.source_reference import SourceReference
 
 logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Domain constants
-# ---------------------------------------------------------------------------
-
-# Fields whose absence materially limits a student's ability to evaluate and act
-# on the opportunity.
+# Defaults for backward compatibility
 CRITICAL_FIELDS: frozenset[str] = frozenset(
-    {
+    [
         "title",
         "opportunity_type",
         "organizer",
         "registration_deadline",
         "application_url",
-    }
+    ]
 )
-
-# Fields that are useful but whose absence does not block evaluation.
 OPTIONAL_FIELDS: frozenset[str] = frozenset(
-    {
+    [
         "start_date",
         "end_date",
         "submission_deadline",
@@ -61,23 +55,22 @@ OPTIONAL_FIELDS: frozenset[str] = frozenset(
         "eligibility",
         "skills_required",
         "compensation",
-    }
+    ]
 )
-
 ALL_EXPECTED_FIELDS: frozenset[str] = CRITICAL_FIELDS | OPTIONAL_FIELDS
 
-# Quality weights for extraction methods (higher = more reliable).
-_METHOD_QUALITY: dict[ExtractionMethod, float] = {
-    ExtractionMethod.STRUCTURED: 1.0,   # JSON-LD / Schema.org
-    ExtractionMethod.RULE_BASED: 0.75,  # Pattern match / heuristics
-    ExtractionMethod.MANUAL: 1.0,       # Human-entered
-    ExtractionMethod.LLM: 0.5,          # LLM; requires review
-}
+
+def _clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
+    return max(lo, min(hi, value))
 
 
-# ---------------------------------------------------------------------------
-# Internal result dataclass
-# ---------------------------------------------------------------------------
+def _normalize_for_comparison(val: str | None) -> str:
+    """Normalize extracted strings for cross-source consistency comparison."""
+    if val is None:
+        return ""
+    # Strip whitespace, lowercase, collapse internal whitespace
+    return " ".join(val.strip().lower().split())
+
 
 @dataclass
 class _AssessmentResult:
@@ -92,6 +85,7 @@ class _AssessmentResult:
     missing_optional_fields: list[str] = field(default_factory=list)
     ambiguous_fields: list[str] = field(default_factory=list)
     conflicting_fields: list[str] = field(default_factory=list)
+    conflict_details: list[dict[str, Any]] = field(default_factory=list)
     limitations: str = ""
     total_fields_assessed: int = 0
     fields_found_count: int = 0
@@ -99,216 +93,295 @@ class _AssessmentResult:
     fields_failed_count: int = 0
 
 
-# ---------------------------------------------------------------------------
-# Scoring helpers
-# ---------------------------------------------------------------------------
+def _evaluate_completeness(
+    evidence_by_field: dict[str, list[FieldEvidence]],
+    applicable_critical: set[str],
+    applicable_optional: set[str],
+    policy: AssessmentPolicy,
+) -> tuple[float, str, list[str], list[str]]:
+    """Calculate completeness score and identify missing fields based on policy."""
+    all_applicable = applicable_critical | applicable_optional
+    missing_critical: list[str] = []
+    missing_optional: list[str] = []
 
-def _clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
-    return max(lo, min(hi, value))
+    total_weight = 0.0
+    found_weight = 0.0
 
+    for fname in sorted(applicable_critical):
+        w = policy.field_weights.get(fname, 2.0)
+        total_weight += w
+        ev_list = evidence_by_field.get(fname, [])
+        is_found = any(
+            ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}
+            for ev in ev_list
+        )
+        if is_found:
+            found_weight += w
+        else:
+            missing_critical.append(fname)
 
-def _score_completeness(evidence_by_field: dict[str, FieldEvidence]) -> tuple[float, str]:
-    """Return (score, explanation) for information completeness."""
-    found_fields: set[str] = set()
-    not_found_fields: set[str] = set()
+    for fname in sorted(applicable_optional):
+        w = policy.field_weights.get(fname, 1.0)
+        total_weight += w
+        ev_list = evidence_by_field.get(fname, [])
+        is_found = any(
+            ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}
+            for ev in ev_list
+        )
+        if is_found:
+            found_weight += w
+        else:
+            missing_optional.append(fname)
 
-    for field_name, ev in evidence_by_field.items():
-        if field_name not in ALL_EXPECTED_FIELDS:
-            continue
-        if ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}:
-            found_fields.add(field_name)
-        elif ev.evidence_status in {
-            EvidenceStatus.NOT_FOUND,
-            EvidenceStatus.EXTRACTION_FAILED,
-        }:
-            not_found_fields.add(field_name)
+    if total_weight <= 0.0:
+        return 0.0, "No applicable fields configured for this opportunity type.", [], []
 
-    total = len(ALL_EXPECTED_FIELDS)
-    found = len(found_fields)
-    score = _clamp(found / total if total > 0 else 0.0)
+    score = _clamp(found_weight / total_weight)
+    found_count = len(all_applicable) - len(missing_critical) - len(missing_optional)
+    total_count = len(all_applicable)
 
-    if score == 1.0:
-        explanation = "All expected fields were found in the source."
-    elif score >= 0.7:
-        missing = sorted(ALL_EXPECTED_FIELDS - found_fields)
+    if score >= 0.99:
+        explanation = f"All {total_count} applicable fields were established with source evidence."
+    elif score >= 0.70:
+        missing = missing_critical + missing_optional
         explanation = (
-            f"{found}/{total} expected fields found. "
+            f"{found_count}/{total_count} applicable fields established. "
             f"Missing: {', '.join(missing)}."
         )
-    elif score >= 0.4:
-        missing = sorted(ALL_EXPECTED_FIELDS - found_fields)
+    elif score >= 0.40:
+        missing = missing_critical + missing_optional
         explanation = (
-            f"Only {found}/{total} expected fields found. "
-            f"Significant gaps: {', '.join(missing)}. "
-            "Verify the opportunity page directly before relying on extracted data."
+            f"Only {found_count}/{total_count} applicable fields established. "
+            f"Material gaps: {', '.join(missing)}. Verify the primary listing before registering."
         )
     else:
-        missing = sorted(ALL_EXPECTED_FIELDS - found_fields)
+        missing = missing_critical + missing_optional
         explanation = (
-            f"Very low completeness: only {found}/{total} fields found. "
-            f"Missing: {', '.join(missing)}. "
-            "The source page may use a non-standard layout, or most details may "
-            "not have been published yet."
+            f"Low completeness: only {found_count}/{total_count} fields found. "
+            f"Missing: {', '.join(missing)}."
         )
 
-    return score, explanation
+    return score, explanation, missing_critical, missing_optional
 
 
-def _score_evidence_quality(
-    evidence_by_field: dict[str, FieldEvidence],
+def _evaluate_evidence_quality(
+    evidence_by_field: dict[str, list[FieldEvidence]],
+    all_applicable: set[str],
+    policy: AssessmentPolicy,
 ) -> tuple[float, str]:
-    """Return (score, explanation) for evidence reliability."""
-    quality_values: list[float] = []
-    method_counts: dict[str, int] = {}
+    """Calculate evidence quality score weighted by extraction methods."""
+    method_scores: list[float] = []
+    method_counts: dict[str, int] = defaultdict(int)
 
-    for field_name, ev in evidence_by_field.items():
-        if field_name not in ALL_EXPECTED_FIELDS:
+    for fname in all_applicable:
+        ev_list = evidence_by_field.get(fname, [])
+        # Take the highest quality evidence record for each field
+        valid_evs = [
+            ev
+            for ev in ev_list
+            if ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}
+        ]
+        if not valid_evs:
             continue
-        if ev.evidence_status not in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}:
-            continue
-        q = _METHOD_QUALITY.get(ev.extraction_method, 0.5)
-        quality_values.append(q)
-        label = ev.extraction_method.value
-        method_counts[label] = method_counts.get(label, 0) + 1
 
-    if not quality_values:
-        return 0.0, "No fields were successfully extracted; quality cannot be assessed."
+        best_q = 0.0
+        best_method = ExtractionMethod.RULE_BASED
+        for ev in valid_evs:
+            q = policy.get_method_quality(ev.extraction_method)
+            if q > best_q:
+                best_q = q
+                best_method = ev.extraction_method
 
-    score = _clamp(sum(quality_values) / len(quality_values))
+        method_scores.append(best_q)
+        method_counts[best_method.value] += 1
 
-    method_summary = ", ".join(
-        f"{count} via {method}" for method, count in sorted(method_counts.items())
-    )
+    if not method_scores:
+        return 0.0, "No fields were successfully extracted; evidence quality cannot be assessed."
 
-    if score >= 0.9:
+    score = _clamp(sum(method_scores) / len(method_scores))
+    summary = ", ".join(f"{count} via {m}" for m, count in sorted(method_counts.items()))
+
+    if score >= policy.thresholds.get("high_quality", 0.80):
         explanation = (
-            f"High-quality evidence: extracted fields used reliable methods "
-            f"({method_summary}). Structured data (JSON-LD/Schema.org) found."
+            f"High evidence quality ({summary}). Primary structured or verified extractions."
         )
-    elif score >= 0.7:
+    elif score >= policy.thresholds.get("moderate_quality", 0.55):
         explanation = (
-            f"Good evidence quality ({method_summary}). Most fields use "
-            "deterministic rule-based extraction from semantic HTML."
-        )
-    elif score >= 0.5:
-        explanation = (
-            f"Moderate evidence quality ({method_summary}). "
-            "Some values rely on heuristic pattern matching — independent "
-            "verification is recommended for time-sensitive details."
+            f"Good evidence quality ({summary}). Predominantly deterministic semantic extractions."
         )
     else:
         explanation = (
-            f"Low evidence quality ({method_summary}). "
-            "Extracted values depend on heuristics that may be imprecise. "
-            "Treat all extracted information as preliminary."
+            f"Moderate or preliminary evidence quality ({summary}). "
+            "Values rely on heuristics; independently verify key terms."
         )
 
     return score, explanation
 
 
-def _score_consistency(
-    evidence_by_field: dict[str, FieldEvidence],
+def _evaluate_consistency(
+    evidence_by_field: dict[str, list[FieldEvidence]],
+    sources_by_id: dict[str, SourceReference],
     source_count: int,
-) -> tuple[float, str, list[str], list[str]]:
-    """Return (score, explanation, ambiguous_fields, conflicting_fields)."""
-    conflicting: list[str] = []
-    ambiguous: list[str] = []
+    policy: AssessmentPolicy,
+) -> tuple[float, str, list[str], list[str], list[dict[str, Any]]]:
+    """Evaluate cross-source consistency and detect field-level conflicts."""
+    conflicting_fields: list[str] = []
+    ambiguous_fields: list[str] = []
+    conflict_details: list[dict[str, Any]] = []
 
-    for field_name, ev in evidence_by_field.items():
-        if field_name not in ALL_EXPECTED_FIELDS:
-            continue
-        if ev.evidence_status == EvidenceStatus.SOURCES_DISAGREE:
-            conflicting.append(field_name)
-        elif ev.evidence_status == EvidenceStatus.NEEDS_VERIFICATION:
-            ambiguous.append(field_name)
+    for fname, ev_list in evidence_by_field.items():
+        found_evs = [
+            ev
+            for ev in ev_list
+            if ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}
+            and ev.extracted_value is not None
+        ]
 
-    if conflicting:
-        score = _clamp(0.3 - 0.05 * len(conflicting))
+        if any(ev.evidence_status == EvidenceStatus.NEEDS_VERIFICATION for ev in ev_list):
+            ambiguous_fields.append(fname)
+
+        if (
+            any(ev.evidence_status == EvidenceStatus.SOURCES_DISAGREE for ev in ev_list)
+            and fname not in conflicting_fields
+        ):
+            conflicting_fields.append(fname)
+
+        # Cross-source comparison across distinct sources
+        distinct_source_values: dict[str, tuple[str, str | None]] = {}
+        for ev in found_evs:
+            src_key = ev.source_id or "unknown_source"
+            if src_key not in distinct_source_values:
+                distinct_source_values[src_key] = (
+                    ev.extracted_value or "",
+                    ev.supporting_excerpt,
+                )
+
+        if len(distinct_source_values) > 1:
+            unique_norm_vals: dict[str, list[str]] = defaultdict(list)
+            for src_key, (raw_val, _) in distinct_source_values.items():
+                norm = _normalize_for_comparison(raw_val)
+                unique_norm_vals[norm].append(src_key)
+
+            if len(unique_norm_vals) > 1:
+                # Contradiction detected between sources!
+                if fname not in conflicting_fields:
+                    conflicting_fields.append(fname)
+
+                source_diffs: dict[str, Any] = {}
+                for src_key, (raw_val, excerpt) in distinct_source_values.items():
+                    src_ref = sources_by_id.get(src_key)
+                    label = src_ref.url if src_ref and src_ref.url else src_key
+                    source_diffs[label] = {
+                        "value": raw_val,
+                        "supporting_excerpt": excerpt,
+                    }
+
+                conflict_details.append(
+                    {
+                        "field_name": fname,
+                        "sources_count": len(distinct_source_values),
+                        "competing_values": source_diffs,
+                        "explanation": (
+                            f"Sources disagree on {fname}. "
+                            f"{len(unique_norm_vals)} distinct values reported."
+                        ),
+                    }
+                )
+
+    # Compute consistency score
+    if conflicting_fields:
+        penalty_multiplier = policy.thresholds.get("conflict_penalty_multiplier", 0.05)
+        conflict_base = policy.thresholds.get("conflict_base_score", 0.30)
+        score = _clamp(conflict_base - (len(conflicting_fields) - 1) * penalty_multiplier)
         explanation = (
-            f"{len(conflicting)} field(s) have conflicting values across sources: "
-            f"{', '.join(sorted(conflicting))}. "
-            "Do not rely on these values without verifying the primary source directly."
+            f"Cross-source disagreement detected in {len(conflicting_fields)} field(s): "
+            f"{', '.join(sorted(conflicting_fields))}. "
+            "Conflicting values preserved with respective source provenance."
         )
-    elif ambiguous:
-        score = _clamp(0.7 - 0.05 * len(ambiguous))
+    elif ambiguous_fields:
+        score = 0.70
         explanation = (
-            f"{len(ambiguous)} field(s) require verification: "
-            f"{', '.join(sorted(ambiguous))}. "
-            "Values were found but could not be independently confirmed."
+            f"{len(ambiguous_fields)} field(s) require verification: "
+            f"{', '.join(sorted(ambiguous_fields))}."
         )
     elif source_count == 1:
-        score = 0.85
+        single_source_penalty = policy.thresholds.get("single_source_penalty", 0.15)
+        score = _clamp(1.0 - single_source_penalty)
         explanation = (
-            "No conflicts detected. Only one source was assessed, so cross-source "
-            "consistency cannot be fully evaluated."
+            "No conflicts detected. Single-source assessment; cross-source verification "
+            "will activate when additional sources are attached."
         )
     else:
         score = 1.0
         explanation = (
-            f"All {source_count} sources agree on extracted values. "
-            "No conflicts or ambiguities detected."
+            f"All {source_count} sources agree on established fields. "
+            "No cross-source discrepancies found."
         )
 
-    return score, explanation, sorted(ambiguous), sorted(conflicting)
+    return (
+        score,
+        explanation,
+        sorted(set(ambiguous_fields)),
+        sorted(set(conflicting_fields)),
+        conflict_details,
+    )
 
 
 def _build_limitations(
     missing_critical: list[str],
     missing_optional: list[str],
     source_count: int,
-    structured_data_present: bool,
+    conflicting_fields: list[str],
 ) -> str:
+    """Build honest, transparent explanation of assessment limitations."""
     parts: list[str] = []
+
+    if conflicting_fields:
+        parts.append(
+            f"Conflicting information exists across sources for {', '.join(conflicting_fields)}. "
+            "Verify with the organizing entity directly."
+        )
 
     if missing_critical:
         parts.append(
-            f"The following critical fields were not found and cannot be inferred: "
-            f"{', '.join(missing_critical)}. "
-            "Absence may mean the opportunity page did not publish this information, "
-            "or that the extractor could not locate it in a non-standard layout."
-        )
-
-    if not structured_data_present:
-        parts.append(
-            "The source page did not contain structured data (JSON-LD or Schema.org). "
-            "All values were extracted from unstructured HTML, which is more error-prone."
+            f"Critical fields not established: {', '.join(missing_critical)}. "
+            "Absence indicates information was either not published or not "
+            "found in standard selectors."
         )
 
     if source_count == 1:
         parts.append(
-            "Only one source has been assessed. Multi-source verification and "
-            "cross-reference consistency checks are not yet available."
+            "Assessed from a single source reference. Cross-source corroboration is unavailable."
         )
 
     if missing_optional:
-        parts.append(
-            f"Optional fields not found: {', '.join(missing_optional)}. "
-            "These may be published on the primary opportunity page or linked documents."
-        )
+        parts.append(f"Optional fields unconfirmed: {', '.join(missing_optional)}.")
 
     if not parts:
         return (
-            "No material limitations identified. Standard caveats apply: "
-            "always verify critical details on the primary opportunity page "
-            "before applying or registering."
+            "Evidence fully corroborates established fields across multiple sources. "
+            "Standard due diligence remains advised before applying."
         )
 
     return " ".join(parts)
 
 
-# ---------------------------------------------------------------------------
-# Main public function
-# ---------------------------------------------------------------------------
+def assess_opportunity(
+    opportunity_id: str,
+    session: Session,
+    policy: AssessmentPolicy | None = None,
+) -> OpportunityAssessment:
+    """Compute and persist an explainable assessment for an opportunity.
 
-def assess_opportunity(opportunity_id: str, session: Session) -> OpportunityAssessment:
-    """Compute and persist an assessment for the given opportunity.
-
-    Loads the opportunity's evidence records, applies all scoring dimensions,
-    then upserts a single OpportunityAssessment record.
+    Operates deterministically from persisted records and validated policy.
+    Uses upsert semantics to maintain 1:1 relationship with Opportunity.
 
     Raises:
-        LookupError: if the opportunity_id does not exist.
+        LookupError: if opportunity_id is not found.
     """
+    if policy is None:
+        policy = load_assessment_policy()
+
     opp = session.scalars(
         select(Opportunity)
         .where(Opportunity.id == opportunity_id)
@@ -322,96 +395,77 @@ def assess_opportunity(opportunity_id: str, session: Session) -> OpportunityAsse
         raise LookupError(f"Opportunity {opportunity_id!r} not found")
 
     evidence_rows: list[FieldEvidence] = list(opp.evidence)
+    sources_by_id: dict[str, SourceReference] = {s.id: s for s in opp.sources}
     source_count = len(opp.sources)
 
-    # Build field→evidence map (latest evidence per field)
-    evidence_by_field: dict[str, FieldEvidence] = {}
+    # Group evidence records by field name
+    evidence_by_field: dict[str, list[FieldEvidence]] = defaultdict(list)
     for ev in evidence_rows:
-        evidence_by_field[ev.field_name] = ev
+        evidence_by_field[ev.field_name].append(ev)
 
-    # Detect whether structured data was used
-    structured_data_present = any(
-        ev.extraction_method == ExtractionMethod.STRUCTURED
-        and ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}
-        for ev in evidence_rows
+    # Applicable fields per policy and opportunity type
+    applicable_critical, applicable_optional = policy.get_applicable_fields(
+        opp.opportunity_type.value if opp.opportunity_type else None
+    )
+    all_applicable = applicable_critical | applicable_optional
+
+    # 1. Completeness dimension
+    (
+        completeness_score,
+        completeness_explanation,
+        missing_critical,
+        missing_optional,
+    ) = _evaluate_completeness(evidence_by_field, applicable_critical, applicable_optional, policy)
+
+    # 2. Evidence quality dimension
+    evidence_quality_score, evidence_quality_explanation = _evaluate_evidence_quality(
+        evidence_by_field, all_applicable, policy
     )
 
-    # --- Completeness dimension -------------------------------------------
-    completeness_score, completeness_explanation = _score_completeness(evidence_by_field)
+    # 3. Consistency dimension & cross-source conflicts
+    (
+        consistency_score,
+        consistency_explanation,
+        ambiguous_fields,
+        conflicting_fields,
+        conflict_details,
+    ) = _evaluate_consistency(evidence_by_field, sources_by_id, source_count, policy)
 
-    # --- Evidence quality dimension ----------------------------------------
-    evidence_quality_score, evidence_quality_explanation = _score_evidence_quality(
-        evidence_by_field
-    )
-
-    # --- Consistency dimension --------------------------------------------
-    consistency_score, consistency_explanation, ambiguous_fields, conflicting_fields = (
-        _score_consistency(evidence_by_field, source_count)
-    )
-
-    # --- Field categorisation ---------------------------------------------
-    missing_critical: list[str] = []
-    missing_optional: list[str] = []
-
-    for fname in sorted(CRITICAL_FIELDS):
-        ev = evidence_by_field.get(fname)
-        if ev is None or ev.evidence_status in {
-            EvidenceStatus.NOT_FOUND,
-            EvidenceStatus.NOT_ASSESSED,
-            EvidenceStatus.EXTRACTION_FAILED,
-        }:
-            missing_critical.append(fname)
-
-    for fname in sorted(OPTIONAL_FIELDS):
-        ev = evidence_by_field.get(fname)
-        if ev is None or ev.evidence_status in {
-            EvidenceStatus.NOT_FOUND,
-            EvidenceStatus.NOT_ASSESSED,
-            EvidenceStatus.EXTRACTION_FAILED,
-        }:
-            missing_optional.append(fname)
-
-    # --- Overall score (weighted average) ---------------------------------
+    # 4. Overall score (weighted by policy dimension weights)
+    dw = policy.dimension_weights
     overall_score = _clamp(
-        0.45 * completeness_score
-        + 0.35 * evidence_quality_score
-        + 0.20 * consistency_score
+        dw.get("completeness", 0.45) * completeness_score
+        + dw.get("evidence_quality", 0.35) * evidence_quality_score
+        + dw.get("consistency", 0.20) * consistency_score
     )
 
-    # --- Limitations paragraph ---------------------------------------------
+    # 5. Limitations disclosure
     limitations = _build_limitations(
-        missing_critical, missing_optional, source_count, structured_data_present
+        missing_critical, missing_optional, source_count, conflicting_fields
     )
 
-    # --- Evidence snapshot counters ---------------------------------------
-    assessed = [
-        ev for ev in evidence_rows if ev.field_name in ALL_EXPECTED_FIELDS
-    ]
+    # Snapshot counters
     found_count = sum(
         1
-        for ev in assessed
-        if ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}
+        for fname in all_applicable
+        if any(
+            ev.evidence_status in {EvidenceStatus.FOUND, EvidenceStatus.MULTI_SOURCE}
+            for ev in evidence_by_field.get(fname, [])
+        )
     )
-    not_found_count = sum(
-        1
-        for ev in assessed
-        if ev.evidence_status in {EvidenceStatus.NOT_FOUND}
-    )
+    not_found_count = len(all_applicable) - found_count
     failed_count = sum(
-        1
-        for ev in assessed
-        if ev.evidence_status == EvidenceStatus.EXTRACTION_FAILED
+        1 for ev in evidence_rows if ev.evidence_status == EvidenceStatus.EXTRACTION_FAILED
     )
 
-    # --- Upsert assessment record ----------------------------------------
+    # Atomic upsert
     session.execute(
-        delete(OpportunityAssessment).where(
-            OpportunityAssessment.opportunity_id == opportunity_id
-        )
+        delete(OpportunityAssessment).where(OpportunityAssessment.opportunity_id == opportunity_id)
     )
 
     record = OpportunityAssessment(
         opportunity_id=opportunity_id,
+        policy_version=policy.policy_version,
         overall_score=overall_score,
         completeness_score=completeness_score,
         evidence_quality_score=evidence_quality_score,
@@ -423,8 +477,9 @@ def assess_opportunity(opportunity_id: str, session: Session) -> OpportunityAsse
         missing_optional_fields=missing_optional,
         ambiguous_fields=ambiguous_fields,
         conflicting_fields=conflicting_fields,
+        conflict_details=conflict_details,
         limitations=limitations,
-        total_fields_assessed=len(assessed),
+        total_fields_assessed=len(evidence_rows),
         fields_found_count=found_count,
         fields_not_found_count=not_found_count,
         fields_failed_count=failed_count,
@@ -434,11 +489,9 @@ def assess_opportunity(opportunity_id: str, session: Session) -> OpportunityAsse
     session.refresh(record)
 
     logger.info(
-        "assessment.complete opportunity_id=%s overall=%.2f completeness=%.2f quality=%.2f",
+        "assessment.completed opportunity_id=%s overall=%.2f policy=%s",
         opportunity_id,
         overall_score,
-        completeness_score,
-        evidence_quality_score,
+        policy.policy_version,
     )
-
     return record

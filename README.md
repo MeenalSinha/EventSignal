@@ -28,18 +28,18 @@ Student Intent
 
 ## Project Status
 
-This repository is currently at **Phase 3 — Opportunity Intake & Evidence Collection**.
+This repository has completed **Phase 4 — Evidence Assessment & Opportunity Evaluation**.
 
-| Foundation (Phase 1) | Foundation (Phase 2) | Completed in Phase 3 | Planned (Phase 4 & Beyond) |
+| Foundation (Phase 1) | Domain Model (Phase 2) | Intake & Ingestion (Phase 3) | Assessment & Evaluation (Phase 4) |
 | --- | --- | --- | --- |
-| FastAPI application factory and lifecycle | Opportunity model replacing Event with `opportunity_type`, `location`, `compensation` | Safe web retrieval service with robust SSRF protections (blocking loopback, private, link-local, metadata IPs) | Student intent & preference profiling UI |
-| Environment-driven configuration | Alembic migration framework (`alembic upgrade head`) | Generic 3-stage content extractor (JSON-LD structured, HTML metadata, rule-based heuristics) | Rule-based explainable recommendation scorer |
-| SQLite database initialization and health check | `FieldEvidence` source-linked evidence layer | Honest evidence attribution (`FOUND`, `NOT_FOUND`, etc.) with zero data fabrication | Alumni profile and mentorship availability matching UI |
-| Read-only listing endpoint | `StudentProfile` model with self-reported goals and privacy levels | Deterministic duplicate URL detection with optional `force_refresh` | Purpose-specific connection request workflow |
-| React, Vite, TypeScript (strict), Tailwind frontend shell | `AlumniProfile` model with explicit `willing_to_connect` consent gate | Opportunity intake API: `POST /api/v1/opportunities/ingest` | Automated LLM extraction provider integration (optional) |
-| Complete backend unit/integration tests | `MatchExplanation` persistence grounded in attributes | React frontend intake UI with URL validation, loading state, duplicate handling, and evidence breakdown table | Real-time chat (intentionally excluded from initial MVP) |
-| Quality gate verification suite (`scripts/verify.py`) | `ConnectionRequest` with explicit purpose categories and anti-self-loop validation | 138 backend tests (SSRF, retrieval, extractor, API) & 33 frontend tests | Scraping personal social media profiles (strictly prohibited) |
-| | Updated `/opportunities` endpoint with backward-compatible `/events` support | Full quality gate suite: 10/10 passing (`scripts/verify.py`) | |
+| FastAPI application factory and lifecycle | Opportunity model with `opportunity_type`, `location`, `compensation` | Safe web retrieval service with robust SSRF protections (blocking loopback, private, link-local, metadata IPs) | Declarative, configurable Assessment Policy (`default_assessment_policy.json` validated via Pydantic) |
+| Environment-driven configuration | Alembic migrations (`alembic upgrade head`) | Generic 3-stage content extractor (JSON-LD structured, HTML metadata, rule-based heuristics) | Multi-dimensional scoring engine: Completeness, Evidence Quality, Cross-Source Consistency |
+| SQLite database initialization and health check | `FieldEvidence` source-linked evidence layer | Honest evidence attribution (`FOUND`, `NOT_FOUND`, etc.) with zero data fabrication | Multi-source conflict detection preserving competing values, source attribution, and supporting excerpts |
+| Read-only listing endpoint | `StudentProfile` model with self-reported goals and privacy levels | Deterministic duplicate URL detection with optional `force_refresh` | Assessment persistence models & versioned migrations (`0002`, `0003`) |
+| React, Vite, TypeScript (strict), Tailwind frontend shell | `AlumniProfile` model with explicit `willing_to_connect` consent gate | Opportunity intake API: `POST /api/v1/opportunities/ingest` | Assessment APIs: `POST /api/v1/opportunities/{id}/assess`, `GET .../assessment`, `POST .../sources` |
+| Complete backend unit/integration tests | `MatchExplanation` persistence grounded in attributes | React frontend intake UI with URL validation, loading state, duplicate handling, and evidence breakdown table | Explainable Assessment Panel UI with score ring, dimension breakdowns, counters, and conflict details |
+| Quality gate verification suite (`scripts/verify.py`) | `ConnectionRequest` with explicit purpose categories and anti-self-loop validation | 159 backend tests (SSRF, retrieval, extractor, assessment, API) & 36 frontend tests | Multi-source attachment UI allowing students to submit additional links for cross-source comparison |
+| | Updated `/opportunities` endpoint with backward-compatible `/events` support | Full quality gate suite: 10/10 passing (`scripts/verify.py`) | Zero hardcoded scores, thresholds, or synthetic production fixtures |
 
 ---
 

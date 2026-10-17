@@ -70,10 +70,43 @@ def ingest_opportunity(
             session=session,
             settings=settings,
             force_refresh=payload.force_refresh,
+            opportunity_id=payload.opportunity_id,
         )
         response.status_code = (
             status.HTTP_200_OK if result.is_duplicate else status.HTTP_201_CREATED
         )
         return result
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    except RetrievalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc
+
+
+@router.post(
+    "/opportunities/{opportunity_id}/sources",
+    response_model=OpportunityIngestResponse,
+    summary="Attach an additional public source URL to an existing opportunity",
+)
+def add_opportunity_source(
+    opportunity_id: str,
+    payload: OpportunityIngestRequest,
+    response: Response,
+    session: Annotated[Session, Depends(get_session)],
+) -> OpportunityIngestResponse:
+    settings = get_settings()
+    try:
+        result = ingest_opportunity_url(
+            url=payload.url,
+            session=session,
+            settings=settings,
+            force_refresh=payload.force_refresh,
+            opportunity_id=opportunity_id,
+        )
+        response.status_code = (
+            status.HTTP_200_OK if result.is_duplicate else status.HTTP_201_CREATED
+        )
+        return result
+    except LookupError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
     except RetrievalError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

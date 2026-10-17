@@ -24,6 +24,10 @@ class OpportunityIngestRequest(BaseModel):
         default=False,
         description="If True, re-fetch and re-extract even if URL already exists.",
     )
+    opportunity_id: str | None = Field(
+        default=None,
+        description="Optional ID of an existing opportunity to attach this source to.",
+    )
 
 
 class OpportunityIngestResponse(BaseModel):

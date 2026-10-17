@@ -1,0 +1,65 @@
+{
+  "policy_version": "1.0.0",
+  "description": "Standard EventSignal explainable opportunity assessment policy.",
+  "dimension_weights": {
+    "completeness": 0.45,
+    "evidence_quality": 0.35,
+    "consistency": 0.20
+  },
+  "critical_fields": [
+    "title",
+    "opportunity_type",
+    "organizer",
+    "registration_deadline",
+    "application_url"
+  ],
+  "optional_fields": [
+    "start_date",
+    "end_date",
+    "submission_deadline",
+    "location",
+    "mode",
+    "eligibility",
+    "skills_required",
+    "compensation"
+  ],
+  "field_weights": {
+    "title": 2.0,
+    "opportunity_type": 1.5,
+    "organizer": 1.5,
+    "registration_deadline": 2.0,
+    "application_url": 2.0,
+    "start_date": 1.0,
+    "end_date": 1.0,
+    "submission_deadline": 1.0,
+    "location": 1.0,
+    "mode": 1.0,
+    "eligibility": 1.0,
+    "skills_required": 1.0,
+    "compensation": 1.0
+  },
+  "type_applicability": {
+    "internship": {
+      "required_fields": ["title", "organizer", "application_url", "location"],
+      "optional_fields": ["compensation", "skills_required", "eligibility", "start_date"],
+      "not_applicable_fields": ["submission_deadline"]
+    },
+    "hackathon": {
+      "required_fields": ["title", "organizer", "registration_deadline", "application_url"],
+      "optional_fields": ["start_date", "end_date", "submission_deadline", "location", "mode", "skills_required", "compensation"],
+      "not_applicable_fields": []
+    }
+  },
+  "method_quality_weights": {
+    "structured": 1.0,
+    "rule_based": 0.75,
+    "manual": 1.0,
+    "llm": 0.5
+  },
+  "thresholds": {
+    "high_quality": 0.80,
+    "moderate_quality": 0.55,
+    "single_source_penalty": 0.0,
+    "conflict_penalty_multiplier": 0.25
+  }
+}

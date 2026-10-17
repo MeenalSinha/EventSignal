@@ -123,9 +123,14 @@ export function AssessmentPanel({ opportunityId, opportunityTitle }: Props) {
       {/* Header */}
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h4 className="font-display text-sm font-semibold text-ink">
-            Evidence Assessment
-          </h4>
+          <div className="flex items-center gap-2">
+            <h4 className="font-display text-sm font-semibold text-ink">
+              Evidence Assessment
+            </h4>
+            <span className="rounded bg-teal-wash px-1.5 py-0.5 text-[10px] font-mono text-teal-deep border border-teal/20">
+              Policy v{assessment.policy_version}
+            </span>
+          </div>
           <p className="text-xs text-ink-soft mt-0.5">
             {opportunityTitle ?? "This opportunity"} · AI extracts. Rules evaluate. Evidence explains.
           </p>
@@ -207,7 +212,7 @@ export function AssessmentPanel({ opportunityId, opportunityTitle }: Props) {
         </div>
       )}
 
-      {/* Ambiguous / conflicting */}
+      {/* Ambiguous / verification */}
       {assessment.ambiguous_fields.length > 0 && (
         <div>
           <p className="mb-1.5 text-xs font-semibold text-caution">Needs verification</p>
@@ -219,14 +224,51 @@ export function AssessmentPanel({ opportunityId, opportunityTitle }: Props) {
         </div>
       )}
 
+      {/* Conflicting sources detail */}
       {assessment.conflicting_fields.length > 0 && (
-        <div>
-          <p className="mb-1.5 text-xs font-semibold text-alert">Source conflicts</p>
-          <div className="flex flex-wrap gap-1.5">
-            {assessment.conflicting_fields.map((f) => (
-              <FieldChip key={f} name={f} tone="danger" />
-            ))}
-          </div>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold text-alert">
+            Cross-source conflicts ({assessment.conflicting_fields.length})
+          </p>
+          {assessment.conflict_details.length > 0 ? (
+            <div className="space-y-2">
+              {assessment.conflict_details.map((cd) => (
+                <div
+                  key={cd.field_name}
+                  className="rounded-lg border border-red-200 bg-red-50/50 p-3 text-xs"
+                >
+                  <p className="font-semibold text-red-800">
+                    Field: <span className="font-mono">{cd.field_name}</span>
+                  </p>
+                  <p className="text-ink-soft mt-0.5">{cd.explanation}</p>
+                  <div className="mt-2 space-y-1.5">
+                    {Object.entries(cd.competing_values).map(([src, claim]) => (
+                      <div
+                        key={src}
+                        className="rounded border border-line bg-paper p-2 text-[11px]"
+                      >
+                        <p className="font-medium text-ink truncate">Source: {src}</p>
+                        <p className="text-teal-deep font-semibold mt-0.5">
+                          Extracted: &ldquo;{claim.value}&rdquo;
+                        </p>
+                        {claim.supporting_excerpt && (
+                          <p className="text-ink-soft italic mt-0.5">
+                            Excerpt: &ldquo;{claim.supporting_excerpt}&rdquo;
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-1.5">
+              {assessment.conflicting_fields.map((f) => (
+                <FieldChip key={f} name={f} tone="danger" />
+              ))}
+            </div>
+          )}
         </div>
       )}
 

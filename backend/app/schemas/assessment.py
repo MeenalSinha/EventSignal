@@ -14,6 +14,8 @@ Assessment dimensions:
 
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
 
@@ -24,6 +26,7 @@ class OpportunityAssessmentRead(BaseModel):
 
     id: str
     opportunity_id: str
+    policy_version: str = "1.0.0"
 
     # Composite score
     overall_score: float = Field(ge=0.0, le=1.0)
@@ -43,6 +46,7 @@ class OpportunityAssessmentRead(BaseModel):
     missing_optional_fields: list[str]
     ambiguous_fields: list[str]
     conflicting_fields: list[str]
+    conflict_details: list[dict[str, Any]] = Field(default_factory=list)
 
     # Limitations paragraph — describes what the system cannot determine
     limitations: str

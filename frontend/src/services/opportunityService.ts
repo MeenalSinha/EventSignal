@@ -106,3 +106,19 @@ export async function ingestOpportunity(
   });
   return parseIngestResponse(body);
 }
+
+export const ATTACH_SOURCE_PATH = (id: string) => `/api/v1/opportunities/${id}/sources`;
+
+export async function attachOpportunitySource(
+  opportunityId: string,
+  request: OpportunityIngestRequest,
+  signal?: AbortSignal,
+): Promise<OpportunityIngestResponse> {
+  const { body } = await requestJson(ATTACH_SOURCE_PATH(opportunityId), {
+    method: "POST",
+    body: request,
+    signal,
+  });
+  return parseIngestResponse(body);
+}
+

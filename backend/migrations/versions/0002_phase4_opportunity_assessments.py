@@ -11,7 +11,7 @@ Each assessment record captures five evaluation dimensions:
   completeness, evidence_quality, cross_source_consistency,
   missing_critical, ambiguous_or_conflicting.
 
-Plus free-text explanation fields and an overall score (0.0–1.0).
+Plus free-text explanation fields and an overall score (0.0-1.0).
 """
 
 from __future__ import annotations
@@ -40,7 +40,7 @@ def upgrade() -> None:
         ),
         # Overall composite score (0.0 = nothing known; 1.0 = fully evidenced)
         sa.Column("overall_score", sa.Float(), nullable=False),
-        # Dimension scores (0.0–1.0 each)
+        # Dimension scores (0.0-1.0 each)
         sa.Column("completeness_score", sa.Float(), nullable=False),
         sa.Column("evidence_quality_score", sa.Float(), nullable=False),
         sa.Column("consistency_score", sa.Float(), nullable=False),

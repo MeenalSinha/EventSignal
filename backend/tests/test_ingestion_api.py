@@ -181,3 +181,57 @@ def test_ingest_api_endpoint_rejects_invalid_url(client: TestClient) -> None:
         json={"url": "not-a-valid-url"},
     )
     assert resp.status_code == 422
+
+
+def test_attach_source_to_opportunity_api(client: TestClient) -> None:
+    with patch("app.services.ingestion.retrieve_web_page") as mock_retrieve:
+        from datetime import UTC, datetime
+
+        from app.services.retrieval import RetrievalResult
+
+        mock_retrieve.side_effect = [
+            RetrievalResult(
+                submitted_url="https://example.com/fellowship",
+                final_url="https://example.com/fellowship",
+                status_code=200,
+                content=MOCK_HTML,
+                content_hash="a" * 64,
+                content_type="text/html",
+                retrieved_at=datetime.now(UTC),
+                headers={"content-type": "text/html"},
+            ),
+            RetrievalResult(
+                submitted_url="https://example.org/fellowship-mirror",
+                final_url="https://example.org/fellowship-mirror",
+                status_code=200,
+                content="""
+                <!DOCTYPE html>
+                <html><head><title>NextGen AI Fellowship</title></head>
+                <body><p>Registration deadline: December 1, 2026</p></body></html>
+                """,
+                content_hash="b" * 64,
+                content_type="text/html",
+                retrieved_at=datetime.now(UTC),
+                headers={"content-type": "text/html"},
+            ),
+        ]
+
+        # 1. Ingest primary source
+        r1 = client.post(INGEST_URL, json={"url": "https://example.com/fellowship"})
+        assert r1.status_code == 201
+        opp_id = r1.json()["opportunity"]["id"]
+
+        # 2. Attach second source
+        attach_url = f"{API_V1_PREFIX}/opportunities/{opp_id}/sources"
+        r2 = client.post(attach_url, json={"url": "https://example.org/fellowship-mirror"})
+        assert r2.status_code == 201
+        data2 = r2.json()
+        assert data2["opportunity"]["id"] == opp_id
+        assert len(data2["opportunity"]["sources"]) == 2
+
+        # 3. Not found test
+        r_nf = client.post(
+            f"{API_V1_PREFIX}/opportunities/non-existent-id/sources",
+            json={"url": "https://example.org/another"},
+        )
+        assert r_nf.status_code == 404

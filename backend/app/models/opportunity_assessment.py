@@ -31,7 +31,7 @@ class OpportunityAssessment(TimestampMixin, Base):
         unique=True,  # One assessment per opportunity
     )
 
-    # --- Scores (0.0 – 1.0) -------------------------------------------
+    # --- Scores (0.0 - 1.0) -------------------------------------------
     overall_score: Mapped[float] = mapped_column(Float, nullable=False)
     completeness_score: Mapped[float] = mapped_column(Float, nullable=False)
     evidence_quality_score: Mapped[float] = mapped_column(Float, nullable=False)
@@ -42,15 +42,15 @@ class OpportunityAssessment(TimestampMixin, Base):
     evidence_quality_explanation: Mapped[str] = mapped_column(Text, nullable=False)
     consistency_explanation: Mapped[str] = mapped_column(Text, nullable=False)
 
+    # --- Policy version ---------------------------------------------------
+    policy_version: Mapped[str] = mapped_column(String(32), nullable=False, default="1.0.0")
+
     # --- Field lists (stored as JSON arrays of field name strings) --------
-    missing_critical_fields: Mapped[list[Any]] = mapped_column(
-        JSON, nullable=False, default=list
-    )
-    missing_optional_fields: Mapped[list[Any]] = mapped_column(
-        JSON, nullable=False, default=list
-    )
+    missing_critical_fields: Mapped[list[Any]] = mapped_column(JSON, nullable=False, default=list)
+    missing_optional_fields: Mapped[list[Any]] = mapped_column(JSON, nullable=False, default=list)
     ambiguous_fields: Mapped[list[Any]] = mapped_column(JSON, nullable=False, default=list)
     conflicting_fields: Mapped[list[Any]] = mapped_column(JSON, nullable=False, default=list)
+    conflict_details: Mapped[list[Any]] = mapped_column(JSON, nullable=False, default=list)
 
     # --- Limitations paragraph --------------------------------------------
     limitations: Mapped[str] = mapped_column(Text, nullable=False)

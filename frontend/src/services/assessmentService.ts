@@ -14,6 +14,7 @@ function parseAssessment(val: unknown): OpportunityAssessment {
   return {
     id: String(val.id),
     opportunity_id: String(val.opportunity_id),
+    policy_version: String(val.policy_version ?? "1.0.0"),
     overall_score: Number(val.overall_score ?? 0),
     completeness_score: Number(val.completeness_score ?? 0),
     evidence_quality_score: Number(val.evidence_quality_score ?? 0),
@@ -30,6 +31,9 @@ function parseAssessment(val: unknown): OpportunityAssessment {
     ambiguous_fields: Array.isArray(val.ambiguous_fields) ? (val.ambiguous_fields as string[]) : [],
     conflicting_fields: Array.isArray(val.conflicting_fields)
       ? (val.conflicting_fields as string[])
+      : [],
+    conflict_details: Array.isArray(val.conflict_details)
+      ? (val.conflict_details as OpportunityAssessment["conflict_details"])
       : [],
     limitations: String(val.limitations ?? ""),
     total_fields_assessed: Number(val.total_fields_assessed ?? 0),

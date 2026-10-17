@@ -8,6 +8,7 @@ import { AssessmentPanel } from "./AssessmentPanel";
 const mockAssessment: OpportunityAssessment = {
   id: "asm-100",
   opportunity_id: "opp-test-1",
+  policy_version: "1.0.0",
   overall_score: 0.85,
   completeness_score: 0.9,
   evidence_quality_score: 0.8,
@@ -19,6 +20,7 @@ const mockAssessment: OpportunityAssessment = {
   missing_optional_fields: ["submission_deadline"],
   ambiguous_fields: ["skills_required"],
   conflicting_fields: [],
+  conflict_details: [],
   limitations: "Single source assessment. Verification recommended for critical dates.",
   total_fields_assessed: 10,
   fields_found_count: 8,
@@ -42,6 +44,7 @@ describe("AssessmentPanel", () => {
     // After assessment loads:
     expect(await screen.findByText("85%")).toBeInTheDocument();
     expect(screen.getByText("Evidence Assessment")).toBeInTheDocument();
+    expect(screen.getByText("Policy v1.0.0")).toBeInTheDocument();
     expect(screen.getByText(/Test Hackathon/)).toBeInTheDocument();
 
     // Dimension labels and explanations
@@ -63,6 +66,44 @@ describe("AssessmentPanel", () => {
     // Limitations
     expect(screen.getByText("Assessment limitations & caveats")).toBeInTheDocument();
     expect(screen.getByText(/Single source assessment/)).toBeInTheDocument();
+  });
+
+  it("renders cross-source conflict details when sources disagree", async () => {
+    const conflictingAssessment: OpportunityAssessment = {
+      ...mockAssessment,
+      consistency_score: 0.5,
+      consistency_explanation: "Conflicting evidence detected across multiple sources.",
+      conflicting_fields: ["start_date"],
+      conflict_details: [
+        {
+          field_name: "start_date",
+          sources_count: 2,
+          explanation: "Different sources report conflicting values for 'start_date'.",
+          competing_values: {
+            "https://source1.com": {
+              value: "2026-11-01",
+              supporting_excerpt: "Starts Nov 1",
+            },
+            "https://source2.com": {
+              value: "2026-11-15",
+              supporting_excerpt: "Kickoff Nov 15",
+            },
+          },
+        },
+      ],
+    };
+
+    stubFetch({
+      "/api/v1/opportunities/opp-test-1/assess": () => jsonResponse(conflictingAssessment),
+    });
+
+    render(<AssessmentPanel opportunityId="opp-test-1" opportunityTitle="Test Hackathon" />);
+    await userEvent.click(screen.getByRole("button", { name: "Evaluate Opportunity" }));
+
+    expect(await screen.findByText("Cross-source conflicts (1)")).toBeInTheDocument();
+    expect(screen.getByText("start_date")).toBeInTheDocument();
+    expect(screen.getByText(/Starts Nov 1/)).toBeInTheDocument();
+    expect(screen.getByText(/Kickoff Nov 15/)).toBeInTheDocument();
   });
 
   it("handles error during assessment gracefully", async () => {

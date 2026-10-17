@@ -72,10 +72,12 @@ The platform's distinguishing principle remains:
 | **Evidence Collection** | Field-level provenance (`FieldEvidence`) separating FOUND, NOT_FOUND, and technical failures | Implemented in Phase 3 |
 | **Duplicate Prevention** | Deterministic URL normalization preventing silent duplicates with force_refresh | Implemented in Phase 3 |
 | **Opportunity Discovery** | Filter and explore opportunities with date/mode validation and evidence cards | Implemented in Phase 3 |
-| **Student Profiles** | Self-reported skills, interests, and preferences with strict privacy controls | Implemented in Phase 2; UI in Phase 4 |
-| **Alumni Profiles** | Expertise, mentoring interests, and explicit consent gates (`willing_to_connect`) | Implemented in Phase 2; UI in Phase 4 |
-| **Explainable Matching** | Traceable match explanations (`MatchExplanation`) referencing specific profile attributes | Implemented in Phase 2; Scorer in Phase 4 |
-| **Purpose-Specific Connections** | Non-spam connection requests (`ConnectionRequest`) requiring explicit purpose categories | Implemented in Phase 2; UI in Phase 4 |
+| **Evidence Assessment Engine** | Declarative policy-driven scoring (completeness, evidence quality, consistency) | Implemented in Phase 4 |
+| **Multi-Source Evaluation** | Cross-source conflict detection, competing values analysis, and source attribution | Implemented in Phase 4 |
+| **Student Profiles** | Self-reported skills, interests, and preferences with strict privacy controls | Implemented in Phase 2; UI in Phase 5 |
+| **Alumni Profiles** | Expertise, mentoring interests, and explicit consent gates (`willing_to_connect`) | Implemented in Phase 2; UI in Phase 5 |
+| **Explainable Matching** | Traceable match explanations (`MatchExplanation`) referencing specific profile attributes | Implemented in Phase 2; Scorer in Phase 5 |
+| **Purpose-Specific Connections** | Non-spam connection requests (`ConnectionRequest`) requiring explicit purpose categories | Implemented in Phase 2; UI in Phase 5 |
 
 ---
 

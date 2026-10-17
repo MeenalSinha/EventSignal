@@ -15,7 +15,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy import select
-from sqlalchemy.orm import Session, selectinload
+from sqlalchemy.orm import Session
 
 from app.database import get_session
 from app.models.opportunity import Opportunity
@@ -77,9 +77,7 @@ def get_assessment(
         )
 
     record = session.scalars(
-        select(OpportunityAssessment).where(
-            OpportunityAssessment.opportunity_id == opportunity_id
-        )
+        select(OpportunityAssessment).where(OpportunityAssessment.opportunity_id == opportunity_id)
     ).first()
 
     if record is None:

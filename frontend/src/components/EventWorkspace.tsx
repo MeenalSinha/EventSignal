@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ResourceState } from "../hooks/useRemoteResource";
 import type { EventList } from "../types/events";
+import { attachOpportunitySource } from "../services/opportunityService";
 import { AssessmentPanel } from "./AssessmentPanel";
 import { OpportunityIntakeForm } from "./OpportunityIntakeForm";
 import { StatePanel } from "./StatePanel";
@@ -12,6 +13,29 @@ interface Props {
 
 export function EventWorkspace({ state, onRetry }: Props) {
   const [showIntake, setShowIntake] = useState(false);
+  const [addingSourceForId, setAddingSourceForId] = useState<string | null>(null);
+  const [newSourceUrl, setNewSourceUrl] = useState("");
+  const [attachingSource, setAttachingSource] = useState(false);
+  const [attachError, setAttachError] = useState<string | null>(null);
+
+  const handleAttachSource = async (e: React.FormEvent, opportunityId: string) => {
+    e.preventDefault();
+    const cleanUrl = newSourceUrl.trim();
+    if (!cleanUrl) return;
+
+    setAttachingSource(true);
+    setAttachError(null);
+    try {
+      await attachOpportunitySource(opportunityId, { url: cleanUrl });
+      setNewSourceUrl("");
+      setAddingSourceForId(null);
+      onRetry();
+    } catch (err: unknown) {
+      setAttachError(err instanceof Error ? err.message : "Failed to attach source.");
+    } finally {
+      setAttachingSource(false);
+    }
+  };
 
   return (
     <section aria-labelledby="workspace-heading">
@@ -76,7 +100,44 @@ export function EventWorkspace({ state, onRetry }: Props) {
                     <p className="font-medium text-ink">{event.event_name ?? event.title ?? "Untitled event"}</p>
                     <p className="text-sm text-ink-soft">{event.organizer ?? "Organizer not stated"}</p>
                   </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setAddingSourceForId(addingSourceForId === event.id ? null : event.id);
+                      setAttachError(null);
+                      setNewSourceUrl("");
+                    }}
+                    className="rounded border border-line bg-paper px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink hover:bg-paper-soft shrink-0"
+                  >
+                    {addingSourceForId === event.id ? "Cancel Add Source" : "+ Add Source"}
+                  </button>
                 </div>
+
+                {addingSourceForId === event.id && (
+                  <form onSubmit={(e) => handleAttachSource(e, event.id)} className="mt-3 rounded-lg border border-line bg-canvas p-3">
+                    <p className="text-xs font-medium text-ink mb-1.5">Attach Additional Source to Opportunity</p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        value={newSourceUrl}
+                        onChange={(e) => setNewSourceUrl(e.target.value)}
+                        placeholder="https://second-source.example.com/details"
+                        disabled={attachingSource}
+                        className="flex-1 rounded-md border border-line bg-paper px-3 py-1.5 text-xs text-ink placeholder:text-ink-soft focus:border-ink focus:outline-none"
+                        required
+                      />
+                      <button
+                        type="submit"
+                        disabled={attachingSource || !newSourceUrl.trim()}
+                        className="rounded-md border border-teal bg-teal-wash px-3 py-1.5 text-xs font-medium text-teal-deep hover:bg-teal/10 disabled:opacity-50"
+                      >
+                        {attachingSource ? "Attaching…" : "Attach"}
+                      </button>
+                    </div>
+                    {attachError && <p className="mt-1.5 text-xs text-alert">{attachError}</p>}
+                  </form>
+                )}
+
                 <AssessmentPanel
                   opportunityId={event.id}
                   opportunityTitle={event.event_name ?? event.title ?? null}

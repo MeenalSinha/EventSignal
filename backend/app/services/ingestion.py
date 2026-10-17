@@ -105,19 +105,39 @@ def ingest_opportunity_url(
     session: Session,
     settings: Settings,
     force_refresh: bool = False,
+    opportunity_id: str | None = None,
     transport: httpx.BaseTransport | None = None,
 ) -> OpportunityIngestResponse:
     """Ingest a public opportunity URL, extract details, and persist with evidence.
 
     Handles duplicates deterministically: returns existing record unless force_refresh is True.
+    If opportunity_id is specified, associates the source with the existing opportunity.
     All database writes are executed inside an atomic transaction.
     """
     normalized = normalize_url(url)
 
+    target_opp: Opportunity | None = None
+    if opportunity_id is not None:
+        target_opp = session.scalars(
+            select(Opportunity)
+            .where(Opportunity.id == opportunity_id)
+            .options(selectinload(Opportunity.sources), selectinload(Opportunity.evidence))
+        ).first()
+        if target_opp is None:
+            raise LookupError(f"Opportunity {opportunity_id!r} not found")
+
     # 1. Check for existing source by normalized URL
-    existing_source = session.scalars(
-        select(SourceReference).where(SourceReference.url == normalized)
-    ).first()
+    if target_opp is not None:
+        existing_source = session.scalars(
+            select(SourceReference).where(
+                SourceReference.opportunity_id == target_opp.id,
+                SourceReference.url == normalized,
+            )
+        ).first()
+    else:
+        existing_source = session.scalars(
+            select(SourceReference).where(SourceReference.url == normalized)
+        ).first()
 
     if existing_source is not None and not force_refresh:
         opp = session.scalars(
@@ -135,7 +155,8 @@ def ingest_opportunity_url(
                 fields_extracted_count=found_count,
                 evidence=[FieldEvidenceRead.model_validate(e) for e in opp.evidence],
                 message=(
-                    "Opportunity already ingested. Returned existing record without re-fetching."
+                    "Opportunity source already ingested. "
+                    "Returned existing record without re-fetching."
                 ),
             )
 
@@ -163,7 +184,7 @@ def ingest_opportunity_url(
 
     try:
         if existing_source is not None and force_refresh:
-            # Refresh existing opportunity
+            # Refresh existing opportunity source
             opp = session.scalars(
                 select(Opportunity)
                 .where(Opportunity.id == existing_source.opportunity_id)
@@ -175,10 +196,10 @@ def ingest_opportunity_url(
                     f"SourceReference {existing_source.id} refers to missing Opportunity"
                 )
 
-            # Update opportunity fields
+            # Update opportunity fields if not previously set
             for field in OPPORTUNITY_FIELDS:
                 extracted = extraction.fields[field]
-                if extracted.value is not None:
+                if extracted.value is not None and getattr(opp, field) is None:
                     setattr(opp, field, extracted.value)
 
             # Update source reference
@@ -187,7 +208,7 @@ def ingest_opportunity_url(
             existing_source.content_hash = retrieval.content_hash
             existing_source.source_metadata = metadata
 
-            # Clear old evidence for this source and re-populate
+            # Clear old evidence for this specific source and re-populate
             session.execute(
                 delete(FieldEvidence).where(
                     FieldEvidence.opportunity_id == opp.id,
@@ -197,6 +218,31 @@ def ingest_opportunity_url(
 
             target_source_id = existing_source.id
             active_source_ref = existing_source
+        elif target_opp is not None:
+            # Attach new source to existing opportunity
+            opp = target_opp
+
+            # Fill in unpopulated opportunity fields without overwriting established ones
+            for field in OPPORTUNITY_FIELDS:
+                extracted = extraction.fields[field]
+                if extracted.value is not None and getattr(opp, field) is None:
+                    setattr(opp, field, extracted.value)
+
+            source_ref = SourceReference(
+                opportunity_id=opp.id,
+                source_type=SourceType.OPPORTUNITY_LISTING,
+                url=normalized,
+                title=source_title,
+                retrieved_at=retrieval.retrieved_at,
+                content_hash=retrieval.content_hash,
+                source_metadata=metadata,
+            )
+            session.add(source_ref)
+            opp.sources.append(source_ref)
+            session.flush()
+
+            target_source_id = source_ref.id
+            active_source_ref = source_ref
         else:
             # Create new opportunity
             opp_kwargs: dict[str, Any] = {}
@@ -218,6 +264,7 @@ def ingest_opportunity_url(
                 source_metadata=metadata,
             )
             session.add(source_ref)
+            opp.sources.append(source_ref)
             session.flush()  # Generate source_ref.id
 
             target_source_id = source_ref.id
@@ -236,8 +283,10 @@ def ingest_opportunity_url(
                 evidence_status=extracted.evidence_status,
             )
             session.add(evidence_rec)
+            opp.evidence.append(evidence_rec)
 
         session.commit()
+        session.expire_all()
 
         # Reload with relationships loaded
         saved_opp = session.scalars(

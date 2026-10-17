@@ -67,6 +67,9 @@ class Settings(BaseSettings):
     )
     ingest_allowed_ports: Annotated[list[int], NoDecode] = Field(default_factory=lambda: [80, 443])
 
+    # Assessment policy path (configurable outside calculation functions)
+    assessment_policy_path: str = Field(default="app/core/default_assessment_policy.json")
+
     @field_validator("ingest_allowed_content_types", mode="before")
     @classmethod
     def _split_content_types(cls, value: object) -> object:
