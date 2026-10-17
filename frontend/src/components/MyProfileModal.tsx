@@ -185,7 +185,9 @@ export function MyProfileModal({ isOpen, onClose, currentUser }: MyProfileModalP
             className="rounded-lg p-1.5 text-ink-soft hover:bg-paper-warm hover:text-ink"
             aria-label="Close"
           >
-            ✕
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -223,8 +225,13 @@ export function MyProfileModal({ isOpen, onClose, currentUser }: MyProfileModalP
           </div>
         )}
 
-        <div className="mt-3 rounded-xl bg-amber-50 border border-amber-200/60 p-2.5 text-[11px] text-amber-800">
-          ℹ️ <strong>Declaration Policy:</strong> Profile skills, career interests, and experience are self-reported and not officially verified by institutional administration.
+        <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-50 border border-amber-200/60 p-2.5 text-[11px] text-amber-800">
+          <svg className="h-4 w-4 text-amber-700 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <div>
+            <strong>Declaration Policy:</strong> Profile skills, career interests, and experience are self-reported and not officially verified by institutional administration.
+          </div>
         </div>
 
         {loading ? (

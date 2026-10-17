@@ -111,8 +111,11 @@ export function MemberDiscoveryPanel({
               ))}
             </select>
           ) : (
-            <div className="rounded-xl border border-line bg-paper-warm px-3 py-1.5 text-xs font-semibold text-ink">
-              🏛️ {currentInst?.institution_name || currentInst?.institution_slug || "Campus Network"}
+            <div className="flex items-center gap-1.5 rounded-xl border border-line bg-paper-warm px-3 py-1.5 text-xs font-semibold text-ink">
+              <svg className="h-3.5 w-3.5 text-teal shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span>{currentInst?.institution_name || currentInst?.institution_slug || "Campus Network"}</span>
             </div>
           )}
 
@@ -234,9 +237,12 @@ export function MemberDiscoveryPanel({
                       {member.campus_positions.map((pos, i) => (
                         <span
                           key={i}
-                          className="rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-medium text-blue-800"
+                          className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-medium text-blue-800"
                         >
-                          🎖️ {pos}
+                          <svg className="h-3 w-3 text-blue-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                          </svg>
+                          <span>{pos}</span>
                         </span>
                       ))}
                     </div>
@@ -300,8 +306,11 @@ export function MemberDiscoveryPanel({
                         </div>
                       )}
                       {sp.career_goals && sp.career_goals.length > 0 && (
-                        <div className="mt-1 text-[11px] text-ink-soft">
-                          🎯 Goals: {sp.career_goals.join(", ")}
+                        <div className="mt-1 flex items-center gap-1 text-[11px] text-ink-soft">
+                          <svg className="h-3.5 w-3.5 text-ink-soft shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          <span>Goals: {sp.career_goals.join(", ")}</span>
                         </div>
                       )}
                     </div>

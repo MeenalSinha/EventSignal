@@ -351,7 +351,10 @@ export function OpportunityFeed({
                   <div className="flex items-center gap-2">
                     {isVerified ? (
                       <span className="inline-flex items-center gap-1 rounded-full bg-success-wash px-2.5 py-0.5 text-[11px] font-semibold text-success">
-                        <span>✓</span> Verified Source
+                        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span>Verified Source</span>
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 rounded-full bg-teal-wash px-2.5 py-0.5 text-[11px] font-semibold text-teal">
@@ -415,17 +418,27 @@ export function OpportunityFeed({
                     <div className="mt-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-ink-soft">
                       {deadlineFormatted && (
                         <div className="flex items-center gap-1 font-medium text-ink">
-                          <span>📅 Applications close {deadlineFormatted}</span>
+                          <svg className="h-3.5 w-3.5 text-teal shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span>Applications close {deadlineFormatted}</span>
                         </div>
                       )}
                       {op.location && (
                         <div className="flex items-center gap-1">
-                          <span>📍 {op.location}</span>
+                          <svg className="h-3.5 w-3.5 text-ink-soft shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span>{op.location}</span>
                         </div>
                       )}
                       {op.mode && (
                         <div className="flex items-center gap-1 capitalize">
-                          <span>🌐 {op.mode.replace("_", " ")}</span>
+                          <svg className="h-3.5 w-3.5 text-ink-soft shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                          </svg>
+                          <span>{op.mode.replace("_", " ")}</span>
                         </div>
                       )}
                     </div>
@@ -443,7 +456,7 @@ export function OpportunityFeed({
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
                   <div className="flex items-center gap-2">
                     <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
                         evidenceCount >= 3
                           ? "bg-success-wash text-success"
                           : evidenceCount >= 1
@@ -451,8 +464,13 @@ export function OpportunityFeed({
                           : "bg-page text-ink-soft"
                       }`}
                     >
-                      <span>✓ Evidence: {evidenceCount >= 3 ? "Strong" : evidenceCount >= 1 ? "Good" : "Not Yet Assessed"}</span>
-                      <span className="text-[10px] opacity-75">ⓘ</span>
+                      <svg className="h-3 w-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Evidence: {evidenceCount >= 3 ? "Strong" : evidenceCount >= 1 ? "Good" : "Not Yet Assessed"}</span>
+                      <svg className="h-3 w-3 opacity-75 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
                     </span>
 
                     <span className="text-[11px] text-ink-muted">
@@ -470,6 +488,9 @@ export function OpportunityFeed({
                           : "border-line bg-card text-ink hover:bg-page"
                       }`}
                     >
+                      <svg className={`h-3.5 w-3.5 ${isSaved ? "fill-teal text-teal" : "text-ink-soft"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+                      </svg>
                       <span>{isSaved ? "Saved" : "Save"}</span>
                     </button>
 

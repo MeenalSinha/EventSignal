@@ -284,7 +284,9 @@ export function DiscoveryPanels({
             promotions.slice(0, 2).map((item: FeedPromotionItem) => (
               <div key={item.campaign_id} className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-50 text-amber-700 font-bold text-xs border border-amber-200">
-                  ★
+                  <svg className="h-4 w-4 fill-amber-500 text-amber-600" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
@@ -350,7 +352,9 @@ export function DiscoveryPanels({
                       title="Mark task completed"
                       className="mt-0.5 h-3.5 w-3.5 rounded-sm border border-line hover:border-teal flex items-center justify-center text-teal"
                     >
-                      ✓
+                      <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
                     </button>
                     <div className="min-w-0 flex-1">
                       <h4 className="text-xs font-semibold text-ink line-clamp-1">{task.title}</h4>

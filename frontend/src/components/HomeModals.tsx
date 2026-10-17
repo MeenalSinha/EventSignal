@@ -32,7 +32,9 @@ export function OpportunityDetailModal({ opportunity, onClose, onRefresh }: Oppo
             className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-soft hover:bg-card hover:text-ink transition"
             aria-label="Close"
           >
-            ✕
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -80,7 +82,9 @@ export function QuickIntakeModal({ isOpen, onClose, onSuccess, title = "Submit O
       <div className="relative w-full max-w-lg rounded-2xl border border-line bg-card shadow-2xl overflow-hidden my-8">
         <div className="flex items-center justify-between border-b border-line px-5 py-4 bg-page">
           <div className="flex items-center gap-2">
-            <span className="text-teal font-bold">🔗</span>
+            <svg className="h-4 w-4 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+            </svg>
             <h3 className="font-display text-base font-bold text-ink">{title}</h3>
           </div>
           <button
@@ -88,7 +92,9 @@ export function QuickIntakeModal({ isOpen, onClose, onSuccess, title = "Submit O
             className="flex h-7 w-7 items-center justify-center rounded-lg text-ink-soft hover:bg-card hover:text-ink transition"
             aria-label="Close"
           >
-            ✕
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -155,7 +161,11 @@ export function ConnectModal({ offer, institutionId, onClose, onSuccess }: Conne
             <h3 className="font-display text-base font-bold text-ink">Request Connection</h3>
             <p className="text-xs text-ink-soft">Connect with {offer.creator_name || "Mentor"}</p>
           </div>
-          <button onClick={onClose} className="text-ink-soft hover:text-ink">✕</button>
+          <button onClick={onClose} aria-label="Close" className="text-ink-soft hover:text-ink">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-3.5">
@@ -263,7 +273,11 @@ export function QuickNeedModal({ isOpen, institutionId, onClose, onSuccess }: Qu
             <h3 className="font-display text-base font-bold text-ink">Ask for Help</h3>
             <p className="text-xs text-ink-soft">Declare a challenge for deterministic helper matching</p>
           </div>
-          <button onClick={onClose} className="text-ink-soft hover:text-ink">✕</button>
+          <button onClick={onClose} aria-label="Close" className="text-ink-soft hover:text-ink">
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-3">

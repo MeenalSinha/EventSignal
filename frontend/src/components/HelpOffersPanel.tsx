@@ -230,8 +230,11 @@ export function HelpOffersPanel({
               ))}
             </select>
           ) : (
-            <div className="rounded-xl border border-line bg-paper-warm px-3 py-1.5 text-xs font-semibold text-ink">
-              🏛️ {currentInst?.institution_name || currentInst?.institution_slug || "College Workspace"}
+            <div className="flex items-center gap-1.5 rounded-xl border border-line bg-paper-warm px-3 py-1.5 text-xs font-semibold text-ink">
+              <svg className="h-3.5 w-3.5 text-teal shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+              <span>{currentInst?.institution_name || currentInst?.institution_slug || "College Workspace"}</span>
             </div>
           )}
 
@@ -659,16 +662,22 @@ export function HelpOffersPanel({
               </div>
               <button
                 onClick={() => setRequestingOffer(null)}
+                aria-label="Close"
                 className="rounded-lg p-1.5 text-ink-soft hover:bg-paper-warm hover:text-ink"
               >
-                ✕
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
             {requestSuccess ? (
               <div className="mt-4 space-y-4">
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs text-emerald-800">
-                  🎉 {requestSuccess}
+                <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-medium text-emerald-800">
+                  <svg className="h-4 w-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{requestSuccess}</span>
                 </div>
                 <div className="text-right">
                   <button

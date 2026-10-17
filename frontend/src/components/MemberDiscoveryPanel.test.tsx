@@ -74,7 +74,7 @@ describe("MemberDiscoveryPanel", () => {
 
     expect(await screen.findByText("Sarah Alum")).toBeInTheDocument();
     expect(screen.getByText("alumni")).toBeInTheDocument();
-    expect(screen.getByText("🎖️ Former ACM Chair")).toBeInTheDocument();
+    expect(screen.getByText("Former ACM Chair")).toBeInTheDocument();
     expect(screen.getByText("Product Manager at Google")).toBeInTheDocument();
     expect(screen.getByText("2 Help Offers")).toBeInTheDocument();
     expect(screen.getByText("Portfolio Reviews")).toBeInTheDocument();

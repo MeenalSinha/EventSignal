@@ -75,7 +75,9 @@ export function AuthModal({
             className="rounded-lg p-1 text-ink-soft hover:bg-paper-warm hover:text-ink"
             aria-label="Close dialog"
           >
-            ✕
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -139,7 +141,9 @@ export function AuthModal({
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
             {promptDescription && (
               <div className="rounded-xl border border-teal/30 bg-teal-wash p-3 text-xs text-teal flex items-start gap-2">
-                <span>🔒</span>
+                <svg className="h-4 w-4 text-teal shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
                 <div>
                   <p className="font-semibold text-ink">Authentication Required</p>
                   <p className="text-[11px] text-ink-soft mt-0.5">{promptDescription}</p>

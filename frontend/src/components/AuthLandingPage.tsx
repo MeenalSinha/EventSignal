@@ -109,8 +109,10 @@ export function AuthLandingPage({
             {/* Feature Highlights Grid */}
             <div className="grid sm:grid-cols-3 gap-3.5 pt-2">
               <div className="rounded-xl border border-line bg-card p-3.5 shadow-xs">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold mb-2 text-sm">
-                  ✓
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold mb-2">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
                 </div>
                 <h4 className="text-xs font-bold text-ink">Evidence-Backed</h4>
                 <p className="mt-1 text-[11px] text-ink-soft leading-normal">
@@ -119,8 +121,10 @@ export function AuthLandingPage({
               </div>
 
               <div className="rounded-xl border border-line bg-card p-3.5 shadow-xs">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold mb-2 text-sm">
-                  🤝
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold mb-2">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
                 </div>
                 <h4 className="text-xs font-bold text-ink">Peer Mentorship</h4>
                 <p className="mt-1 text-[11px] text-ink-soft leading-normal">
@@ -129,8 +133,10 @@ export function AuthLandingPage({
               </div>
 
               <div className="rounded-xl border border-line bg-card p-3.5 shadow-xs">
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold mb-2 text-sm">
-                  🏛️
+                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold mb-2">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                  </svg>
                 </div>
                 <h4 className="text-xs font-bold text-ink">Campus Memory</h4>
                 <p className="mt-1 text-[11px] text-ink-soft leading-normal">
@@ -185,7 +191,9 @@ export function AuthLandingPage({
               {/* Error Banner */}
               {error && (
                 <div className="mb-4 rounded-xl border border-alert/30 bg-alert-wash p-3 text-xs text-alert flex items-start gap-2">
-                  <span className="font-bold">⚠️</span>
+                  <svg className="h-4 w-4 text-alert shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
                   <div className="flex-1">{error}</div>
                 </div>
               )}

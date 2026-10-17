@@ -267,22 +267,43 @@ export function InstitutionWorkspacePanel({
                 <h2 className="font-display text-2xl font-bold tracking-tight text-ink sm:text-3xl">
                   {selectedInst.name}
                 </h2>
-                <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
-                  ✓ Verified Institutional Workspace
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                  <svg className="h-3 w-3 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                  Verified Institutional Workspace
                 </span>
               </div>
 
               <div className="flex flex-wrap items-center gap-4 text-sm text-ink-soft">
-                {selectedInst.location && <span>📍 {selectedInst.location}</span>}
-                {selectedInst.domain && <span>🌐 {selectedInst.domain}</span>}
+                {selectedInst.location && (
+                  <span className="inline-flex items-center gap-1">
+                    <svg className="h-3.5 w-3.5 text-ink-soft shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {selectedInst.location}
+                  </span>
+                )}
+                {selectedInst.domain && (
+                  <span className="inline-flex items-center gap-1">
+                    <svg className="h-3.5 w-3.5 text-ink-soft shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                    </svg>
+                    {selectedInst.domain}
+                  </span>
+                )}
                 {selectedInst.website_url && (
                   <a
                     href={selectedInst.website_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-accent hover:underline"
+                    className="inline-flex items-center gap-1 text-accent hover:underline"
                   >
-                    Visit Campus Site ↗
+                    Visit Campus Site
+                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                    </svg>
                   </a>
                 )}
               </div>
@@ -564,9 +585,12 @@ export function InstitutionWorkspacePanel({
               <h3 className="font-display text-xl font-bold">Register College Workspace</h3>
               <button
                 onClick={() => setShowCreateInst(false)}
+                aria-label="Close"
                 className="rounded-lg p-1 text-ink-soft hover:bg-paper-warm"
               >
-                ✕
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 

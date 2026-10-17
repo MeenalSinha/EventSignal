@@ -310,7 +310,10 @@ export function Header({
                     }}
                     className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs font-medium text-ink hover:bg-page transition"
                   >
-                    <span>🎓</span> View & Edit Profile
+                    <svg className="h-4 w-4 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5" />
+                    </svg>
+                    <span>View & Edit Profile</span>
                   </button>
                   <button
                     onClick={() => {
@@ -319,7 +322,10 @@ export function Header({
                     }}
                     className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs font-medium text-ink hover:bg-page transition"
                   >
-                    <span>🏛️</span> College Workspaces
+                    <svg className="h-4 w-4 text-ink-soft" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z" />
+                    </svg>
+                    <span>College Workspaces</span>
                   </button>
                   <div className="border-t border-line my-1" />
                   <button
@@ -329,7 +335,10 @@ export function Header({
                     }}
                     className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs font-medium text-alert hover:bg-alert-wash transition"
                   >
-                    <span>🚪</span> Sign Out / Switch User
+                    <svg className="h-4 w-4 text-alert" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Sign Out / Switch User</span>
                   </button>
                 </div>
               )}
