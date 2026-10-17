@@ -18,11 +18,14 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UTCDateTime, new_id
 
 if TYPE_CHECKING:
+    from app.models.alumni_profile import AlumniProfile
     from app.models.audit_log import AuditLog
     from app.models.campus_position import CampusPositionDefinition, CampusRoleAssignment
+    from app.models.help_offer import HelpOffer
     from app.models.membership import InstitutionMembership
     from app.models.opportunity import Opportunity
     from app.models.organizational_unit import OrganizationalUnit
+    from app.models.student_profile import StudentProfile
 
 
 class InstitutionStatus(enum.StrEnum):
@@ -129,4 +132,16 @@ class Institution(TimestampMixin, Base):
     )
     audit_logs: Mapped[list[AuditLog]] = relationship(
         back_populates="institution",
+    )
+    student_profiles: Mapped[list[StudentProfile]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
+    )
+    alumni_profiles: Mapped[list[AlumniProfile]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
+    )
+    help_offers: Mapped[list[HelpOffer]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
     )

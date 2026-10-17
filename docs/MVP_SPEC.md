@@ -74,10 +74,13 @@ The platform's distinguishing principle remains:
 | **Opportunity Discovery** | Filter and explore opportunities with date/mode validation and evidence cards | Implemented in Phase 3 |
 | **Evidence Assessment Engine** | Declarative policy-driven scoring (completeness, evidence quality, consistency) | Implemented in Phase 4 |
 | **Multi-Source Evaluation** | Cross-source conflict detection, competing values analysis, and source attribution | Implemented in Phase 4 |
-| **Student Profiles** | Self-reported skills, interests, and preferences with strict privacy controls | Implemented in Phase 2; UI in Phase 5 |
-| **Alumni Profiles** | Expertise, mentoring interests, and explicit consent gates (`willing_to_connect`) | Implemented in Phase 2; UI in Phase 5 |
-| **Explainable Matching** | Traceable match explanations (`MatchExplanation`) referencing specific profile attributes | Implemented in Phase 2; Scorer in Phase 5 |
-| **Purpose-Specific Connections** | Non-spam connection requests (`ConnectionRequest`) requiring explicit purpose categories | Implemented in Phase 2; UI in Phase 5 |
+| **Institutional Workspaces & RBAC** | Multi-college workspaces, tenant isolation, official campus positions, and audit logging | Implemented in Phase 5 |
+| **Student Profiles** | Self-reported skills, interests, and preferences with server-enforced privacy controls | Implemented in Phase 6 |
+| **Alumni Profiles** | Expertise, mentoring topics, and explicit consent gates (`willing_to_help`) | Implemented in Phase 6 |
+| **Explicit Help Offers** | Configurable help offers, lifecycle management (`active`, `paused`, `archived`), and discovery | Implemented in Phase 6 |
+| **Campus Network Discovery** | Privacy-aware, institution-scoped discovery of people and active help offers | Implemented in Phase 6 |
+| **Purpose-Specific Help Requests** | Structured requests on published help offers with introductory intent | Implemented in Phase 6 |
+| **Explainable Matching** | Gap-to-Helper matching connecting student opportunity needs to suitable helpers | Planned for Phase 8 |
 
 ---
 

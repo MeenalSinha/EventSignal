@@ -32,3 +32,6 @@ def record_audit_event(
     session.add(log)
     session.flush()
     return log
+
+
+log_audit_event = record_audit_event

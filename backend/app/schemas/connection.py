@@ -1,8 +1,8 @@
-"""Schema for ConnectionRequest.
+"""Schema for ConnectionRequest and HelpOffer requests.
 
-Connection requests may only be sent to alumni profiles that have explicitly
-declared willingness to connect (``willing_to_connect = True``). This validation
-is enforced at the API layer, not in the Pydantic schema alone.
+Connection requests may only be sent to alumni profiles or published help offers
+that have explicitly declared willingness to connect / help.
+This validation is enforced at the API layer, not in the Pydantic schema alone.
 """
 
 from __future__ import annotations
@@ -19,6 +19,7 @@ class ConnectionRequestCreate(BaseModel):
 
     requester_profile_id: str = Field(min_length=1)
     recipient_profile_id: str = Field(min_length=1)
+    help_offer_id: str | None = None
     purpose: ConnectionPurpose
     # Message is optional but required when purpose is OTHER.
     message: str | None = Field(default=None, max_length=2000)
@@ -32,8 +33,15 @@ class ConnectionRequestCreate(BaseModel):
     @model_validator(mode="after")
     def _cannot_connect_to_self(self) -> ConnectionRequestCreate:
         if self.requester_profile_id == self.recipient_profile_id:
-            raise ValueError("A student cannot send a connection request to themselves")
+            raise ValueError("A member cannot send a connection request to themselves")
         return self
+
+
+class HelpOfferRequestCreate(BaseModel):
+    """Payload for requesting assistance on a published help offer."""
+
+    purpose: ConnectionPurpose = ConnectionPurpose.SKILL_MENTORING
+    message: str | None = Field(default=None, max_length=2000)
 
 
 class ConnectionRequestRead(BaseModel):
@@ -42,6 +50,7 @@ class ConnectionRequestRead(BaseModel):
     id: str
     requester_profile_id: str
     recipient_profile_id: str
+    help_offer_id: str | None = None
     purpose: ConnectionPurpose
     message: str | None
     status: RequestStatus

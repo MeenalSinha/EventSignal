@@ -13,9 +13,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, new_id
 
 if TYPE_CHECKING:
+    from app.models.alumni_profile import AlumniProfile
     from app.models.audit_log import AuditLog
     from app.models.campus_position import CampusRoleAssignment
+    from app.models.help_offer import HelpOffer
     from app.models.membership import InstitutionMembership
+    from app.models.student_profile import StudentProfile
 
 
 class User(TimestampMixin, Base):
@@ -55,4 +58,19 @@ class User(TimestampMixin, Base):
     audit_logs: Mapped[list[AuditLog]] = relationship(
         back_populates="actor",
         foreign_keys="[AuditLog.actor_user_id]",
+    )
+    student_profiles: Mapped[list[StudentProfile]] = relationship(
+        back_populates="user",
+        foreign_keys="[StudentProfile.user_id]",
+        cascade="all, delete-orphan",
+    )
+    alumni_profiles: Mapped[list[AlumniProfile]] = relationship(
+        back_populates="user",
+        foreign_keys="[AlumniProfile.user_id]",
+        cascade="all, delete-orphan",
+    )
+    help_offers: Mapped[list[HelpOffer]] = relationship(
+        back_populates="user",
+        foreign_keys="[HelpOffer.user_id]",
+        cascade="all, delete-orphan",
     )

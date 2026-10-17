@@ -62,6 +62,9 @@ class ConnectionRequest(TimestampMixin, Base):
     recipient_profile_id: Mapped[str] = mapped_column(
         ForeignKey("alumni_profiles.id", ondelete="CASCADE"), nullable=False, index=True
     )
+    help_offer_id: Mapped[str | None] = mapped_column(
+        ForeignKey("help_offers.id", ondelete="SET NULL"), nullable=True, index=True
+    )
 
     purpose: Mapped[ConnectionPurpose] = mapped_column(
         Enum(

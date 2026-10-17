@@ -10,7 +10,15 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api import assessment, auth, health, institutions, opportunities
+from app.api import (
+    assessment,
+    auth,
+    health,
+    help_offers,
+    institutions,
+    opportunities,
+    profiles,
+)
 from app.core.config import Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
@@ -74,5 +82,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(assessment.router)
     v1.include_router(auth.router)
     v1.include_router(institutions.router)
+    v1.include_router(profiles.router)
+    v1.include_router(help_offers.router)
     app.include_router(v1)
     return app

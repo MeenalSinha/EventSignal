@@ -16,7 +16,7 @@ from app.database import (
     missing_tables,
 )
 from app.main import create_app
-from app.models import AlumniProfile, Base, Opportunity, SourceReference, StudentProfile
+from app.models import AlumniProfile, Base, HelpOffer, Opportunity, SourceReference, StudentProfile
 
 
 def test_startup_creates_directory_database_and_tables(
@@ -48,6 +48,7 @@ def test_no_rows_are_seeded_at_startup(session: Session) -> None:
     assert session.scalar(select(func.count()).select_from(SourceReference)) == 0
     assert session.scalar(select(func.count()).select_from(StudentProfile)) == 0
     assert session.scalar(select(func.count()).select_from(AlumniProfile)) == 0
+    assert session.scalar(select(func.count()).select_from(HelpOffer)) == 0
 
 
 def test_init_db_is_idempotent(client: TestClient) -> None:
@@ -128,6 +129,7 @@ def test_metadata_registers_expected_tables() -> None:
         "campus_position_definitions",
         "campus_role_assignments",
         "audit_logs",
+        "help_offers",
     }
     assert set(Base.metadata.tables) == expected
 

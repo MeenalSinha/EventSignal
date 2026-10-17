@@ -37,6 +37,12 @@ from app.models.campus_position import (
 )
 from app.models.connection_request import ConnectionPurpose, ConnectionRequest, RequestStatus
 from app.models.field_evidence import EvidenceStatus, ExtractionMethod, FieldEvidence
+from app.models.help_offer import (
+    HelpOffer,
+    HelpOfferAudience,
+    HelpOfferDeliveryMode,
+    HelpOfferStatus,
+)
 from app.models.institution import Institution, InstitutionStatus, InstitutionVerificationStatus
 from app.models.match_explanation import MatchedEntityType, MatchExplanation
 from app.models.membership import InstitutionMembership, InstitutionRole, MembershipStatus
@@ -61,6 +67,10 @@ __all__ = [
     "EvidenceStatus",
     "ExtractionMethod",
     "FieldEvidence",
+    "HelpOffer",
+    "HelpOfferAudience",
+    "HelpOfferDeliveryMode",
+    "HelpOfferStatus",
     "Institution",
     "InstitutionMembership",
     "InstitutionRole",

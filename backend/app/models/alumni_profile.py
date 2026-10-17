@@ -7,7 +7,7 @@ Willingness to receive connection requests is explicit and required. No
 connection request may be sent to a profile whose ``willing_to_connect``
 flag is False.
 
-Migration note: introduced in Alembic revision 0001.
+Ownership: linked to authenticated User and Institution workspace.
 """
 
 from __future__ import annotations
@@ -15,8 +15,8 @@ from __future__ import annotations
 import enum
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, Enum, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import JSON, Boolean, Enum, ForeignKey, String, Text, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, new_id
 
@@ -33,6 +33,26 @@ class AlumniProfile(TimestampMixin, Base):
     __tablename__ = "alumni_profiles"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+
+    # Ownership & institutional context
+    user_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    institution_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("institutions.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    membership_id: Mapped[str | None] = mapped_column(
+        String(36),
+        ForeignKey("institution_memberships.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
 
     # Display name — self-reported, not verified.
     display_name: Mapped[str | None] = mapped_column(String(200))
@@ -71,3 +91,15 @@ class AlumniProfile(TimestampMixin, Base):
 
     # Extensible metadata bag for future structured fields.
     extra_data: Mapped[dict[str, Any] | None] = mapped_column(JSON)
+
+    # Relationships
+    user: Mapped[Any] = relationship(
+        "User", back_populates="alumni_profiles", foreign_keys=[user_id]
+    )
+    institution: Mapped[Any] = relationship(
+        "Institution", back_populates="alumni_profiles", foreign_keys=[institution_id]
+    )
+
+    __table_args__ = (
+        UniqueConstraint("user_id", "institution_id", name="uq_alumni_profile_user_institution"),
+    )

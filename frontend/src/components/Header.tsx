@@ -3,12 +3,15 @@ import type { HealthResponse } from "../types/health";
 import type { UserProfile } from "../types/auth";
 import { ConnectionStatus, SIGNAL_RULE_STYLES, describeConnection } from "./ConnectionStatus";
 
+export type AppView = "opportunities" | "institutions" | "network" | "offers";
+
 interface HeaderProps {
   health: ResourceState<HealthResponse>;
-  currentView?: "opportunities" | "institutions";
-  onViewChange?: (view: "opportunities" | "institutions") => void;
+  currentView?: AppView;
+  onViewChange?: (view: AppView) => void;
   currentUser?: UserProfile | null;
   onOpenAuth?: () => void;
+  onOpenProfile?: () => void;
 }
 
 export function Header({
@@ -17,6 +20,7 @@ export function Header({
   onViewChange,
   currentUser = null,
   onOpenAuth,
+  onOpenProfile,
 }: HeaderProps) {
   const { tone } = describeConnection(health);
   return (
@@ -31,7 +35,7 @@ export function Header({
           </div>
 
           {onViewChange && (
-            <div className="hidden sm:flex items-center gap-1 rounded-xl bg-paper-warm p-1 text-xs font-semibold">
+            <div className="hidden md:flex items-center gap-1 rounded-xl bg-paper-warm p-1 text-xs font-semibold">
               <button
                 onClick={() => onViewChange("opportunities")}
                 className={`rounded-lg px-3 py-1.5 transition ${
@@ -40,7 +44,7 @@ export function Header({
                     : "text-ink-soft hover:text-ink"
                 }`}
               >
-                Opportunities & Evidence
+                Opportunities
               </button>
               <button
                 onClick={() => onViewChange("institutions")}
@@ -52,11 +56,40 @@ export function Header({
               >
                 College Workspaces
               </button>
+              <button
+                onClick={() => onViewChange("network")}
+                className={`rounded-lg px-3 py-1.5 transition ${
+                  currentView === "network"
+                    ? "bg-paper text-ink shadow-sm"
+                    : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Campus Network
+              </button>
+              <button
+                onClick={() => onViewChange("offers")}
+                className={`rounded-lg px-3 py-1.5 transition ${
+                  currentView === "offers"
+                    ? "bg-paper text-ink shadow-sm"
+                    : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Help Offers
+              </button>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
+          {currentUser && onOpenProfile && (
+            <button
+              onClick={onOpenProfile}
+              className="inline-flex items-center gap-1 rounded-xl border border-line bg-paper px-2.5 py-1.5 text-xs font-semibold text-ink transition hover:bg-paper-warm"
+            >
+              <span>🎓 My Profile</span>
+            </button>
+          )}
+
           {onOpenAuth && (
             <button
               onClick={onOpenAuth}
@@ -79,24 +112,40 @@ export function Header({
         </div>
       </div>
 
-      {/* Mobile nav switcher */}
+      {/* Mobile / Tablet nav switcher */}
       {onViewChange && (
-        <div className="flex sm:hidden border-b border-line bg-paper-warm p-1 text-xs font-semibold">
+        <div className="flex md:hidden border-b border-line bg-paper-warm p-1 text-xs font-semibold overflow-x-auto">
           <button
             onClick={() => onViewChange("opportunities")}
-            className={`flex-1 py-1.5 text-center transition ${
-              currentView === "opportunities" ? "bg-paper text-ink shadow-sm" : "text-ink-soft"
+            className={`flex-1 min-w-[90px] py-1.5 text-center transition ${
+              currentView === "opportunities" ? "bg-paper text-ink shadow-sm rounded-lg" : "text-ink-soft"
             }`}
           >
             Opportunities
           </button>
           <button
             onClick={() => onViewChange("institutions")}
-            className={`flex-1 py-1.5 text-center transition ${
-              currentView === "institutions" ? "bg-paper text-ink shadow-sm" : "text-ink-soft"
+            className={`flex-1 min-w-[100px] py-1.5 text-center transition ${
+              currentView === "institutions" ? "bg-paper text-ink shadow-sm rounded-lg" : "text-ink-soft"
             }`}
           >
-            College Workspaces
+            Workspaces
+          </button>
+          <button
+            onClick={() => onViewChange("network")}
+            className={`flex-1 min-w-[90px] py-1.5 text-center transition ${
+              currentView === "network" ? "bg-paper text-ink shadow-sm rounded-lg" : "text-ink-soft"
+            }`}
+          >
+            Network
+          </button>
+          <button
+            onClick={() => onViewChange("offers")}
+            className={`flex-1 min-w-[90px] py-1.5 text-center transition ${
+              currentView === "offers" ? "bg-paper text-ink shadow-sm rounded-lg" : "text-ink-soft"
+            }`}
+          >
+            Help Offers
           </button>
         </div>
       )}
