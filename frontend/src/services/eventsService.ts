@@ -102,13 +102,15 @@ export function parseOpportunityList(body: unknown): OpportunityList {
 }
 
 /** Fetch the list of all stored opportunities. */
-export async function fetchOpportunities(signal?: AbortSignal): Promise<OpportunityList> {
-  const { body } = await requestJson(OPPORTUNITIES_PATH, signal ? { signal } : {});
+export async function fetchOpportunities(signal?: AbortSignal, institutionId?: string): Promise<OpportunityList> {
+  const query = institutionId ? `?institution_id=${encodeURIComponent(institutionId)}` : "";
+  const { body } = await requestJson(`${OPPORTUNITIES_PATH}${query}`, signal ? { signal } : {});
   return parseOpportunityList(body);
 }
 
 /** Legacy alias used by App.tsx useRemoteResource hook. Uses EVENTS_PATH for route compatibility. */
-export async function fetchEvents(signal?: AbortSignal): Promise<OpportunityList> {
-  const { body } = await requestJson(EVENTS_PATH, signal ? { signal } : {});
+export async function fetchEvents(signal?: AbortSignal, institutionId?: string): Promise<OpportunityList> {
+  const query = institutionId ? `?institution_id=${encodeURIComponent(institutionId)}` : "";
+  const { body } = await requestJson(`${EVENTS_PATH}${query}`, signal ? { signal } : {});
   return parseOpportunityList(body);
 }

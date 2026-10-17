@@ -7,6 +7,7 @@ export interface User {
   is_active: boolean;
   is_superuser: boolean;
   created_at: string;
+  is_demo?: boolean;
 }
 
 export interface UserMembership {
@@ -22,6 +23,7 @@ export interface UserMembership {
 export interface UserProfile {
   user: User;
   memberships: UserMembership[];
+  is_demo?: boolean;
 }
 
 export interface TokenResponse {
@@ -29,3 +31,9 @@ export interface TokenResponse {
   token_type: string;
   expires_in_seconds: number;
 }
+
+export interface DemoStatusResponse {
+  demo_mode_enabled: boolean;
+  demo_dataset_seeded: boolean;
+}
+

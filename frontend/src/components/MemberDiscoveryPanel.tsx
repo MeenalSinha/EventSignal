@@ -261,13 +261,13 @@ export function MemberDiscoveryPanel({
                           Domain: {ap.professional_domain} {ap.years_of_experience ? `• ${ap.years_of_experience} yrs exp` : ""}
                         </div>
                       )}
-                      {ap.mentoring_topics && ap.mentoring_topics.length > 0 && (
+                      {ap.mentoring_topics && (
                         <div className="mt-2">
                           <span className="text-[10px] font-semibold text-ink-soft uppercase tracking-wider">
                             Willing to help with:
                           </span>
                           <div className="mt-1 flex flex-wrap gap-1">
-                            {ap.mentoring_topics.map((t, i) => (
+                            {(Array.isArray(ap.mentoring_topics) ? ap.mentoring_topics : String(ap.mentoring_topics).split(",").map((s) => s.trim()).filter(Boolean)).map((t, i) => (
                               <span key={i} className="rounded bg-paper-warm px-1.5 py-0.5 text-[10px] text-ink">
                                 {t}
                               </span>
@@ -275,9 +275,9 @@ export function MemberDiscoveryPanel({
                           </div>
                         </div>
                       )}
-                      {ap.skills && ap.skills.length > 0 && (
+                      {ap.skills && (
                         <div className="mt-1 flex flex-wrap gap-1">
-                          {ap.skills.map((s, i) => (
+                          {(Array.isArray(ap.skills) ? ap.skills : String(ap.skills).split(",").map((s) => s.trim()).filter(Boolean)).map((s, i) => (
                             <span key={i} className="rounded bg-paper-warm/70 px-1.5 py-0.5 text-[10px] text-ink-soft">
                               {s}
                             </span>
@@ -296,21 +296,21 @@ export function MemberDiscoveryPanel({
                           {sp.degree_level} {sp.graduation_year ? `Class of ${sp.graduation_year}` : ""}
                         </div>
                       )}
-                      {sp.skills && sp.skills.length > 0 && (
+                      {sp.skills && (
                         <div className="mt-2 flex flex-wrap gap-1">
-                          {sp.skills.map((s, i) => (
+                          {(Array.isArray(sp.skills) ? sp.skills : String(sp.skills).split(",").map((s) => s.trim()).filter(Boolean)).map((s, i) => (
                             <span key={i} className="rounded bg-paper-warm px-1.5 py-0.5 text-[10px] text-ink">
                               {s}
                             </span>
                           ))}
                         </div>
                       )}
-                      {sp.career_goals && sp.career_goals.length > 0 && (
+                      {sp.career_goals && (
                         <div className="mt-1 flex items-center gap-1 text-[11px] text-ink-soft">
                           <svg className="h-3.5 w-3.5 text-ink-soft shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.8}>
                             <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                           </svg>
-                          <span>Goals: {sp.career_goals.join(", ")}</span>
+                          <span>Goals: {Array.isArray(sp.career_goals) ? sp.career_goals.join(", ") : String(sp.career_goals)}</span>
                         </div>
                       )}
                     </div>

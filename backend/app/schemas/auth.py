@@ -44,6 +44,7 @@ class UserResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     extra_data: dict[str, Any] | None = None
+    is_demo: bool = False
 
 
 class UserProfileResponse(BaseModel):
@@ -51,3 +52,4 @@ class UserProfileResponse(BaseModel):
 
     user: UserResponse
     memberships: list[dict[str, Any]]
+    is_demo: bool = False

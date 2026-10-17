@@ -1,23 +1,35 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { UserProfile } from "../types/auth";
-import { loginUser, registerUser, fetchCurrentUser } from "../services/authService";
+import { loginUser, registerUser, fetchCurrentUser, fetchDemoStatus } from "../services/authService";
 
 interface AuthLandingPageProps {
   onAuthSuccess: (profile: UserProfile) => void;
   onContinueAsGuest: () => void;
+  onDemoAuthSuccess?: (profile: UserProfile) => void;
 }
 
 export function AuthLandingPage({
   onAuthSuccess,
   onContinueAsGuest,
+  onDemoAuthSuccess,
 }: AuthLandingPageProps) {
-  const [isRegister, setIsRegister] = useState(false);
+  const [authMode, setAuthMode] = useState<"signin" | "register" | "demo">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [demoEmail, setDemoEmail] = useState("");
+  const [demoPassword, setDemoPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [showDemoPassword, setShowDemoPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [demoEnabled, setDemoEnabled] = useState(false);
+
+  useEffect(() => {
+    fetchDemoStatus().then((status) => {
+      setDemoEnabled(status.demo_mode_enabled);
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,7 +37,7 @@ export function AuthLandingPage({
     setLoading(true);
 
     try {
-      if (isRegister) {
+      if (authMode === "register") {
         if (!fullName.trim()) {
           throw new Error("Full name is required.");
         }
@@ -33,13 +45,22 @@ export function AuthLandingPage({
           throw new Error("Password must be at least 8 characters.");
         }
         await registerUser(email.trim(), password, fullName.trim());
+      } else if (authMode === "demo") {
+        if (!demoEmail.trim() || !demoPassword) {
+          throw new Error("Demo email and password are required.");
+        }
+        await loginUser(demoEmail.trim(), demoPassword);
       } else {
         await loginUser(email.trim(), password);
       }
 
       const profile = await fetchCurrentUser();
       if (profile) {
-        onAuthSuccess(profile);
+        if (authMode === "demo" && onDemoAuthSuccess) {
+          onDemoAuthSuccess(profile);
+        } else {
+          onAuthSuccess(profile);
+        }
       } else {
         throw new Error("Could not retrieve profile after authentication.");
       }
@@ -148,15 +169,23 @@ export function AuthLandingPage({
 
           {/* Right Column: Authentication Card */}
           <div className="lg:col-span-5 w-full">
-            <div className="rounded-2xl border border-line bg-card p-6 sm:p-8 shadow-md">
+            <div className={`rounded-2xl border ${authMode === 'demo' ? 'border-amber-400/60 ring-1 ring-amber-400/30' : 'border-line'} bg-card p-6 sm:p-8 shadow-md transition`}>
               {/* Card Header & Tab Switcher */}
               <div className="flex items-center justify-between border-b border-line pb-4 mb-6">
                 <div>
                   <h3 className="font-display text-lg font-bold text-ink">
-                    {isRegister ? "Create Account" : "Sign In"}
+                    {authMode === "demo"
+                      ? "Demo Presentation Access"
+                      : authMode === "register"
+                      ? "Create Account"
+                      : "Sign In"}
                   </h3>
                   <p className="text-xs text-ink-soft mt-0.5">
-                    {isRegister ? "Join your campus network" : "Access your student workspace"}
+                    {authMode === "demo"
+                      ? "Presentation mode for evaluators & judges"
+                      : authMode === "register"
+                      ? "Join your campus network"
+                      : "Access your student workspace"}
                   </p>
                 </div>
 
@@ -164,11 +193,11 @@ export function AuthLandingPage({
                   <button
                     type="button"
                     onClick={() => {
-                      setIsRegister(false);
+                      setAuthMode("signin");
                       setError(null);
                     }}
-                    className={`rounded-md px-3 py-1 transition ${
-                      !isRegister ? "bg-card text-ink shadow-xs" : "text-ink-soft hover:text-ink"
+                    className={`rounded-md px-2.5 py-1 transition ${
+                      authMode === "signin" ? "bg-card text-ink shadow-xs" : "text-ink-soft hover:text-ink"
                     }`}
                   >
                     Sign In
@@ -176,17 +205,51 @@ export function AuthLandingPage({
                   <button
                     type="button"
                     onClick={() => {
-                      setIsRegister(true);
+                      setAuthMode("register");
                       setError(null);
                     }}
-                    className={`rounded-md px-3 py-1 transition ${
-                      isRegister ? "bg-card text-ink shadow-xs" : "text-ink-soft hover:text-ink"
+                    className={`rounded-md px-2.5 py-1 transition ${
+                      authMode === "register" ? "bg-card text-ink shadow-xs" : "text-ink-soft hover:text-ink"
                     }`}
                   >
                     Register
                   </button>
+                  {demoEnabled && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("demo");
+                        setError(null);
+                      }}
+                      className={`flex items-center gap-1 rounded-md px-2.5 py-1 transition ${
+                        authMode === "demo"
+                          ? "bg-amber-100 text-amber-900 font-bold shadow-xs border border-amber-300"
+                          : "text-amber-700 hover:text-amber-900"
+                      }`}
+                    >
+                      <svg className="h-3 w-3 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                      <span>Demo</span>
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {/* Demo Mode Notice */}
+              {authMode === "demo" && (
+                <div className="mb-4 rounded-xl border border-amber-300/80 bg-amber-50/70 p-3 text-xs text-amber-900 space-y-1">
+                  <div className="flex items-center gap-1.5 font-bold">
+                    <svg className="h-4 w-4 text-amber-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span>Demonstration Presentation Mode</span>
+                  </div>
+                  <p className="text-[11px] leading-relaxed text-amber-800">
+                    Authenticate using your dedicated demo credentials. Demo access loads an isolated collegiate dataset for live evaluation across all 8 modules.
+                  </p>
+                </div>
+              )}
 
               {/* Error Banner */}
               {error && (
@@ -200,7 +263,7 @@ export function AuthLandingPage({
 
               {/* Form */}
               <form onSubmit={handleSubmit} className="space-y-4">
-                {isRegister && (
+                {authMode === "register" && (
                   <div>
                     <label className="block text-xs font-semibold text-ink mb-1">
                       Full Name *
@@ -216,47 +279,94 @@ export function AuthLandingPage({
                   </div>
                 )}
 
-                <div>
-                  <label className="block text-xs font-semibold text-ink mb-1">
-                    Email Address *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@college.edu or personal email"
-                    className="w-full rounded-xl border border-line bg-page px-3.5 py-2.5 text-xs text-ink placeholder:text-ink-soft/70 focus:border-teal focus:bg-card focus:outline-hidden focus:ring-1 focus:ring-teal transition"
-                  />
-                </div>
+                {authMode === "demo" ? (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-ink mb-1">
+                        Demo Account Email *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={demoEmail}
+                        onChange={(e) => setDemoEmail(e.target.value)}
+                        placeholder="demo@eventsignal.local"
+                        className="w-full rounded-xl border border-line bg-page px-3.5 py-2.5 text-xs text-ink placeholder:text-ink-soft/70 focus:border-amber-500 focus:bg-card focus:outline-hidden focus:ring-1 focus:ring-amber-500 transition"
+                      />
+                    </div>
 
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <label className="block text-xs font-semibold text-ink">
-                      Password *
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="text-[11px] font-medium text-teal hover:underline focus:outline-hidden"
-                    >
-                      {showPassword ? "Hide password" : "Show password"}
-                    </button>
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder={isRegister ? "At least 8 characters" : "Enter your password"}
-                    className="w-full rounded-xl border border-line bg-page px-3.5 py-2.5 text-xs text-ink placeholder:text-ink-soft/70 focus:border-teal focus:bg-card focus:outline-hidden focus:ring-1 focus:ring-teal transition"
-                  />
-                </div>
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-ink">
+                          Demo Password *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowDemoPassword(!showDemoPassword)}
+                          className="text-[11px] font-medium text-amber-700 hover:underline focus:outline-hidden"
+                        >
+                          {showDemoPassword ? "Hide password" : "Show password"}
+                        </button>
+                      </div>
+                      <input
+                        type={showDemoPassword ? "text" : "password"}
+                        required
+                        value={demoPassword}
+                        onChange={(e) => setDemoPassword(e.target.value)}
+                        placeholder="Enter configured demo password"
+                        className="w-full rounded-xl border border-line bg-page px-3.5 py-2.5 text-xs text-ink placeholder:text-ink-soft/70 focus:border-amber-500 focus:bg-card focus:outline-hidden focus:ring-1 focus:ring-amber-500 transition"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label className="block text-xs font-semibold text-ink mb-1">
+                        Email Address *
+                      </label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="student@college.edu or personal email"
+                        className="w-full rounded-xl border border-line bg-page px-3.5 py-2.5 text-xs text-ink placeholder:text-ink-soft/70 focus:border-teal focus:bg-card focus:outline-hidden focus:ring-1 focus:ring-teal transition"
+                      />
+                    </div>
+
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-semibold text-ink">
+                          Password *
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="text-[11px] font-medium text-teal hover:underline focus:outline-hidden"
+                        >
+                          {showPassword ? "Hide password" : "Show password"}
+                        </button>
+                      </div>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder={authMode === "register" ? "At least 8 characters" : "Enter your password"}
+                        className="w-full rounded-xl border border-line bg-page px-3.5 py-2.5 text-xs text-ink placeholder:text-ink-soft/70 focus:border-teal focus:bg-card focus:outline-hidden focus:ring-1 focus:ring-teal transition"
+                      />
+                    </div>
+                  </>
+                )}
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full mt-2 flex items-center justify-center gap-2 rounded-xl bg-teal py-2.5 px-4 text-xs font-bold text-white shadow-xs hover:bg-teal-deep focus:outline-hidden focus:ring-2 focus:ring-teal focus:ring-offset-2 disabled:opacity-50 transition"
+                  className={`w-full mt-2 flex items-center justify-center gap-2 rounded-xl py-2.5 px-4 text-xs font-bold text-white shadow-xs focus:outline-hidden focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition ${
+                    authMode === "demo"
+                      ? "bg-amber-600 hover:bg-amber-700 focus:ring-amber-500"
+                      : "bg-teal hover:bg-teal-deep focus:ring-teal"
+                  }`}
                 >
                   {loading && (
                     <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -264,7 +374,9 @@ export function AuthLandingPage({
                   <span>
                     {loading
                       ? "Authenticating..."
-                      : isRegister
+                      : authMode === "demo"
+                      ? "Sign In to Demo Mode"
+                      : authMode === "register"
                       ? "Create Account"
                       : "Sign In to EventSignal"}
                   </span>
@@ -293,13 +405,27 @@ export function AuthLandingPage({
 
               {/* Toggle Prompt */}
               <div className="mt-4 text-center text-xs text-ink-soft">
-                {isRegister ? (
+                {authMode === "demo" ? (
+                  <p>
+                    Presenting to evaluators?{" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAuthMode("signin");
+                        setError(null);
+                      }}
+                      className="font-semibold text-teal hover:underline"
+                    >
+                      Return to Standard Sign In
+                    </button>
+                  </p>
+                ) : authMode === "register" ? (
                   <p>
                     Already have an account?{" "}
                     <button
                       type="button"
                       onClick={() => {
-                        setIsRegister(false);
+                        setAuthMode("signin");
                         setError(null);
                       }}
                       className="font-semibold text-teal hover:underline"
@@ -313,7 +439,7 @@ export function AuthLandingPage({
                     <button
                       type="button"
                       onClick={() => {
-                        setIsRegister(true);
+                        setAuthMode("register");
                         setError(null);
                       }}
                       className="font-semibold text-teal hover:underline"

@@ -50,21 +50,27 @@ export function MyProfileModal({ isOpen, onClose, currentUser }: MyProfileModalP
     if (!isOpen || !selectedInstId) return;
     let isMounted = true;
 
+    const toListString = (val: string[] | string | null | undefined): string => {
+      if (!val) return "";
+      if (Array.isArray(val)) return val.join(", ");
+      return String(val);
+    };
+
     if (isAlumni) {
       fetchMyAlumniProfile(selectedInstId)
         .then((p: AlumniProfile | null) => {
           if (!isMounted) return;
           if (p) {
-            setAlumniTitle(p.current_title || "");
-            setAlumniOrg(p.current_organization || "");
+            setAlumniTitle(p.current_title || (p as any).extra_data?.current_title || p.professional_domain || "");
+            setAlumniOrg(p.current_organization || (p as any).extra_data?.current_organization || "");
             setAlumniDomain(p.professional_domain || "");
             setAlumniIndustry(p.industry || "");
-            setAlumniExpYears(p.years_of_experience ?? "");
-            setAlumniSkills((p.skills || []).join(", "));
-            setAlumniTopics((p.mentoring_topics || []).join(", "));
-            setAlumniBio(p.bio || "");
-            setWillingToHelp(p.willing_to_help);
-            setMonthlyLimit(p.monthly_request_limit);
+            setAlumniExpYears(p.years_of_experience ?? (p as any).years_experience ?? "");
+            setAlumniSkills(toListString(p.skills));
+            setAlumniTopics(toListString(p.mentoring_topics ?? (p as any).mentoring_interests));
+            setAlumniBio(p.bio || (p as any).extra_data?.bio || "");
+            setWillingToHelp(p.willing_to_help ?? (p as any).willing_to_connect ?? true);
+            setMonthlyLimit(p.monthly_request_limit ?? (p as any).monthly_connection_limit ?? 5);
             setAlumniVisibility(p.visibility);
           } else {
             setAlumniTitle("");
@@ -91,13 +97,13 @@ export function MyProfileModal({ isOpen, onClose, currentUser }: MyProfileModalP
         .then((p: StudentProfile | null) => {
           if (!isMounted) return;
           if (p) {
-            setStudentHeadline(p.headline || "");
-            setStudentBio(p.bio || "");
-            setStudentDegree(p.degree_level || "");
-            setStudentGradYear(p.graduation_year ?? "");
-            setStudentSkills((p.skills || []).join(", "));
-            setStudentInterests((p.interests || []).join(", "));
-            setStudentGoals((p.career_goals || []).join(", "));
+            setStudentHeadline(p.headline || (p as any).extra_data?.headline || (p as any).display_name || "");
+            setStudentBio(p.bio || (p as any).extra_data?.bio || "");
+            setStudentDegree(p.degree_level || (p as any).extra_data?.degree_level || "");
+            setStudentGradYear(p.graduation_year ?? (p as any).extra_data?.graduation_year ?? "");
+            setStudentSkills(toListString(p.skills));
+            setStudentInterests(toListString(p.interests));
+            setStudentGoals(toListString(p.career_goals));
             setStudentVisibility(p.visibility);
           } else {
             setStudentHeadline("");

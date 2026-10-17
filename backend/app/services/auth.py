@@ -82,9 +82,13 @@ def get_user_by_email(session: Session, email: str) -> User | None:
 def create_user_token(user: User, settings: Settings) -> tuple[str, int]:
     """Issue a signed bearer token for the user."""
     expires_in_seconds = settings.auth_token_expire_minutes * 60
+    is_demo = bool(
+        user.extra_data and user.extra_data.get("is_demo") is True
+    )
     claims = {
         "email": user.email,
         "is_superuser": user.is_superuser,
+        "is_demo": is_demo,
     }
     token = create_access_token(
         subject=user.id,

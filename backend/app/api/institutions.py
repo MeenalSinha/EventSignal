@@ -98,12 +98,20 @@ def create_new_institution(
 )
 def get_all_institutions(
     db: Annotated[Session, Depends(get_db)],
+    current_user: Annotated[User | None, Depends(get_optional_current_user)] = None,
     status_filter: Annotated[InstitutionStatus | None, Query(alias="status")] = None,
     limit: Annotated[int, Query(ge=1, le=100)] = 50,
     offset: Annotated[int, Query(ge=0)] = 0,
 ) -> list[InstitutionResponse]:
     """Retrieve list of institutions."""
+    from app.services.demo_service import DEMO_INSTITUTION_ID, DemoService
+
     institutions = list_institutions(db, status=status_filter, limit=limit, offset=offset)
+    is_demo = bool(current_user and DemoService.is_demo_user(current_user))
+    if not is_demo:
+        # Hide private demonstration institution from ordinary users and guests
+        institutions = [inst for inst in institutions if inst.id != DEMO_INSTITUTION_ID]
+
     return [InstitutionResponse.model_validate(inst) for inst in institutions]
 
 

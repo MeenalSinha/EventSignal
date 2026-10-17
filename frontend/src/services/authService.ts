@@ -100,3 +100,33 @@ export async function fetchCurrentUser(): Promise<UserProfile | null> {
 export function logoutUser(): void {
   clearStoredToken();
 }
+
+export async function fetchDemoStatus(): Promise<{ demo_mode_enabled: boolean; demo_dataset_seeded: boolean }> {
+  try {
+    const response = await requestJson("/api/v1/auth/demo/status", { method: "GET" });
+    return response.body as { demo_mode_enabled: boolean; demo_dataset_seeded: boolean };
+  } catch {
+    return { demo_mode_enabled: false, demo_dataset_seeded: false };
+  }
+}
+
+export async function seedDemoEnvironment(): Promise<{ status: string; message: string }> {
+  const token = getStoredToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const response = await requestJson("/api/v1/auth/demo/seed", {
+    method: "POST",
+    headers,
+  });
+  return response.body as { status: string; message: string };
+}
+
+export async function resetDemoEnvironment(): Promise<{ status: string; message: string }> {
+  const token = getStoredToken();
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const response = await requestJson("/api/v1/auth/demo/reset", {
+    method: "POST",
+    headers,
+  });
+  return response.body as { status: string; message: string };
+}
+

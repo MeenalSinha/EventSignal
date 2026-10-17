@@ -56,6 +56,7 @@ class StudentProfileRead(BaseModel):
     preferred_opportunity_types: str | None
     location_preference: str | None
     visibility: StudentProfileVisibility
+    extra_data: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 
@@ -118,6 +119,7 @@ class AlumniProfileRead(BaseModel):
     willing_to_connect: bool
     monthly_connection_limit: int | None
     visibility: AlumniProfileVisibility
+    extra_data: dict[str, Any] | None = None
     created_at: datetime
     updated_at: datetime
 

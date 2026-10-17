@@ -54,6 +54,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ensure_sqlite_directory(settings)
             init_db(engine)
             logger.info("Database initialised (%s)", engine.dialect.name)
+
+            if settings.demo_mode_enabled:
+                from app.services.demo_service import DemoService
+                with app.state.session_factory() as db:
+                    DemoService.seed_demo_environment(db, settings)
+                logger.info("Demo environment prepared and verified")
         except (SQLAlchemyError, OSError):
             # Keep serving so /health can report the failure honestly.
             logger.exception("Database initialisation failed; health will report it")
@@ -69,12 +75,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         lifespan=lifespan,
     )
     app.state.settings = settings
+    app.dependency_overrides[get_settings] = lambda: settings
 
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
         allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "Authorization"],
+        allow_headers=["*"],
     )
     register_error_handlers(app)
 
@@ -85,7 +92,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(auth.router)
     v1.include_router(institutions.router)
     v1.include_router(profiles.router)
+    v1.include_router(profiles.compat_router)
     v1.include_router(help_offers.router)
+    v1.include_router(help_offers.compat_router)
     v1.include_router(phase7.router)
     v1.include_router(phase8.router)
     app.include_router(v1)

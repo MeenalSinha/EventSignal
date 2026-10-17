@@ -46,9 +46,15 @@ def list_opportunities(
         .limit(limit)
         .offset(offset)
     )
+    from app.services.demo_service import DEMO_INSTITUTION_ID
+
     if institution_id:
         count_stmt = count_stmt.where(Opportunity.institution_id == institution_id)
         query_stmt = query_stmt.where(Opportunity.institution_id == institution_id)
+    else:
+        # Hide isolated demo opportunities from public general/guest browsing
+        count_stmt = count_stmt.where((Opportunity.institution_id != DEMO_INSTITUTION_ID) | (Opportunity.institution_id.is_(None)))
+        query_stmt = query_stmt.where((Opportunity.institution_id != DEMO_INSTITUTION_ID) | (Opportunity.institution_id.is_(None)))
 
     total = session.scalar(count_stmt) or 0
     rows = session.scalars(query_stmt).all()

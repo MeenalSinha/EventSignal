@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
@@ -152,3 +152,197 @@ def discover_institution_members(
         "limit": limit,
         "offset": offset,
     }
+
+
+# ---------------------------------------------------------------------------
+# Compatibility Routes for Frontend profileService (/profiles/...)
+# ---------------------------------------------------------------------------
+
+compat_router = APIRouter(prefix="/profiles", tags=["profiles-compat"])
+
+
+@compat_router.get("/student/me", response_model=StudentProfileRead)
+def get_my_student_profile_compat(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    institution_id: str | None = None,
+    x_institution_id: Annotated[str | None, Header(alias="X-Institution-Id")] = None,
+) -> StudentProfileRead:
+    inst_id = institution_id or x_institution_id
+    if not inst_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="institution_id parameter or X-Institution-Id header is required",
+        )
+    profile = profile_service.get_student_profile(db, current_user.id, inst_id)
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Student profile has not been created yet.",
+        )
+    return StudentProfileRead.model_validate(profile)
+
+
+@compat_router.post("/student", response_model=StudentProfileRead)
+def save_my_student_profile_compat(
+    data: dict[str, Any],
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    institution_id: str | None = None,
+    x_institution_id: Annotated[str | None, Header(alias="X-Institution-Id")] = None,
+) -> StudentProfileRead:
+    inst_id = institution_id or x_institution_id
+    if not inst_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="institution_id parameter or X-Institution-Id header is required",
+        )
+
+    skills_raw = data.get("skills")
+    skills_val = ", ".join(skills_raw) if isinstance(skills_raw, list) else skills_raw
+    interests_raw = data.get("interests")
+    interests_val = ", ".join(interests_raw) if isinstance(interests_raw, list) else interests_raw
+    goals_raw = data.get("career_goals")
+    goals_val = ", ".join(goals_raw) if isinstance(goals_raw, list) else goals_raw
+    vis = data.get("visibility") or "institution_only"
+    extra = {
+        "headline": data.get("headline"),
+        "bio": data.get("bio"),
+        "degree_level": data.get("degree_level"),
+        "graduation_year": data.get("graduation_year"),
+    }
+
+    existing = profile_service.get_student_profile(db, current_user.id, inst_id)
+    if existing:
+        update_data = StudentProfileUpdate(
+            display_name=data.get("headline") or existing.display_name,
+            skills=skills_val,
+            interests=interests_val,
+            career_goals=goals_val,
+            visibility=vis,
+            extra_data=extra,
+        )
+        profile = profile_service.update_student_profile(db, current_user.id, inst_id, update_data)
+    else:
+        create_data = StudentProfileCreate(
+            display_name=data.get("headline"),
+            skills=skills_val,
+            interests=interests_val,
+            career_goals=goals_val,
+            visibility=vis,
+            extra_data=extra,
+        )
+        profile = profile_service.create_student_profile(db, current_user.id, inst_id, create_data)
+
+    db.commit()
+    db.refresh(profile)
+    return StudentProfileRead.model_validate(profile)
+
+
+@compat_router.get("/alumni/me", response_model=AlumniProfileRead)
+def get_my_alumni_profile_compat(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    institution_id: str | None = None,
+    x_institution_id: Annotated[str | None, Header(alias="X-Institution-Id")] = None,
+) -> AlumniProfileRead:
+    inst_id = institution_id or x_institution_id
+    if not inst_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="institution_id parameter or X-Institution-Id header is required",
+        )
+    profile = profile_service.get_alumni_profile(db, current_user.id, inst_id)
+    if not profile:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Alumni profile has not been created yet.",
+        )
+    return AlumniProfileRead.model_validate(profile)
+
+
+@compat_router.post("/alumni", response_model=AlumniProfileRead)
+def save_my_alumni_profile_compat(
+    data: dict[str, Any],
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    institution_id: str | None = None,
+    x_institution_id: Annotated[str | None, Header(alias="X-Institution-Id")] = None,
+) -> AlumniProfileRead:
+    inst_id = institution_id or x_institution_id
+    if not inst_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="institution_id parameter or X-Institution-Id header is required",
+        )
+
+    skills_raw = data.get("skills")
+    skills_val = ", ".join(skills_raw) if isinstance(skills_raw, list) else skills_raw
+    topics_raw = data.get("mentoring_topics")
+    topics_val = ", ".join(topics_raw) if isinstance(topics_raw, list) else topics_raw
+    vis = data.get("visibility") or "students_only"
+    extra = {
+        "current_title": data.get("current_title"),
+        "current_organization": data.get("current_organization"),
+        "bio": data.get("bio"),
+    }
+
+    existing = profile_service.get_alumni_profile(db, current_user.id, inst_id)
+    if existing:
+        update_data = AlumniProfileUpdate(
+            display_name=data.get("current_title") or existing.display_name,
+            professional_domain=data.get("professional_domain") or existing.professional_domain,
+            industry=data.get("industry") or existing.industry,
+            years_experience=data.get("years_of_experience") or existing.years_experience,
+            skills=skills_val,
+            mentoring_interests=topics_val,
+            willing_to_connect=data.get("willing_to_help", True),
+            monthly_connection_limit=data.get("monthly_request_limit", 5),
+            visibility=vis,
+            extra_data=extra,
+        )
+        profile = profile_service.update_alumni_profile(db, current_user.id, inst_id, update_data)
+    else:
+        create_data = AlumniProfileCreate(
+            display_name=data.get("current_title"),
+            professional_domain=data.get("professional_domain"),
+            industry=data.get("industry"),
+            years_experience=data.get("years_of_experience"),
+            skills=skills_val,
+            mentoring_interests=topics_val,
+            willing_to_connect=data.get("willing_to_help", True),
+            monthly_connection_limit=data.get("monthly_request_limit", 5),
+            visibility=vis,
+            extra_data=extra,
+        )
+        profile = profile_service.create_alumni_profile(db, current_user.id, inst_id, create_data)
+
+    db.commit()
+    db.refresh(profile)
+    return AlumniProfileRead.model_validate(profile)
+
+
+@compat_router.get("/discovery", response_model=list[dict[str, object]])
+def discover_members_compat(
+    current_user: Annotated[User, Depends(get_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    institution_id: str | None = None,
+    x_institution_id: Annotated[str | None, Header(alias="X-Institution-Id")] = None,
+    role: str | None = None,
+    q: str | None = None,
+) -> list[dict[str, object]]:
+    inst_id = institution_id or x_institution_id
+    if not inst_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="institution_id parameter or X-Institution-Id header is required",
+        )
+    items, total = profile_service.discover_members(
+        db,
+        institution_id=inst_id,
+        current_user=current_user,
+        search=q,
+        role_filter=role,
+    )
+    return [item.model_dump() for item in items]
+

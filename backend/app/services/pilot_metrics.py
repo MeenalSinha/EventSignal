@@ -158,6 +158,22 @@ class PilotMetricsService:
             "ready_for_controlled_pilot" if len(memberships) > 0 else "pilot_validation_pending"
         )
 
+        notes = [
+            "Metrics reflect strictly persisted and auditable database records.",
+            (
+                "Sponsorship revenue records agreed commercial terms, "
+                "not automated payment verification."
+            ),
+            "Cross-college campaigns preserve distinct 'Featured — Sponsored' disclosures.",
+        ]
+        from app.services.demo_service import DEMO_INSTITUTION_ID
+
+        if inst.id == DEMO_INSTITUTION_ID or (inst.extra_data and inst.extra_data.get("is_demo")):
+            notes.insert(
+                0,
+                "DEMO DATA / DEMONSTRATION METRICS: These metrics are derived from persisted synthetic demonstration records for platform evaluation, not actual real-world institutional pilot results."
+            )
+
         return PilotMetricsResponse(
             institution_id=inst.id,
             institution_name=inst.name,
@@ -170,12 +186,5 @@ class PilotMetricsService:
             cross_college_promotion=campaign_stats,
             alumni_network=alumni_stats,
             readiness_status=readiness,
-            notes=[
-                "Metrics reflect strictly persisted and auditable database records.",
-                (
-                    "Sponsorship revenue records agreed commercial terms, "
-                    "not automated payment verification."
-                ),
-                "Cross-college campaigns preserve distinct 'Featured — Sponsored' disclosures.",
-            ],
+            notes=notes,
         )

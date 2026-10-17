@@ -176,6 +176,70 @@ npm run dev
 
 ---
 
+---
+
+## Access Experiences & Demo Mode
+
+EventSignal supports three distinct access experiences:
+
+1. **Normal User Mode**: Users register or sign in with their personal or institutional credentials, accessing their own college workspace, profiles, and permissions.
+2. **Guest Mode**: Unauthenticated visitors select "Continue as Guest" or "Skip for Now" to explore public opportunities and public event feeds. Guest mode **never** accesses demo records or activates demo privileges.
+3. **Demo Mode**: Presenters sign in with dedicated, separate demo credentials to access a curated, presentation-ready environment featuring synthetic records across all 8 platform modules.
+
+---
+
+## Dedicated Demo Mode Configuration
+
+### Environment Variables
+
+Configure demo mode in `backend/.env`:
+
+```env
+# Enable or disable the presentation demo mode
+DEMO_MODE_ENABLED=true
+
+# Dedicated demo presenter credentials (never use production secrets)
+DEMO_USER_EMAIL=demo@eventsignal.local
+DEMO_USER_PASSWORD=DemoSignal2026!Secure
+```
+
+> [!IMPORTANT]
+> - When `DEMO_MODE_ENABLED=false`, the Demo tab is hidden on the login page, demo login attempts return `403 Forbidden`, and demo seeding/reset endpoints are disabled.
+> - Demo credentials are never hardcoded in frontend source files or exposed via public APIs.
+> - The demo user has `is_demo: true` and is strictly isolated to the demonstration college workspace (`Apex Institute of Technology`).
+
+### Demo Account Provisioning & Seeding
+
+When `DEMO_MODE_ENABLED=true` is set, the backend lifespan automatically provisions the demo user and idempotently seeds demonstration data on application startup.
+
+You can also trigger seeding or reset on demand via the backend API:
+
+- **Check Demo Status**: `GET /api/v1/auth/demo/status` (Returns `{"enabled": true, "seeded": true}`)
+- **Seed Demo Data**: `POST /api/v1/auth/demo/seed` (Idempotent seed of all 8 modules)
+- **Reset Demo Data**: `POST /api/v1/auth/demo/reset` (Safely deletes demo records without touching production data)
+
+### Demonstration Records & Isolation
+
+All demo records belong to an isolated workspace (`demo-inst-apex-tech-001`) and cover all 8 product areas:
+
+1. **Opportunities & Evidence**: Curated hackathon and fellowship opportunities with field-level evidence (`FieldEvidence`) and deterministic assessments.
+2. **College Workspace**: Synthetic institution `Apex Institute of Technology` with organizational units and campus roles.
+3. **Campus Network**: Synthetic student and alumni profiles with privacy gates.
+4. **Help Offers**: Active mentoring offers across resume review, system design, and career guidance.
+5. **Gap-to-Helper Matching**: Persisted student need with deterministic matching engine score and explainability breakdown.
+6. **EventSignal Legacy**: Annual tech symposium handover, event retrospectives, and follow-up tasks.
+7. **Partnerships & Sponsorship**: Verified brand partner prospectus and tiered sponsorship requests.
+8. **Cross-College Promotion & Pilot Metrics**: Active promotional campaign and pilot operational metrics with prominent `DEMO DATA / DEMONSTRATION METRICS` disclaimers.
+
+### Security & Isolation Guarantees
+
+- **Tenant Isolation**: Demo records are isolated from normal institutional workspaces and excluded from public guest opportunity searches.
+- **Backend Authorization**: Demo privileges and session claims (`is_demo`) are verified by backend signed JWT tokens and route dependencies.
+- **No Mock Responses**: All UI views consume real backend API endpoints (`/opportunities`, `/phase7/needs`, `/phase7/legacy`, `/phase8/sponsorships`, `/phase8/metrics/pilot`).
+- **External Integrations**: External services (payment processing, institutional SSO, automated mail) have graceful status indicators and fallbacks; no false simulated successes are produced.
+
+---
+
 ## Verification & Quality Gates
 
 Run the automated quality verification suite from the repository root:
@@ -188,14 +252,20 @@ backend\.venv\Scripts\python scripts\verify.py
 backend/.venv/bin/python scripts/verify.py
 ```
 
-This runs all 10 quality gates in sequence:
-1. `Backend: ruff lint` (strict Python linting)
-2. `Backend: ruff format check` (formatting compliance)
-3. `Backend: mypy (strict)` (full type validation across all modules)
-4. `Backend: compile check` (compilation syntax verification)
-5. `Backend: pytest` (173 automated tests on isolated temporary databases)
-6. `Frontend: TypeScript (strict)` (`tsc --noEmit`)
-7. `Frontend: ESLint`
-8. `Frontend: component tests` (43 automated Vitest tests)
-9. `Frontend: production build` (Vite build check)
-10. `Integration: live backend + frontend` (end-to-end live HTTP check with failure injection)
+Or run test suites independently:
+
+```bash
+# Backend pytest suite (222 tests including test_demo.py)
+cd backend
+.venv\Scripts\pytest
+
+# Frontend vitest suite (54 tests across all components)
+cd frontend
+npm test
+
+# Frontend strict type check & build
+cd frontend
+npx tsc --noEmit
+npm run build
+```
+

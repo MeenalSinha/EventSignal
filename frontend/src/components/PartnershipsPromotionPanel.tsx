@@ -1082,6 +1082,22 @@ export function PartnershipsPromotionPanel({
       {/* ==================================================================== */}
       {subTab === "metrics" && (
         <div className="space-y-6">
+          {(currentUser?.is_demo || metrics?.institution_id === "demo-inst-apex-tech-001") && (
+            <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-amber-900 shadow-2xs flex items-start gap-3">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-200 text-amber-900 font-bold text-xs mt-0.5">
+                !
+              </div>
+              <div className="text-xs space-y-1">
+                <div className="font-bold uppercase tracking-wider text-amber-950">
+                  DEMONSTRATION METRICS / DEMO DATA
+                </div>
+                <p className="text-amber-800 leading-relaxed">
+                  The figures displayed below are derived strictly from isolated synthetic demonstration records persisted in the demo workspace database. They illustrate platform functionality and audit reporting capabilities, and must not be presented as genuine institutional adoption, real-world engagement, or commercial pilot revenue.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-display text-xl font-bold">Pilot & Release Operational Metrics</h2>

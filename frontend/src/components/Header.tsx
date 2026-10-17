@@ -276,7 +276,12 @@ export function Header({
 
           {/* User Account / Profile */}
           {currentUser ? (
-            <div className="relative">
+            <div className="relative flex items-center gap-2">
+              {currentUser.is_demo && (
+                <span className="inline-flex items-center rounded-md border border-amber-300 bg-amber-100 px-1.5 py-0.5 text-[10px] font-bold text-amber-900 tracking-wider">
+                  DEMO
+                </span>
+              )}
               <button
                 type="button"
                 onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}

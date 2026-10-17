@@ -78,6 +78,11 @@ class Settings(BaseSettings):
     auth_bootstrap_admin_email: str | None = Field(default=None)
     auth_bootstrap_admin_password: str | None = Field(default=None)
 
+    # Demo Mode settings
+    demo_mode_enabled: bool = Field(default=False)
+    demo_user_email: str | None = Field(default="demo@eventsignal.local")
+    demo_user_password: str | None = Field(default="DemoSignal2026!Secure")
+
     @field_validator("ingest_allowed_content_types", mode="before")
     @classmethod
     def _split_content_types(cls, value: object) -> object:
