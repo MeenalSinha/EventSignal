@@ -120,6 +120,7 @@ def test_metadata_registers_expected_tables() -> None:
         "alumni_profiles",
         "match_explanations",
         "connection_requests",
+        "opportunity_assessments",
     }
     assert set(Base.metadata.tables) == expected
 

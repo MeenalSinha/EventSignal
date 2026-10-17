@@ -12,6 +12,9 @@ Phase 2 models added:
   - AlumniProfile        (self-reported alumni expertise and availability)
   - MatchExplanation     (explainable recommendation records)
   - ConnectionRequest    (purpose-specific professional connections)
+
+Phase 4 models added:
+  - OpportunityAssessment (evaluation results per opportunity)
 """
 
 from app.models.alumni_profile import AlumniProfile
@@ -21,6 +24,7 @@ from app.models.connection_request import ConnectionPurpose, ConnectionRequest, 
 from app.models.field_evidence import EvidenceStatus, ExtractionMethod, FieldEvidence
 from app.models.match_explanation import MatchedEntityType, MatchExplanation
 from app.models.opportunity import Opportunity, OpportunityType, ParticipationMode
+from app.models.opportunity_assessment import OpportunityAssessment
 from app.models.source_reference import SourceReference, SourceType
 from app.models.student_profile import ProfileVisibility as StudentProfileVisibility
 from app.models.student_profile import StudentProfile
@@ -37,6 +41,7 @@ __all__ = [
     "MatchExplanation",
     "MatchedEntityType",
     "Opportunity",
+    "OpportunityAssessment",
     "OpportunityType",
     "ParticipationMode",
     "RequestStatus",

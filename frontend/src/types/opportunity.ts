@@ -49,6 +49,7 @@ export interface FieldEvidence {
 export interface Opportunity {
   id: string;
   title: string | null;
+  event_name?: string | null;
   opportunity_type: OpportunityType | null;
   organizer: string | null;
   start_date: string | null;

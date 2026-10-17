@@ -10,7 +10,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api import health, opportunities
+from app.api import assessment, health, opportunities
 from app.core.config import Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
@@ -71,5 +71,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1 = APIRouter(prefix=API_V1_PREFIX)
     v1.include_router(health.router)
     v1.include_router(opportunities.router)
+    v1.include_router(assessment.router)
     app.include_router(v1)
     return app

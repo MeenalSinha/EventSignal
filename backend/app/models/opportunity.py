@@ -21,6 +21,7 @@ from app.models.base import Base, TimestampMixin, UTCDateTime, new_id
 
 if TYPE_CHECKING:
     from app.models.field_evidence import FieldEvidence
+    from app.models.opportunity_assessment import OpportunityAssessment
     from app.models.source_reference import SourceReference
 
 
@@ -100,4 +101,11 @@ class Opportunity(TimestampMixin, Base):
     evidence: Mapped[list[FieldEvidence]] = relationship(
         back_populates="opportunity",
         cascade="all, delete-orphan",
+    )
+
+    # Assessment result (added Phase 4; one-to-one, created on demand).
+    assessment: Mapped[OpportunityAssessment | None] = relationship(
+        back_populates="opportunity",
+        cascade="all, delete-orphan",
+        uselist=False,
     )

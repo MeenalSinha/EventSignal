@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ResourceState } from "../hooks/useRemoteResource";
 import type { EventList } from "../types/events";
+import { AssessmentPanel } from "./AssessmentPanel";
 import { OpportunityIntakeForm } from "./OpportunityIntakeForm";
 import { StatePanel } from "./StatePanel";
 
@@ -69,9 +70,17 @@ export function EventWorkspace({ state, onRetry }: Props) {
           </p>
           <ul className="mt-3 divide-y divide-line">
             {state.data.items.map((event) => (
-              <li key={event.id} className="py-3">
-                <p className="font-medium">{event.event_name ?? event.title ?? "Untitled event"}</p>
-                <p className="text-sm text-ink-soft">{event.organizer ?? "Organizer not stated"}</p>
+              <li key={event.id} className="py-4">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-medium text-ink">{event.event_name ?? event.title ?? "Untitled event"}</p>
+                    <p className="text-sm text-ink-soft">{event.organizer ?? "Organizer not stated"}</p>
+                  </div>
+                </div>
+                <AssessmentPanel
+                  opportunityId={event.id}
+                  opportunityTitle={event.event_name ?? event.title ?? null}
+                />
               </li>
             ))}
           </ul>
