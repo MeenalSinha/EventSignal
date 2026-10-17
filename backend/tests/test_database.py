@@ -130,8 +130,15 @@ def test_metadata_registers_expected_tables() -> None:
         "campus_role_assignments",
         "audit_logs",
         "help_offers",
+        # Phase 7 tables
+        "student_needs",
+        "helper_matches",
+        "legacy_handovers",
+        "event_memories",
+        "follow_up_tasks",
     }
     assert set(Base.metadata.tables) == expected
+
 
 
 def test_in_memory_database_works_across_connections() -> None:

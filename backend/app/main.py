@@ -17,6 +17,7 @@ from app.api import (
     help_offers,
     institutions,
     opportunities,
+    phase7,
     profiles,
 )
 from app.core.config import Settings, get_settings
@@ -84,5 +85,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(institutions.router)
     v1.include_router(profiles.router)
     v1.include_router(help_offers.router)
+    v1.include_router(phase7.router)
     app.include_router(v1)
     return app

@@ -24,6 +24,17 @@ Phase 5 models added:
   - CampusPositionDefinition (official campus positions & leadership)
   - CampusRoleAssignment (time-bounded appointments & verified tenures)
   - AuditLog             (immutable security and governance trail)
+
+Phase 6 models added:
+  - HelpOffer            (declared assistance by institution members)
+  - ConnectionRequest    (purpose-specific connection requests)
+
+Phase 7 models added:
+  - StudentNeed          (declared student gap or blocker)
+  - HelperMatch          (rule-based match between need and offer)
+  - LegacyHandover       (structured knowledge transfer on role transition)
+  - EventMemory          (institutional memory for events/opportunities)
+  - FollowUpTask         (actionable tasks from handovers and matches)
 """
 
 from app.models.alumni_profile import AlumniProfile
@@ -36,20 +47,25 @@ from app.models.campus_position import (
     CampusRoleAssignment,
 )
 from app.models.connection_request import ConnectionPurpose, ConnectionRequest, RequestStatus
+from app.models.event_memory import EventMemory
 from app.models.field_evidence import EvidenceStatus, ExtractionMethod, FieldEvidence
+from app.models.follow_up_task import FollowUpTask, TaskPriority, TaskSource
 from app.models.help_offer import (
     HelpOffer,
     HelpOfferAudience,
     HelpOfferDeliveryMode,
     HelpOfferStatus,
 )
+from app.models.helper_match import HelperMatch, MatchStatus
 from app.models.institution import Institution, InstitutionStatus, InstitutionVerificationStatus
+from app.models.legacy_handover import HandoverStatus, LegacyHandover
 from app.models.match_explanation import MatchedEntityType, MatchExplanation
 from app.models.membership import InstitutionMembership, InstitutionRole, MembershipStatus
 from app.models.opportunity import Opportunity, OpportunityType, ParticipationMode
 from app.models.opportunity_assessment import OpportunityAssessment
 from app.models.organizational_unit import OrganizationalUnit
 from app.models.source_reference import SourceReference, SourceType
+from app.models.student_need import NeedStatus, NeedUrgency, StudentNeed
 from app.models.student_profile import ProfileVisibility as StudentProfileVisibility
 from app.models.student_profile import StudentProfile
 from app.models.user import User
@@ -64,21 +80,29 @@ __all__ = [
     "CampusRoleAssignment",
     "ConnectionPurpose",
     "ConnectionRequest",
+    "EventMemory",
     "EvidenceStatus",
     "ExtractionMethod",
     "FieldEvidence",
+    "FollowUpTask",
+    "HandoverStatus",
     "HelpOffer",
     "HelpOfferAudience",
     "HelpOfferDeliveryMode",
     "HelpOfferStatus",
+    "HelperMatch",
     "Institution",
     "InstitutionMembership",
     "InstitutionRole",
     "InstitutionStatus",
     "InstitutionVerificationStatus",
+    "LegacyHandover",
     "MatchExplanation",
+    "MatchStatus",
     "MatchedEntityType",
     "MembershipStatus",
+    "NeedStatus",
+    "NeedUrgency",
     "Opportunity",
     "OpportunityAssessment",
     "OpportunityType",
@@ -87,8 +111,11 @@ __all__ = [
     "RequestStatus",
     "SourceReference",
     "SourceType",
+    "StudentNeed",
     "StudentProfile",
     "StudentProfileVisibility",
+    "TaskPriority",
+    "TaskSource",
     "TimestampMixin",
     "UTCDateTime",
     "User",

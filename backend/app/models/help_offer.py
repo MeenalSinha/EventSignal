@@ -108,6 +108,12 @@ class HelpOffer(TimestampMixin, Base):
     institution: Mapped[Any] = relationship(
         "Institution", back_populates="help_offers", foreign_keys=[institution_id]
     )
+    matches: Mapped[list[Any]] = relationship(
+        "HelperMatch",
+        back_populates="help_offer",
+        cascade="all, delete-orphan",
+        foreign_keys="[HelperMatch.help_offer_id]",
+    )
 
     __table_args__ = (
         Index("ix_help_offers_inst_status", "institution_id", "status"),

@@ -81,6 +81,11 @@ def session(client: TestClient) -> Iterator[Session]:
         session.close()
 
 
+@pytest.fixture
+def db(session: Session) -> Session:
+    return session
+
+
 @pytest.fixture(autouse=True)
 def forbid_real_database_creation() -> Iterator[None]:
     """Fail loudly if a test touches the repository's real database file."""

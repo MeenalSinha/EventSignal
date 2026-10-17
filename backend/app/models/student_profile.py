@@ -95,6 +95,12 @@ class StudentProfile(TimestampMixin, Base):
     institution: Mapped[Any] = relationship(
         "Institution", back_populates="student_profiles", foreign_keys=[institution_id]
     )
+    needs: Mapped[list[Any]] = relationship(
+        "StudentNeed",
+        back_populates="student_profile",
+        cascade="all, delete-orphan",
+        foreign_keys="[StudentNeed.student_profile_id]",
+    )
 
     __table_args__ = (
         UniqueConstraint("user_id", "institution_id", name="uq_student_profile_user_institution"),

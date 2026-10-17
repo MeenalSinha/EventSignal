@@ -20,6 +20,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UTCDateTime, new_id
 
 if TYPE_CHECKING:
+    from app.models.event_memory import EventMemory
     from app.models.field_evidence import FieldEvidence
     from app.models.institution import Institution
     from app.models.opportunity_assessment import OpportunityAssessment
@@ -117,4 +118,8 @@ class Opportunity(TimestampMixin, Base):
     )
     institution: Mapped[Institution | None] = relationship(
         back_populates="opportunities",
+    )
+    event_memories: Mapped[list[EventMemory]] = relationship(
+        back_populates="opportunity",
+        foreign_keys="[EventMemory.opportunity_id]",
     )

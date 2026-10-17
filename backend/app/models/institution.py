@@ -21,10 +21,15 @@ if TYPE_CHECKING:
     from app.models.alumni_profile import AlumniProfile
     from app.models.audit_log import AuditLog
     from app.models.campus_position import CampusPositionDefinition, CampusRoleAssignment
+    from app.models.event_memory import EventMemory
+    from app.models.follow_up_task import FollowUpTask
     from app.models.help_offer import HelpOffer
+    from app.models.helper_match import HelperMatch
+    from app.models.legacy_handover import LegacyHandover
     from app.models.membership import InstitutionMembership
     from app.models.opportunity import Opportunity
     from app.models.organizational_unit import OrganizationalUnit
+    from app.models.student_need import StudentNeed
     from app.models.student_profile import StudentProfile
 
 
@@ -142,6 +147,26 @@ class Institution(TimestampMixin, Base):
         cascade="all, delete-orphan",
     )
     help_offers: Mapped[list[HelpOffer]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
+    )
+    student_needs: Mapped[list[StudentNeed]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
+    )
+    helper_matches: Mapped[list[HelperMatch]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
+    )
+    legacy_handovers: Mapped[list[LegacyHandover]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
+    )
+    event_memories: Mapped[list[EventMemory]] = relationship(
+        back_populates="institution",
+        cascade="all, delete-orphan",
+    )
+    follow_up_tasks: Mapped[list[FollowUpTask]] = relationship(
         back_populates="institution",
         cascade="all, delete-orphan",
     )

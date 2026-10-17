@@ -4,6 +4,7 @@ import { EventWorkspace } from "./components/EventWorkspace";
 import { Header, type AppView } from "./components/Header";
 import { HelpOffersPanel } from "./components/HelpOffersPanel";
 import { InstitutionWorkspacePanel } from "./components/InstitutionWorkspacePanel";
+import { LegacyMatchingPanel } from "./components/LegacyMatchingPanel";
 import { MemberDiscoveryPanel } from "./components/MemberDiscoveryPanel";
 import { MyProfileModal } from "./components/MyProfileModal";
 import { ServiceStatusPanel } from "./components/ServiceStatusPanel";
@@ -121,6 +122,25 @@ export default function App() {
             </div>
 
             <HelpOffersPanel
+              currentUser={currentUser}
+              onOpenAuth={() => setIsAuthModalOpen(true)}
+            />
+          </>
+        )}
+
+        {currentView === "legacy" && (
+          <>
+            <div className="max-w-2xl mb-8">
+              <h1 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+                Gap Matching & EventSignal Legacy
+              </h1>
+              <p className="mt-4 text-base leading-relaxed text-ink-soft">
+                Declare specific academic or career challenges for deterministic helper matching. Preserve institutional
+                memory, tenure handovers, event retrospectives, and follow-up commitments.
+              </p>
+            </div>
+
+            <LegacyMatchingPanel
               currentUser={currentUser}
               onOpenAuth={() => setIsAuthModalOpen(true)}
             />

@@ -16,7 +16,10 @@ if TYPE_CHECKING:
     from app.models.alumni_profile import AlumniProfile
     from app.models.audit_log import AuditLog
     from app.models.campus_position import CampusRoleAssignment
+    from app.models.event_memory import EventMemory
+    from app.models.follow_up_task import FollowUpTask
     from app.models.help_offer import HelpOffer
+    from app.models.legacy_handover import LegacyHandover
     from app.models.membership import InstitutionMembership
     from app.models.student_profile import StudentProfile
 
@@ -73,4 +76,27 @@ class User(TimestampMixin, Base):
         back_populates="user",
         foreign_keys="[HelpOffer.user_id]",
         cascade="all, delete-orphan",
+    )
+    outgoing_handovers: Mapped[list[LegacyHandover]] = relationship(
+        back_populates="outgoing_user",
+        foreign_keys="[LegacyHandover.outgoing_user_id]",
+        cascade="all, delete-orphan",
+    )
+    incoming_handovers: Mapped[list[LegacyHandover]] = relationship(
+        back_populates="incoming_user",
+        foreign_keys="[LegacyHandover.incoming_user_id]",
+    )
+    authored_event_memories: Mapped[list[EventMemory]] = relationship(
+        back_populates="author",
+        foreign_keys="[EventMemory.author_user_id]",
+        cascade="all, delete-orphan",
+    )
+    assigned_tasks: Mapped[list[FollowUpTask]] = relationship(
+        back_populates="assignee",
+        foreign_keys="[FollowUpTask.assignee_user_id]",
+        cascade="all, delete-orphan",
+    )
+    created_tasks: Mapped[list[FollowUpTask]] = relationship(
+        back_populates="creator",
+        foreign_keys="[FollowUpTask.creator_user_id]",
     )

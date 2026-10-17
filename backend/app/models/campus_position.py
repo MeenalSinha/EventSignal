@@ -20,6 +20,7 @@ from app.models.base import Base, TimestampMixin, UTCDateTime, new_id
 
 if TYPE_CHECKING:
     from app.models.institution import Institution
+    from app.models.legacy_handover import LegacyHandover
     from app.models.organizational_unit import OrganizationalUnit
     from app.models.user import User
 
@@ -66,6 +67,10 @@ class CampusPositionDefinition(TimestampMixin, Base):
     assignments: Mapped[list[CampusRoleAssignment]] = relationship(
         back_populates="position",
         cascade="all, delete-orphan",
+    )
+    handovers: Mapped[list[LegacyHandover]] = relationship(
+        back_populates="position",
+        foreign_keys="[LegacyHandover.position_id]",
     )
 
 

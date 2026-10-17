@@ -3,7 +3,7 @@ import type { HealthResponse } from "../types/health";
 import type { UserProfile } from "../types/auth";
 import { ConnectionStatus, SIGNAL_RULE_STYLES, describeConnection } from "./ConnectionStatus";
 
-export type AppView = "opportunities" | "institutions" | "network" | "offers";
+export type AppView = "opportunities" | "institutions" | "network" | "offers" | "legacy";
 
 interface HeaderProps {
   health: ResourceState<HealthResponse>;
@@ -76,6 +76,16 @@ export function Header({
               >
                 Help Offers
               </button>
+              <button
+                onClick={() => onViewChange("legacy")}
+                className={`rounded-lg px-3 py-1.5 transition ${
+                  currentView === "legacy"
+                    ? "bg-paper text-ink shadow-sm"
+                    : "text-ink-soft hover:text-ink"
+                }`}
+              >
+                Legacy & Matching
+              </button>
             </div>
           )}
         </div>
@@ -146,6 +156,14 @@ export function Header({
             }`}
           >
             Help Offers
+          </button>
+          <button
+            onClick={() => onViewChange("legacy")}
+            className={`flex-1 min-w-[90px] py-1.5 text-center transition ${
+              currentView === "legacy" ? "bg-paper text-ink shadow-sm rounded-lg" : "text-ink-soft"
+            }`}
+          >
+            Legacy
           </button>
         </div>
       )}
