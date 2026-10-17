@@ -7,6 +7,7 @@ import { InstitutionWorkspacePanel } from "./components/InstitutionWorkspacePane
 import { LegacyMatchingPanel } from "./components/LegacyMatchingPanel";
 import { MemberDiscoveryPanel } from "./components/MemberDiscoveryPanel";
 import { MyProfileModal } from "./components/MyProfileModal";
+import { PartnershipsPromotionPanel } from "./components/PartnershipsPromotionPanel";
 import { ServiceStatusPanel } from "./components/ServiceStatusPanel";
 import { useRemoteResource } from "./hooks/useRemoteResource";
 import { fetchCurrentUser, logoutUser } from "./services/authService";
@@ -141,6 +142,25 @@ export default function App() {
             </div>
 
             <LegacyMatchingPanel
+              currentUser={currentUser}
+              onOpenAuth={() => setIsAuthModalOpen(true)}
+            />
+          </>
+        )}
+
+        {currentView === "partnerships" && (
+          <>
+            <div className="max-w-2xl mb-8">
+              <h1 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl">
+                Partnerships, Promotion & Pilot Readiness
+              </h1>
+              <p className="mt-4 text-base leading-relaxed text-ink-soft">
+                Connect events with verified brand partners, request transparent cross-college promotion campaigns,
+                securely import approved alumni records with strict consent privacy, and monitor real pilot metrics.
+              </p>
+            </div>
+
+            <PartnershipsPromotionPanel
               currentUser={currentUser}
               onOpenAuth={() => setIsAuthModalOpen(true)}
             />

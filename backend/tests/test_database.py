@@ -136,9 +136,13 @@ def test_metadata_registers_expected_tables() -> None:
         "legacy_handovers",
         "event_memories",
         "follow_up_tasks",
+        # Phase 8 tables
+        "partner_organizations",
+        "sponsorship_requests",
+        "promotion_campaigns",
+        "alumni_import_jobs",
     }
     assert set(Base.metadata.tables) == expected
-
 
 
 def test_in_memory_database_works_across_connections() -> None:

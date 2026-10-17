@@ -84,9 +84,7 @@ class LegacyHandover(TimestampMixin, Base):
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     accomplishments_summary: Mapped[str | None] = mapped_column(Text)
     ongoing_work: Mapped[str | None] = mapped_column(Text)
-    key_contacts: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSON, nullable=False, default=list
-    )
+    key_contacts: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
     lessons_learned: Mapped[str | None] = mapped_column(Text)
     recommended_first_steps: Mapped[str | None] = mapped_column(Text)
 

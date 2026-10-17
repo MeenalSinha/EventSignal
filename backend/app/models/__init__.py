@@ -37,6 +37,7 @@ Phase 7 models added:
   - FollowUpTask         (actionable tasks from handovers and matches)
 """
 
+from app.models.alumni_import import AlumniImportJob, ImportJobStatus
 from app.models.alumni_profile import AlumniProfile
 from app.models.alumni_profile import ProfileVisibility as AlumniProfileVisibility
 from app.models.audit_log import AuditLog
@@ -64,18 +65,29 @@ from app.models.membership import InstitutionMembership, InstitutionRole, Member
 from app.models.opportunity import Opportunity, OpportunityType, ParticipationMode
 from app.models.opportunity_assessment import OpportunityAssessment
 from app.models.organizational_unit import OrganizationalUnit
+from app.models.promotion_campaign import CampaignStatus, CampaignType, PromotionCampaign
 from app.models.source_reference import SourceReference, SourceType
+from app.models.sponsorship import (
+    PartnerOrganization,
+    PartnerVerificationStatus,
+    SponsorshipRequest,
+    SponsorshipStatus,
+    SupportType,
+)
 from app.models.student_need import NeedStatus, NeedUrgency, StudentNeed
 from app.models.student_profile import ProfileVisibility as StudentProfileVisibility
 from app.models.student_profile import StudentProfile
 from app.models.user import User
 
 __all__ = [
+    "AlumniImportJob",
     "AlumniProfile",
     "AlumniProfileVisibility",
     "AssignmentVerificationStatus",
     "AuditLog",
     "Base",
+    "CampaignStatus",
+    "CampaignType",
     "CampusPositionDefinition",
     "CampusRoleAssignment",
     "ConnectionPurpose",
@@ -91,6 +103,7 @@ __all__ = [
     "HelpOfferDeliveryMode",
     "HelpOfferStatus",
     "HelperMatch",
+    "ImportJobStatus",
     "Institution",
     "InstitutionMembership",
     "InstitutionRole",
@@ -108,12 +121,18 @@ __all__ = [
     "OpportunityType",
     "OrganizationalUnit",
     "ParticipationMode",
+    "PartnerOrganization",
+    "PartnerVerificationStatus",
+    "PromotionCampaign",
     "RequestStatus",
     "SourceReference",
     "SourceType",
+    "SponsorshipRequest",
+    "SponsorshipStatus",
     "StudentNeed",
     "StudentProfile",
     "StudentProfileVisibility",
+    "SupportType",
     "TaskPriority",
     "TaskSource",
     "TimestampMixin",

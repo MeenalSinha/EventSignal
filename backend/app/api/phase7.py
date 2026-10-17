@@ -43,7 +43,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, require_institution_membership
+from app.api.deps import require_institution_membership
 from app.database import get_db
 from app.models.event_memory import EventMemory
 from app.models.follow_up_task import FollowUpTask, TaskSource
@@ -116,10 +116,7 @@ def _enrich_match(match: HelperMatch) -> HelperMatchRead:
     owner = getattr(offer, "user", None) if offer else None
     return HelperMatchRead.model_validate(
         {
-            **{
-                col.key: getattr(match, col.key)
-                for col in match.__table__.columns
-            },
+            **{col.key: getattr(match, col.key) for col in match.__table__.columns},
             "offer_title": offer.title if offer else None,
             "offer_category": offer.category if offer else None,
             "offer_delivery_mode": offer.delivery_mode if offer else None,
@@ -240,10 +237,14 @@ def get_need(
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> StudentNeedRead:
     profile = _get_student_profile(db, current_user.id, institution_id)
-    need = db.query(StudentNeed).filter(
-        StudentNeed.id == need_id,
-        StudentNeed.student_profile_id == profile.id,
-    ).first()
+    need = (
+        db.query(StudentNeed)
+        .filter(
+            StudentNeed.id == need_id,
+            StudentNeed.student_profile_id == profile.id,
+        )
+        .first()
+    )
     if not need:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Need not found")
     return StudentNeedRead.model_validate(need)
@@ -262,15 +263,20 @@ def update_need(
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> StudentNeedRead:
     profile = _get_student_profile(db, current_user.id, institution_id)
-    need = db.query(StudentNeed).filter(
-        StudentNeed.id == need_id,
-        StudentNeed.student_profile_id == profile.id,
-    ).first()
+    need = (
+        db.query(StudentNeed)
+        .filter(
+            StudentNeed.id == need_id,
+            StudentNeed.student_profile_id == profile.id,
+        )
+        .first()
+    )
     if not need:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Need not found")
 
     if payload.status and payload.status not in (
-        NeedStatus.RESOLVED.value, NeedStatus.WITHDRAWN.value
+        NeedStatus.RESOLVED.value,
+        NeedStatus.WITHDRAWN.value,
     ):
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -299,10 +305,14 @@ def run_matching(
     replace_existing: bool = Query(default=False),
 ) -> HelperMatchListResponse:
     profile = _get_student_profile(db, current_user.id, institution_id)
-    need = db.query(StudentNeed).filter(
-        StudentNeed.id == need_id,
-        StudentNeed.student_profile_id == profile.id,
-    ).first()
+    need = (
+        db.query(StudentNeed)
+        .filter(
+            StudentNeed.id == need_id,
+            StudentNeed.student_profile_id == profile.id,
+        )
+        .first()
+    )
     if not need:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Need not found")
 
@@ -345,10 +355,14 @@ def list_matches_for_need(
     offset: int = Query(default=0, ge=0),
 ) -> HelperMatchListResponse:
     profile = _get_student_profile(db, current_user.id, institution_id)
-    need = db.query(StudentNeed).filter(
-        StudentNeed.id == need_id,
-        StudentNeed.student_profile_id == profile.id,
-    ).first()
+    need = (
+        db.query(StudentNeed)
+        .filter(
+            StudentNeed.id == need_id,
+            StudentNeed.student_profile_id == profile.id,
+        )
+        .first()
+    )
     if not need:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Need not found")
 
@@ -383,10 +397,14 @@ def get_match(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> HelperMatchRead:
-    match = db.query(HelperMatch).filter(
-        HelperMatch.id == match_id,
-        HelperMatch.institution_id == institution_id,
-    ).first()
+    match = (
+        db.query(HelperMatch)
+        .filter(
+            HelperMatch.id == match_id,
+            HelperMatch.institution_id == institution_id,
+        )
+        .first()
+    )
     if not match:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
     return _enrich_match(match)
@@ -409,10 +427,14 @@ def update_match_status(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Status must be 'accepted' or 'dismissed'.",
         )
-    match = db.query(HelperMatch).filter(
-        HelperMatch.id == match_id,
-        HelperMatch.institution_id == institution_id,
-    ).first()
+    match = (
+        db.query(HelperMatch)
+        .filter(
+            HelperMatch.id == match_id,
+            HelperMatch.institution_id == institution_id,
+        )
+        .first()
+    )
     if not match:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Match not found")
     if match.status != MatchStatus.PROPOSED:
@@ -420,7 +442,7 @@ def update_match_status(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"Only PROPOSED matches can be updated; current status: '{match.status}'.",
         )
-    match.status = payload.status
+    match.status = MatchStatus(payload.status)
     match.is_seen = True
     match.updated_at = datetime.now(UTC)
     db.commit()
@@ -504,10 +526,14 @@ def get_handover_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> LegacyHandoverRead:
-    h = db.query(LegacyHandover).filter(
-        LegacyHandover.id == handover_id,
-        LegacyHandover.institution_id == institution_id,
-    ).first()
+    h = (
+        db.query(LegacyHandover)
+        .filter(
+            LegacyHandover.id == handover_id,
+            LegacyHandover.institution_id == institution_id,
+        )
+        .first()
+    )
     if not h:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Handover not found")
     return _enrich_handover(h)
@@ -525,18 +551,21 @@ def update_handover_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> LegacyHandoverRead:
-    h = db.query(LegacyHandover).filter(
-        LegacyHandover.id == handover_id,
-        LegacyHandover.institution_id == institution_id,
-    ).first()
+    h = (
+        db.query(LegacyHandover)
+        .filter(
+            LegacyHandover.id == handover_id,
+            LegacyHandover.institution_id == institution_id,
+        )
+        .first()
+    )
     if not h:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Handover not found")
 
     update_fields = payload.model_dump(exclude_unset=True)
     if "key_contacts" in update_fields and update_fields["key_contacts"] is not None:
         update_fields["key_contacts"] = [
-            c.model_dump() if hasattr(c, "model_dump") else c
-            for c in update_fields["key_contacts"]
+            c.model_dump() if hasattr(c, "model_dump") else c for c in update_fields["key_contacts"]
         ]
 
     try:
@@ -562,10 +591,14 @@ def submit_handover_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> LegacyHandoverRead:
-    h = db.query(LegacyHandover).filter(
-        LegacyHandover.id == handover_id,
-        LegacyHandover.institution_id == institution_id,
-    ).first()
+    h = (
+        db.query(LegacyHandover)
+        .filter(
+            LegacyHandover.id == handover_id,
+            LegacyHandover.institution_id == institution_id,
+        )
+        .first()
+    )
     if not h:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Handover not found")
     try:
@@ -590,10 +623,14 @@ def acknowledge_handover_endpoint(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> LegacyHandoverRead:
-    h = db.query(LegacyHandover).filter(
-        LegacyHandover.id == handover_id,
-        LegacyHandover.institution_id == institution_id,
-    ).first()
+    h = (
+        db.query(LegacyHandover)
+        .filter(
+            LegacyHandover.id == handover_id,
+            LegacyHandover.institution_id == institution_id,
+        )
+        .first()
+    )
     if not h:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Handover not found")
     try:
@@ -691,14 +728,16 @@ def get_memory(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> EventMemoryRead:
-    m = db.query(EventMemory).filter(
-        EventMemory.id == memory_id,
-        EventMemory.institution_id == institution_id,
-    ).first()
-    if not m:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Memory record not found"
+    m = (
+        db.query(EventMemory)
+        .filter(
+            EventMemory.id == memory_id,
+            EventMemory.institution_id == institution_id,
         )
+        .first()
+    )
+    if not m:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Memory record not found")
     return _enrich_memory(m)
 
 
@@ -785,10 +824,14 @@ def get_task(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> FollowUpTaskRead:
-    t = db.query(FollowUpTask).filter(
-        FollowUpTask.id == task_id,
-        FollowUpTask.institution_id == institution_id,
-    ).first()
+    t = (
+        db.query(FollowUpTask)
+        .filter(
+            FollowUpTask.id == task_id,
+            FollowUpTask.institution_id == institution_id,
+        )
+        .first()
+    )
     if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
     return _enrich_task(t)
@@ -806,17 +849,18 @@ def update_task(
     db: Annotated[Session, Depends(get_db)],
     current_user: Annotated[User, Depends(require_institution_membership)],
 ) -> FollowUpTaskRead:
-    t = db.query(FollowUpTask).filter(
-        FollowUpTask.id == task_id,
-        FollowUpTask.institution_id == institution_id,
-    ).first()
+    t = (
+        db.query(FollowUpTask)
+        .filter(
+            FollowUpTask.id == task_id,
+            FollowUpTask.institution_id == institution_id,
+        )
+        .first()
+    )
     if not t:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
 
-    if (
-        payload.is_completed is not None
-        and t.assignee_user_id != current_user.id
-    ):
+    if payload.is_completed is not None and t.assignee_user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Only the assignee may mark a task as completed.",

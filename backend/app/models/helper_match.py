@@ -80,9 +80,7 @@ class HelperMatch(TimestampMixin, Base):
     score: Mapped[float] = mapped_column(nullable=False)
 
     # Ordered list of rule results that produced the score (see module docstring).
-    rule_results: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSON, nullable=False, default=list
-    )
+    rule_results: Mapped[list[dict[str, Any]]] = mapped_column(JSON, nullable=False, default=list)
 
     # Plain-language summary automatically derived from rule_results.
     # Must not be edited by the system after creation.
@@ -138,4 +136,3 @@ class HelperMatch(TimestampMixin, Base):
         Index("ix_helper_matches_inst_status", "institution_id", "status"),
         Index("ix_helper_matches_need_score", "need_id", "score"),
     )
-

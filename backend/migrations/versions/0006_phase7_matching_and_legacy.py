@@ -65,9 +65,7 @@ def upgrade() -> None:
     op.create_index("ix_student_needs_institution_id", "student_needs", ["institution_id"])
     op.create_index("ix_student_needs_status", "student_needs", ["status"])
     op.create_index("ix_student_needs_category", "student_needs", ["category"])
-    op.create_index(
-        "ix_student_needs_inst_status", "student_needs", ["institution_id", "status"]
-    )
+    op.create_index("ix_student_needs_inst_status", "student_needs", ["institution_id", "status"])
     op.create_index(
         "ix_student_needs_inst_category", "student_needs", ["institution_id", "category"]
     )
@@ -118,9 +116,7 @@ def upgrade() -> None:
     op.create_index("ix_helper_matches_help_offer_id", "helper_matches", ["help_offer_id"])
     op.create_index("ix_helper_matches_institution_id", "helper_matches", ["institution_id"])
     op.create_index("ix_helper_matches_status", "helper_matches", ["status"])
-    op.create_index(
-        "ix_helper_matches_inst_status", "helper_matches", ["institution_id", "status"]
-    )
+    op.create_index("ix_helper_matches_inst_status", "helper_matches", ["institution_id", "status"])
     op.create_index("ix_helper_matches_need_score", "helper_matches", ["need_id", "score"])
 
     # 3. legacy_handovers
@@ -183,9 +179,7 @@ def upgrade() -> None:
     op.create_index(
         "ix_legacy_handovers_inst_status", "legacy_handovers", ["institution_id", "status"]
     )
-    op.create_index(
-        "ix_legacy_handovers_position", "legacy_handovers", ["position_id", "version"]
-    )
+    op.create_index("ix_legacy_handovers_position", "legacy_handovers", ["position_id", "version"])
 
     # 4. event_memories
     op.create_table(

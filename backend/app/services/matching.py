@@ -29,7 +29,7 @@ Scoring rules (v1):
     Tokenise need.description (lowercased words, stop-words stripped) and
     offer.applicable_skills (lowercased words).
     Overlap ratio = |intersection| / max(|need_tokens|, 1).
-    Contribution = 0.25 × min(overlap_ratio, 1.0).
+    Contribution = 0.25 * min(overlap_ratio, 1.0).
 
   Rule 4 — Urgency boost (weight 0.10)
     If need.urgency == HIGH → contribution = 0.10.
@@ -60,9 +60,35 @@ SCORE_THRESHOLD = 0.10  # Minimum score to persist a match
 
 _STOP_WORDS = frozenset(
     {
-        "a", "an", "and", "are", "as", "at", "be", "been", "by", "for",
-        "from", "has", "have", "i", "in", "is", "it", "its", "of", "on",
-        "or", "that", "the", "this", "to", "was", "were", "will", "with",
+        "a",
+        "an",
+        "and",
+        "are",
+        "as",
+        "at",
+        "be",
+        "been",
+        "by",
+        "for",
+        "from",
+        "has",
+        "have",
+        "i",
+        "in",
+        "is",
+        "it",
+        "its",
+        "of",
+        "on",
+        "or",
+        "that",
+        "the",
+        "this",
+        "to",
+        "was",
+        "were",
+        "will",
+        "with",
     }
 )
 
@@ -100,8 +126,7 @@ def _compute_match(need: StudentNeed, offer: HelpOffer) -> dict[str, Any] | None
     # Rule 2 — Delivery mode alignment
     if need.preferred_delivery_mode:
         r2_matched = (
-            need.preferred_delivery_mode.strip().lower()
-            == offer.delivery_mode.strip().lower()
+            need.preferred_delivery_mode.strip().lower() == offer.delivery_mode.strip().lower()
         )
         r2_contrib = 0.20 if r2_matched else 0.0
         total_score += r2_contrib
@@ -125,7 +150,9 @@ def _compute_match(need: StudentNeed, offer: HelpOffer) -> dict[str, Any] | None
                 "matched": None,
                 "weight": 0.20,
                 "contribution": 0.0,
-                "evidence": "Student did not specify a preferred delivery mode; rule not evaluated.",
+                "evidence": (
+                    "Student did not specify a preferred delivery mode; rule not evaluated."
+                ),
             }
         )
         uncertainty_parts.append(
@@ -210,9 +237,7 @@ def _compute_match(need: StudentNeed, offer: HelpOffer) -> dict[str, Any] | None
             f"signal. Review carefully before acting on this suggestion."
         )
 
-    uncertainty_notes = (
-        " ".join(uncertainty_parts) if uncertainty_parts else None
-    )
+    uncertainty_notes = " ".join(uncertainty_parts) if uncertainty_parts else None
 
     return {
         "score": final_score,

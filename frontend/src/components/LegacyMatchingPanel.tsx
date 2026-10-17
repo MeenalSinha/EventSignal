@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   acknowledgeHandover,
   completeFollowUpTask,
@@ -39,12 +39,31 @@ interface LegacyMatchingPanelProps {
 
 type SubTab = "needs" | "handovers" | "memories" | "tasks";
 
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error) return err.message;
+  return fallback;
+}
+
 export function LegacyMatchingPanel({
   currentUser,
   onOpenAuth,
 }: LegacyMatchingPanelProps) {
-  const [institutions, setInstitutions] = useState<InstitutionOption[]>([]);
-  const [selectedInstId, setSelectedInstId] = useState<string>("");
+  const institutions: InstitutionOption[] = useMemo(() => {
+    return (currentUser?.memberships || []).map((m) => ({
+      id: m.institution_id,
+      name: m.institution_name || "College Workspace",
+      slug: m.institution_slug || m.institution_id.slice(0, 8),
+    }));
+  }, [currentUser]);
+
+  const [selectedInstId, setSelectedInstId] = useState<string>(
+    () => currentUser?.memberships?.[0]?.institution_id || ""
+  );
+  const effectiveInstId = selectedInstId || institutions[0]?.id || "";
+  const [refreshKey, setRefreshKey] = useState(0);
+  const refreshData = useCallback(() => {
+    setRefreshKey((k) => k + 1);
+  }, []);
   const [subTab, setSubTab] = useState<SubTab>("needs");
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
@@ -85,66 +104,60 @@ export function LegacyMatchingPanel({
   const [taskDesc, setTaskDesc] = useState("");
   const [taskPriority, setTaskPriority] = useState<"low" | "medium" | "high">("medium");
 
-  // 1. Load user's institutions from profile memberships
   useEffect(() => {
-    if (!currentUser) return;
-    const instList: InstitutionOption[] = (currentUser.memberships || []).map((m) => ({
-      id: m.institution_id,
-      name: m.institution_name || "College Workspace",
-      slug: m.institution_slug || m.institution_id.slice(0, 8),
-    }));
-    setInstitutions(instList);
-    const firstInst = instList[0];
-    if (firstInst && !selectedInstId) {
-      setSelectedInstId(firstInst.id);
-    }
-  }, [currentUser]);
+    if (!effectiveInstId || !currentUser) return;
+    let isMounted = true;
 
-  // 2. Load tab data whenever selectedInstId or subTab changes
-  useEffect(() => {
-    if (!selectedInstId || !currentUser) return;
-    loadTabData();
-  }, [selectedInstId, subTab]);
-
-  const loadTabData = async () => {
-    if (!selectedInstId) return;
-    setIsLoading(true);
-    setFeedback(null);
-    try {
-      if (subTab === "needs") {
-        const res = await fetchMyStudentNeeds(selectedInstId);
-        setNeeds(res.items);
-        // Load matches for each need
-        for (const need of res.items) {
-          fetchMatchesForNeed(selectedInstId, need.id).then((matches) => {
-            setMatchesMap((prev) => ({ ...prev, [need.id]: matches }));
-          });
+    async function loadData() {
+      try {
+        if (subTab === "needs") {
+          const res = await fetchMyStudentNeeds(effectiveInstId);
+          if (!isMounted) return;
+          setNeeds(res.items);
+          for (const need of res.items) {
+            fetchMatchesForNeed(effectiveInstId, need.id)
+              .then((matches) => {
+                if (isMounted) {
+                  setMatchesMap((prev) => ({ ...prev, [need.id]: matches }));
+                }
+              })
+              .catch((err: unknown) => {
+                console.error("Failed to fetch matches for need", err);
+              });
+          }
+        } else if (subTab === "handovers") {
+          const res = await fetchHandovers(effectiveInstId);
+          if (isMounted) setHandovers(res.items);
+        } else if (subTab === "memories") {
+          const res = await fetchEventMemories(effectiveInstId);
+          if (isMounted) setMemories(res.items);
+        } else if (subTab === "tasks") {
+          const res = await fetchMyFollowUpTasks(effectiveInstId);
+          if (isMounted) setTasks(res.items);
         }
-      } else if (subTab === "handovers") {
-        const res = await fetchHandovers(selectedInstId);
-        setHandovers(res.items);
-      } else if (subTab === "memories") {
-        const res = await fetchEventMemories(selectedInstId);
-        setMemories(res.items);
-      } else if (subTab === "tasks") {
-        const res = await fetchMyFollowUpTasks(selectedInstId);
-        setTasks(res.items);
+      } catch (err: unknown) {
+        if (isMounted) {
+          setFeedback({ type: "error", message: getErrorMessage(err, "Failed to load tab data") });
+        }
+      } finally {
+        if (isMounted) setIsLoading(false);
       }
-    } catch (err: any) {
-      console.error(err);
-      setFeedback({ type: "error", message: err.message || "Failed to load tab data" });
-    } finally {
-      setIsLoading(false);
     }
-  };
+
+    void loadData();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [effectiveInstId, currentUser, subTab, refreshKey]);
 
   // Need Handlers
   const handleCreateNeed = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     setIsLoading(true);
     try {
-      await createStudentNeed(selectedInstId, {
+      await createStudentNeed(effectiveInstId, {
         title: needTitle,
         category: needCategory,
         description: needDesc || undefined,
@@ -155,63 +168,63 @@ export function LegacyMatchingPanel({
       setIsCreatingNeed(false);
       setNeedTitle("");
       setNeedDesc("");
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not declare need." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not declare need.") });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleRunMatching = async (needId: string) => {
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     setIsLoading(true);
     try {
-      const matches = await runMatchingForNeed(selectedInstId, needId);
+      const matches = await runMatchingForNeed(effectiveInstId, needId);
       setMatchesMap((prev) => ({ ...prev, [needId]: matches }));
       setFeedback({
         type: "success",
         message: `Matching engine evaluated offers: found ${matches.length} compatible helper(s)!`,
       });
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Matching engine run failed." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Matching engine run failed.") });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleUpdateMatch = async (matchId: string, needId: string, status: "accepted" | "dismissed") => {
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     try {
-      await updateMatchStatus(selectedInstId, matchId, status);
+      await updateMatchStatus(effectiveInstId, matchId, status);
       setFeedback({ type: "success", message: `Match updated to ${status}.` });
       // reload matches for this need
-      const updated = await fetchMatchesForNeed(selectedInstId, needId);
+      const updated = await fetchMatchesForNeed(effectiveInstId, needId);
       setMatchesMap((prev) => ({ ...prev, [needId]: updated }));
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not update match." });
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not update match.") });
     }
   };
 
   const handleResolveNeed = async (needId: string) => {
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     try {
-      await updateNeedStatus(selectedInstId, needId, "resolved");
+      await updateNeedStatus(effectiveInstId, needId, "resolved");
       setFeedback({ type: "success", message: "Need marked as resolved!" });
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not resolve need." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not resolve need.") });
     }
   };
 
   // Handover Handlers
   const handleCreateHandover = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     setIsLoading(true);
     try {
-      await createHandover(selectedInstId, {
+      await createHandover(effectiveInstId, {
         title: hoTitle,
         accomplishments_summary: hoAccomplishments || undefined,
         ongoing_work: hoOngoingWork || undefined,
@@ -225,47 +238,47 @@ export function LegacyMatchingPanel({
       setHoOngoingWork("");
       setHoLessonsLearned("");
       setHoFirstSteps("");
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not create handover." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not create handover.") });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSubmitHandover = async (handoverId: string) => {
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     try {
-      await submitHandover(selectedInstId, handoverId);
+      await submitHandover(effectiveInstId, handoverId);
       setFeedback({ type: "success", message: "Handover submitted for successor review!" });
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not submit handover." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not submit handover.") });
     }
   };
 
   const handleAcknowledgeHandover = async (handoverId: string) => {
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     try {
-      await acknowledgeHandover(selectedInstId, handoverId);
+      await acknowledgeHandover(effectiveInstId, handoverId);
       setFeedback({ type: "success", message: "Handover acknowledged! Knowledge transfer complete." });
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not acknowledge handover." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not acknowledge handover.") });
     }
   };
 
   // Memory Handlers
   const handleCreateMemory = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     setIsLoading(true);
     try {
       const parsedTags = memTags
         .split(",")
         .map((t) => t.trim())
         .filter(Boolean);
-      await createEventMemory(selectedInstId, {
+      await createEventMemory(effectiveInstId, {
         title: memTitle,
         what_worked: memWhatWorked || undefined,
         what_did_not_work: memWhatDidNot || undefined,
@@ -281,9 +294,9 @@ export function LegacyMatchingPanel({
       setMemAttendance("");
       setMemOutcome("");
       setMemTags("");
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not record memory." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not record memory.") });
     } finally {
       setIsLoading(false);
     }
@@ -292,10 +305,10 @@ export function LegacyMatchingPanel({
   // Task Handlers
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedInstId || !currentUser) return;
+    if (!effectiveInstId || !currentUser) return;
     setIsLoading(true);
     try {
-      await createFollowUpTask(selectedInstId, {
+      await createFollowUpTask(effectiveInstId, {
         title: taskTitle,
         description: taskDesc || undefined,
         assignee_user_id: currentUser.user.id,
@@ -305,22 +318,22 @@ export function LegacyMatchingPanel({
       setIsCreatingTask(false);
       setTaskTitle("");
       setTaskDesc("");
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not create task." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not create task.") });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCompleteTask = async (taskId: string) => {
-    if (!selectedInstId) return;
+    if (!effectiveInstId) return;
     try {
-      await completeFollowUpTask(selectedInstId, taskId);
+      await completeFollowUpTask(effectiveInstId, taskId);
       setFeedback({ type: "success", message: "Task marked completed!" });
-      loadTabData();
-    } catch (err: any) {
-      setFeedback({ type: "error", message: err.message || "Could not complete task." });
+      refreshData();
+    } catch (err: unknown) {
+      setFeedback({ type: "error", message: getErrorMessage(err, "Could not complete task.") });
     }
   };
 
@@ -352,7 +365,7 @@ export function LegacyMatchingPanel({
           </label>
           <select
             id="inst-select"
-            value={selectedInstId}
+            value={effectiveInstId}
             onChange={(e) => setSelectedInstId(e.target.value)}
             className="rounded-lg border border-line bg-paper-warm px-3 py-1.5 text-sm font-medium text-ink focus:border-ink focus:outline-none"
           >
@@ -1034,7 +1047,7 @@ export function LegacyMatchingPanel({
                   <label className="block text-xs font-medium text-ink-soft mb-1">Priority</label>
                   <select
                     value={taskPriority}
-                    onChange={(e) => setTaskPriority(e.target.value as any)}
+                    onChange={(e) => setTaskPriority(e.target.value as "low" | "medium" | "high")}
                     className="w-full rounded-lg border border-line bg-paper-warm px-3 py-2 text-sm focus:border-ink focus:outline-none"
                   >
                     <option value="low">Low</option>

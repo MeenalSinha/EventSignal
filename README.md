@@ -28,16 +28,15 @@ Student Intent
 
 ## Project Status
 
-This repository has completed **Phase 6 — Campus Network, Profiles & Help Offers**.
+This repository has completed **Phase 8 — Partnerships, Cross-College Promotion, Pilot & Release Readiness**.
 
-| Foundation (Phase 1) | Domain Model (Phase 2) | Intake & Ingestion (Phase 3) | Assessment & Evaluation (Phase 4) | Institutional Identity & RBAC (Phase 5) | Campus Network & Help Offers (Phase 6) |
-| --- | --- | --- | --- | --- | --- |
-| FastAPI application factory and lifecycle | Opportunity model with `opportunity_type`, `location`, `compensation` | Safe web retrieval service with robust SSRF protections (blocking loopback, private, link-local, metadata IPs) | Declarative, configurable Assessment Policy (`default_assessment_policy.json` validated via Pydantic) | Multi-college workspaces with strict multi-tenant isolation and workspace-scoped opportunity filtering | Institution-scoped `StudentProfile` and `AlumniProfile` models tied to authenticated users and active memberships |
-| Environment-driven configuration | Alembic migrations (`alembic upgrade head`) | Generic 3-stage content extractor (JSON-LD structured, HTML metadata, rule-based heuristics) | Multi-dimensional scoring engine: Completeness, Evidence Quality, Cross-Source Consistency | Standard-library PBKDF2 password hashing & HMAC-SHA256 signed bearer token authentication | Granular server-side privacy projections (`private`, `students_only`, `alumni_only`, `public`) with zero data leaks |
-| SQLite database initialization and health check | `FieldEvidence` source-linked evidence layer | Honest evidence attribution (`FOUND`, `NOT_FOUND`, etc.) with zero data fabrication | Multi-source conflict detection preserving competing values, source attribution, and supporting excerpts | Hierarchical organizational units (departments, cells, centers, offices) and official campus positions | Explicit, consent-based `HelpOffer` model with lifecycle states (`active`, `paused`, `archived`) and owner consent control |
-| Read-only listing endpoint | `StudentProfile` model with self-reported goals and privacy levels | Deterministic duplicate URL detection with optional `force_refresh` | Assessment persistence models & versioned migrations (`0002`, `0003`, `0004`) | Time-bounded campus role assignments with verification workflows and immutable security audit logs | Purpose-specific connection requests linking students to mentors on published help offers |
-| React, Vite, TypeScript (strict), Tailwind frontend shell | `AlumniProfile` model with explicit `willing_to_connect` consent gate | Opportunity intake API: `POST /api/v1/opportunities/ingest` | Assessment APIs: `POST /api/v1/opportunities/{id}/assess`, `GET .../assessment`, `POST .../sources` | Institutional Auth & Workspace UI (`AuthModal`, `InstitutionWorkspacePanel`, college switcher, role badges) | Complete frontend experience: `MyProfileModal`, `MemberDiscoveryPanel`, `HelpOffersPanel`, dynamic category filters |
-| Quality gate verification suite (`scripts/verify.py`) | `ConnectionRequest` with explicit purpose categories and anti-self-loop validation | React frontend intake UI with URL validation, loading state, duplicate handling, and evidence breakdown table | Explainable Assessment Panel UI with score ring, dimension breakdowns, counters, and conflict details | 166 backend tests & 36 frontend tests | 173 backend tests & 43 frontend tests across all 10 automated quality gates (10/10 PASS) |
+All 8 phases of the reduced authoritative roadmap are fully implemented, verified, and backed by automated quality gates.
+
+| Phase 1–4: Core Foundation | Phase 5: Workspaces & RBAC | Phase 6: Network & Mentoring | Phase 7: Matching & Legacy | Phase 8: Partnerships & Pilot |
+| --- | --- | --- | --- | --- |
+| Opportunity ingestion with SSRF protection, generic 3-stage extraction, field-level provenance (`FieldEvidence`), deterministic duplicate detection, and declarative evidence assessment | Multi-college workspaces, tenant isolation, PBKDF2 auth, signed tokens, organizational units, campus positions, and immutable audit logging | Student & alumni profiles, server-side privacy projections, explicit `HelpOffer` lifecycle, and purpose-specific connection requests | Student needs, deterministic Gap-to-Helper matching, honest explanations, campus handovers, event memories, and follow-up commitments | Sponsorship prospectuses, brand partner verification, cross-college promotion with conspicuous disclosure, zero-consent alumni CSV import, and live pilot analytics |
+| Ingestion & assessment APIs, evidence cards, conflict detection | Role assignments, workspace switching, audit log security | Consent gates (`willing_to_connect`), category filters | Persisted needs & handovers, deterministic scores | Transparent pricing packages, dry-run import preview, real stored metrics |
+| 166 backend tests & 36 frontend tests | Institutional Auth & RBAC UI | 173 backend tests & 43 frontend tests | 209 backend tests & 45 frontend tests | **214 backend tests & 47 frontend tests across all quality gates (ALL PASS)** |
 
 ---
 
@@ -49,17 +48,17 @@ eventsignal/
 │   ├── alembic.ini              # Alembic migration configuration
 │   ├── migrations/              # Database migration versions
 │   │   ├── env.py               # Migration environment anchoring Base.metadata
-│   ├── migrations/              # Database migration versions
-│   │   ├── env.py               # Migration environment anchoring Base.metadata
-│   │   └── versions/            # 0001-0005 migrations (Phase 1-6)
+│   │   └── versions/            # 0001-0007 migrations (Phases 1-8)
 │   ├── app/
-│   │   ├── api/                 # HTTP routes only
+│   │   ├── api/                 # HTTP routes
 │   │   │   ├── health.py        #   GET /api/v1/health
 │   │   │   ├── opportunities.py #   Opportunities intake & assessment
 │   │   │   ├── auth.py          #   Registration, login & session endpoints
 │   │   │   ├── institutions.py  #   Colleges, units, positions & memberships
 │   │   │   ├── profiles.py      #   Student & alumni profiles, member discovery
 │   │   │   ├── help_offers.py   #   Help offers lifecycle, discovery & requests
+│   │   │   ├── phase7.py        #   Phase 7: Student needs, matches, handovers, memories, tasks
+│   │   │   ├── phase8.py        #   Phase 8: Sponsorships, campaigns, CSV import, pilot metrics
 │   │   │   └── deps.py          #   FastAPI auth & RBAC dependency injection
 │   │   ├── core/
 │   │   │   ├── config.py        # Typed Settings and validation
@@ -79,22 +78,32 @@ eventsignal/
 │   │   │   ├── organizational_unit.py # Departments, cells, and offices
 │   │   │   ├── campus_position.py # Official campus positions & tenure
 │   │   │   ├── audit_log.py     #   Immutable security audit log
-│   │   │   ├── source_reference.py # Source provenance
-│   │   │   └── field_evidence.py   # Field-level extraction evidence
+│   │   │   ├── student_need.py  #   Phase 7: Declared student challenges
+│   │   │   ├── helper_match.py  #   Phase 7: Persisted helper matches
+│   │   │   ├── match_explanation.py # Phase 7: Deterministic score rationales
+│   │   │   ├── legacy_handover.py # Phase 7: Leadership transition handovers
+│   │   │   ├── event_memory.py  #   Phase 7: Institutional event retrospectives
+│   │   │   ├── follow_up_task.py # Phase 7: Post-event follow-up commitments
+│   │   │   ├── sponsorship.py   #   Phase 8: Partner orgs & sponsorship prospectuses
+│   │   │   ├── promotion_campaign.py # Phase 8: Cross-college campaigns
+│   │   │   └── alumni_import.py #   Phase 8: Batch alumni directory import jobs
 │   │   ├── services/            # Business & security services
 │   │   │   ├── auth.py          #   User lifecycle & token management
 │   │   │   ├── institution.py   #   Multi-tenant workspace operations
 │   │   │   ├── profile.py       #   Profile CRUD, active gate, privacy projection
 │   │   │   ├── help_offer.py    #   Offer lifecycle, discovery & requests
-│   │   │   ├── audit.py         #   Security event logging
-│   │   │   ├── crawler.py       #   Safe SSRF-protected content fetcher
-│   │   │   ├── extractor.py     #   Structured & heuristic data extraction
-│   │   │   └── evaluator.py     #   Explainable opportunity assessment
+│   │   │   ├── matching.py      #   Phase 7: Deterministic matching engine
+│   │   │   ├── legacy.py        #   Phase 7: Handovers, memories & tasks
+│   │   │   ├── sponsorship.py   #   Phase 8: Sponsorship lifecycle & commercial terms
+│   │   │   ├── promotion.py     #   Phase 8: Campaign review & cross-college feed
+│   │   │   ├── alumni_import.py #   Phase 8: Dry-run CSV parser & zero-consent import
+│   │   │   ├── pilot_metrics.py #   Phase 8: Operational indicators aggregator
+│   │   │   └── audit.py         #   Security event logging
 │   │   ├── schemas/             # Pydantic v2 API contracts
 │   │   ├── database.py          # Engine, session factory, init_db, health checks
 │   │   ├── main.py              # Application factory and lifespan
 │   │   └── __main__.py          # `python -m app` entry point
-│   ├── tests/                   # Pytest test suite (173 tests across isolated DBs)
+│   ├── tests/                   # Pytest suite (214 tests across isolated DBs)
 │   ├── pyproject.toml           # Ruff and Mypy strict configuration
 │   └── requirements.txt         # Runtime dependencies (pinned, includes alembic)
 ├── frontend/
@@ -105,18 +114,20 @@ eventsignal/
 │   │   │   ├── MemberDiscoveryPanel.tsx # College network member discovery
 │   │   │   ├── HelpOffersPanel.tsx # Campus mentorship & help offer manager
 │   │   │   ├── InstitutionWorkspacePanel.tsx # College workspace manager
+│   │   │   ├── LegacyMatchingPanel.tsx # Phase 7: Needs matching & legacy handovers
+│   │   │   ├── PartnershipsPromotionPanel.tsx # Phase 8: Sponsorships, campaigns, CSV import, metrics
 │   │   │   ├── AssessmentPanel.tsx # Opportunity assessment viewer
 │   │   │   └── OpportunityIntakeForm.tsx # URL ingest & evidence review
 │   │   ├── hooks/               # useRemoteResource (loading, error, retry)
 │   │   ├── services/            # API client and validation
 │   │   ├── types/               # TypeScript interfaces
-│   │   ├── App.tsx              # Application shell with view switching
+│   │   ├── App.tsx              # Application shell with 6-tab navigation
 │   │   └── main.tsx
 │   ├── package.json
 │   ├── tsconfig.json            # Strict TypeScript settings
 │   └── vite.config.ts
 ├── scripts/
-│   ├── verify.py                # Runs all 10 quality gates in order
+│   ├── verify.py                # Runs all quality gates in order
 │   └── integration_test.py      # Live end-to-end integration check
 └── data/                        # Local SQLite database (git-ignored)
 ```

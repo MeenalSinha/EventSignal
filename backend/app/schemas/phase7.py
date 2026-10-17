@@ -9,7 +9,6 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-
 # ---------------------------------------------------------------------------
 # StudentNeed schemas
 # ---------------------------------------------------------------------------
@@ -22,7 +21,9 @@ class StudentNeedCreate(BaseModel):
     category: str = Field(
         min_length=2,
         max_length=64,
-        description="Category aligned with HelpOffer categories (e.g. mock_interview, portfolio_review).",
+        description=(
+            "Category aligned with HelpOffer categories (e.g. mock_interview, portfolio_review)."
+        ),
     )
     description: str | None = Field(
         default=None,

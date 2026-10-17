@@ -95,9 +95,7 @@ def update_handover(
             f"has status '{handover.status}'."
         )
     if handover.outgoing_user_id != requesting_user_id:
-        raise PermissionError(
-            "Only the outgoing role holder may edit this handover."
-        )
+        raise PermissionError("Only the outgoing role holder may edit this handover.")
     allowed = {
         "title",
         "incoming_user_id",
@@ -132,9 +130,7 @@ def submit_handover(
             f"has status '{handover.status}'."
         )
     if handover.outgoing_user_id != requesting_user_id:
-        raise PermissionError(
-            "Only the outgoing role holder may submit this handover."
-        )
+        raise PermissionError("Only the outgoing role holder may submit this handover.")
 
     # Supersede older handovers for the same position.
     if handover.position_id:
@@ -144,9 +140,7 @@ def submit_handover(
                 LegacyHandover.institution_id == handover.institution_id,
                 LegacyHandover.position_id == handover.position_id,
                 LegacyHandover.id != handover.id,
-                LegacyHandover.status.in_(
-                    [HandoverStatus.SUBMITTED, HandoverStatus.ACKNOWLEDGED]
-                ),
+                LegacyHandover.status.in_([HandoverStatus.SUBMITTED, HandoverStatus.ACKNOWLEDGED]),
             )
             .all()
         )

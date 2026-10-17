@@ -80,7 +80,12 @@ The platform's distinguishing principle remains:
 | **Explicit Help Offers** | Configurable help offers, lifecycle management (`active`, `paused`, `archived`), and discovery | Implemented in Phase 6 |
 | **Campus Network Discovery** | Privacy-aware, institution-scoped discovery of people and active help offers | Implemented in Phase 6 |
 | **Purpose-Specific Help Requests** | Structured requests on published help offers with introductory intent | Implemented in Phase 6 |
-| **Explainable Matching** | Gap-to-Helper matching connecting student opportunity needs to suitable helpers | Planned for Phase 8 |
+| **Gap-to-Helper Matching** | Student needs, deterministic eligibility filtering, grounded explanations, and no-match honesty | Implemented in Phase 7 |
+| **EventSignal Legacy & Handovers** | Preserving institutional memory across leadership transitions, retrospective event memories, and follow-up commitments | Implemented in Phase 7 |
+| **Sponsorship Facilitation** | Structured event sponsorship prospectuses, honest partner verification, and manual commercial terms tracking | Implemented in Phase 8 |
+| **Cross-College Promotion** | Configurable pricing packages, multi-campus feed targeting, admin review, and conspicuous "Featured — Sponsored" disclosure | Implemented in Phase 8 |
+| **Approved Alumni Directory Import** | Secure CSV import, pre-commit dry run validation, and strict zero-default consent guarantees | Implemented in Phase 8 |
+| **Pilot Evaluation & Operational Metrics** | Live measurable indicators from stored records across opportunities, needs, matches, legacy, sponsorships, and campaigns | Implemented in Phase 8 |
 
 ---
 

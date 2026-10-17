@@ -21,7 +21,7 @@ from app.models.campus_position import CampusPositionDefinition
 from app.models.help_offer import HelpOffer, HelpOfferStatus
 from app.models.helper_match import HelperMatch, MatchStatus
 from app.models.institution import Institution
-from app.models.legacy_handover import HandoverStatus, LegacyHandover
+from app.models.legacy_handover import HandoverStatus
 from app.models.membership import InstitutionMembership, InstitutionRole, MembershipStatus
 from app.models.student_need import NeedStatus, NeedUrgency, StudentNeed
 from app.models.student_profile import StudentProfile
@@ -33,7 +33,6 @@ from app.services.legacy import (
     update_handover,
 )
 from app.services.matching import SCORER_VERSION, _compute_match, run_matching_for_need
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -145,9 +144,7 @@ def active_offer(db: Session, inst: Institution, user_b: User) -> HelpOffer:
 
 
 @pytest.fixture()
-def open_need(
-    db: Session, inst: Institution, student_profile_a: StudentProfile
-) -> StudentNeed:
+def open_need(db: Session, inst: Institution, student_profile_a: StudentProfile) -> StudentNeed:
     need = StudentNeed(
         student_profile_id=student_profile_a.id,
         institution_id=inst.id,
@@ -202,7 +199,9 @@ class TestComputeMatch:
         result = _compute_match(open_need, active_offer)
         assert result is not None
         # delivery mode rule should show matched=False
-        delivery_rule = next(r for r in result["rule_results"] if r["rule"] == "delivery_mode_alignment")
+        delivery_rule = next(
+            r for r in result["rule_results"] if r["rule"] == "delivery_mode_alignment"
+        )
         assert delivery_rule["matched"] is False
         assert delivery_rule["contribution"] == 0.0
 
@@ -223,7 +222,12 @@ class TestComputeMatch:
         result = _compute_match(open_need, active_offer)
         assert result is not None
         rules = {r["rule"] for r in result["rule_results"]}
-        assert rules == {"category_alignment", "delivery_mode_alignment", "skill_keyword_overlap", "urgency_boost"}
+        assert rules == {
+            "category_alignment",
+            "delivery_mode_alignment",
+            "skill_keyword_overlap",
+            "urgency_boost",
+        }
 
     def test_summary_explanation_is_set(
         self, open_need: StudentNeed, active_offer: HelpOffer
@@ -233,9 +237,7 @@ class TestComputeMatch:
         assert result["summary_explanation"] is not None
         assert SCORER_VERSION in result["summary_explanation"]
 
-    def test_score_capped_at_one(
-        self, open_need: StudentNeed, active_offer: HelpOffer
-    ) -> None:
+    def test_score_capped_at_one(self, open_need: StudentNeed, active_offer: HelpOffer) -> None:
         result = _compute_match(open_need, active_offer)
         assert result is not None
         assert result["score"] <= 1.0
@@ -270,9 +272,7 @@ class TestRunMatchingForNeed:
             active_offer.status = HelpOfferStatus.ACTIVE
             db.commit()
 
-    def test_matching_non_open_need_raises(
-        self, db: Session, open_need: StudentNeed
-    ) -> None:
+    def test_matching_non_open_need_raises(self, db: Session, open_need: StudentNeed) -> None:
         open_need.status = NeedStatus.RESOLVED
         with pytest.raises(ValueError, match="OPEN"):
             run_matching_for_need(db, open_need)
@@ -317,14 +317,28 @@ class TestLegacyHandoverService:
         user_a: User,
         membership_a: InstitutionMembership,
     ) -> None:
-        h1 = create_handover(db, institution_id=inst.id, outgoing_user_id=user_a.id, title="H1", position_id=campus_pos.id)
-        h2 = create_handover(db, institution_id=inst.id, outgoing_user_id=user_a.id, title="H2", position_id=campus_pos.id)
+        h1 = create_handover(
+            db,
+            institution_id=inst.id,
+            outgoing_user_id=user_a.id,
+            title="H1",
+            position_id=campus_pos.id,
+        )
+        h2 = create_handover(
+            db,
+            institution_id=inst.id,
+            outgoing_user_id=user_a.id,
+            title="H2",
+            position_id=campus_pos.id,
+        )
         assert h2.version == h1.version + 1
 
     def test_update_draft_by_owner_succeeds(
         self, db: Session, inst: Institution, user_a: User, membership_a: InstitutionMembership
     ) -> None:
-        h = create_handover(db, institution_id=inst.id, outgoing_user_id=user_a.id, title="Original")
+        h = create_handover(
+            db, institution_id=inst.id, outgoing_user_id=user_a.id, title="Original"
+        )
         h = update_handover(db, h, requesting_user_id=user_a.id, title="Updated")
         assert h.title == "Updated"
 
@@ -644,9 +658,7 @@ class TestHandoverAPI:
         hid = resp.json()["id"]
         assert resp.json()["status"] == "draft"
 
-        list_resp = client.get(
-            f"/api/v1/institutions/{inst.id}/handovers", headers=headers
-        )
+        list_resp = client.get(f"/api/v1/institutions/{inst.id}/handovers", headers=headers)
         assert list_resp.status_code == 200
         ids = [h["id"] for h in list_resp.json()["items"]]
         assert hid in ids
@@ -739,9 +751,7 @@ class TestEventMemoryAPI:
         mid = resp.json()["id"]
         assert resp.json()["is_current"] is True
 
-        get_resp = client.get(
-            f"/api/v1/institutions/{inst.id}/memories/{mid}", headers=headers
-        )
+        get_resp = client.get(f"/api/v1/institutions/{inst.id}/memories/{mid}", headers=headers)
         assert get_resp.status_code == 200
         assert get_resp.json()["title"] == "Annual Hackathon 2025 Memory"
 
@@ -841,8 +851,6 @@ class TestFollowUpTaskAPI:
             json={"title": "Self-task", "assignee_user_id": user_a.id},
             headers=headers_a,
         )
-        resp = client.get(
-            f"/api/v1/institutions/{inst.id}/tasks", headers=headers_a
-        )
+        resp = client.get(f"/api/v1/institutions/{inst.id}/tasks", headers=headers_a)
         assert resp.status_code == 200
         assert resp.json()["total"] >= 1
