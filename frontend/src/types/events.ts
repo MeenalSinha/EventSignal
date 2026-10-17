@@ -1,7 +1,7 @@
-/** Subset of backend `EventRead` the Phase 1 interface uses. */
 export interface EventSummary {
   id: string;
-  event_name: string | null;
+  event_name?: string | null;
+  title?: string | null;
   organizer: string | null;
 }
 

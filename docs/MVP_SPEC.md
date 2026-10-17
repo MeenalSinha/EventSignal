@@ -67,13 +67,15 @@ The platform's distinguishing principle remains:
 
 | Capability | Description | Phase |
 | --- | --- | --- |
-| **Opportunity Discovery** | Filter and explore opportunities with date/mode validation | Foundation in Phase 2; UI in Phase 3 |
-| **Source-Linked Information** | Opportunities backed by `SourceReference` records | Implemented in Phase 2 |
-| **Evidence & Completeness** | Field-level provenance (`FieldEvidence`) separating found, missing, and contradictory values | Implemented in Phase 2 |
-| **Student Profiles** | Self-reported skills, interests, and preferences with strict privacy controls | Implemented in Phase 2 |
-| **Alumni Profiles** | Expertise, mentoring interests, and explicit consent gates (`willing_to_connect`) | Implemented in Phase 2 |
-| **Explainable Matching** | Traceable match explanations (`MatchExplanation`) referencing specific profile attributes and scoring versions | Foundation in Phase 2 |
-| **Purpose-Specific Connections** | Non-spam connection requests (`ConnectionRequest`) requiring explicit purpose categories and consent validation | Foundation in Phase 2 |
+| **Opportunity Intake** | Secure public URL ingestion, SSRF protection, redirect verification, body limit streaming | Implemented in Phase 3 |
+| **Generic Content Extraction** | Multi-stage extraction (JSON-LD, OpenGraph, semantic heuristics) without hardcoding | Implemented in Phase 3 |
+| **Evidence Collection** | Field-level provenance (`FieldEvidence`) separating FOUND, NOT_FOUND, and technical failures | Implemented in Phase 3 |
+| **Duplicate Prevention** | Deterministic URL normalization preventing silent duplicates with force_refresh | Implemented in Phase 3 |
+| **Opportunity Discovery** | Filter and explore opportunities with date/mode validation and evidence cards | Implemented in Phase 3 |
+| **Student Profiles** | Self-reported skills, interests, and preferences with strict privacy controls | Implemented in Phase 2; UI in Phase 4 |
+| **Alumni Profiles** | Expertise, mentoring interests, and explicit consent gates (`willing_to_connect`) | Implemented in Phase 2; UI in Phase 4 |
+| **Explainable Matching** | Traceable match explanations (`MatchExplanation`) referencing specific profile attributes | Implemented in Phase 2; Scorer in Phase 4 |
+| **Purpose-Specific Connections** | Non-spam connection requests (`ConnectionRequest`) requiring explicit purpose categories | Implemented in Phase 2; UI in Phase 4 |
 
 ---
 

@@ -1,5 +1,7 @@
+import { useState } from "react";
 import type { ResourceState } from "../hooks/useRemoteResource";
 import type { EventList } from "../types/events";
+import { OpportunityIntakeForm } from "./OpportunityIntakeForm";
 import { StatePanel } from "./StatePanel";
 
 interface Props {
@@ -8,11 +10,35 @@ interface Props {
 }
 
 export function EventWorkspace({ state, onRetry }: Props) {
+  const [showIntake, setShowIntake] = useState(false);
+
   return (
     <section aria-labelledby="workspace-heading">
-      <h2 id="workspace-heading" className="mb-3 font-display text-xl font-semibold">
-        Event workspace
-      </h2>
+      <div className="mb-3 flex items-center justify-between">
+        <h2 id="workspace-heading" className="font-display text-xl font-semibold">
+          Event workspace
+        </h2>
+        {state.status === "success" && (
+          <button
+            type="button"
+            onClick={() => setShowIntake(!showIntake)}
+            className="rounded-md border border-line bg-paper px-3 py-1.5 text-xs font-medium text-ink hover:bg-paper-soft"
+          >
+            {showIntake ? "Close Intake" : "Submit Opportunity URL"}
+          </button>
+        )}
+      </div>
+
+      {showIntake && (
+        <div className="mb-6">
+          <OpportunityIntakeForm
+            onIngestSuccess={() => {
+              onRetry();
+            }}
+            onClose={() => setShowIntake(false)}
+          />
+        </div>
+      )}
 
       {state.status === "loading" && <StatePanel tone="loading" title="Loading your events" />}
 
@@ -29,8 +55,8 @@ export function EventWorkspace({ state, onRetry }: Props) {
       {state.status === "success" && state.data.total === 0 && (
         <StatePanel tone="empty" title="The workspace is ready, with no events yet">
           <p>
-            Events you add will appear here with the evidence behind each detail. Adding events is not available in this
-            version, so there is nothing to show yet.
+            Events and opportunities you add will appear here with the evidence behind each detail. Click Submit
+            Opportunity URL to extract and evaluate a public link.
           </p>
         </StatePanel>
       )}
@@ -44,7 +70,7 @@ export function EventWorkspace({ state, onRetry }: Props) {
           <ul className="mt-3 divide-y divide-line">
             {state.data.items.map((event) => (
               <li key={event.id} className="py-3">
-                <p className="font-medium">{event.event_name ?? "Untitled event"}</p>
+                <p className="font-medium">{event.event_name ?? event.title ?? "Untitled event"}</p>
                 <p className="text-sm text-ink-soft">{event.organizer ?? "Organizer not stated"}</p>
               </li>
             ))}

@@ -1,24 +1,24 @@
-"""Read-only opportunity listing.
+"""Opportunity listing and intake endpoints.
 
-Phase 2 note: This route replaces GET /api/v1/events from Phase 1.
-The endpoint URL is now /opportunities. The /events URL is intentionally
-not preserved as an alias to avoid confusion.
-
-Phase 2 has no submission endpoint. This route exists so the frontend's
-empty state is derived from the actual database rather than assumed.
+Phase 3: Adds POST /api/v1/opportunities/ingest for real URL submission, safe
+web retrieval, generic multi-stage extraction, and evidence persistence.
 """
 
 from __future__ import annotations
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.config import get_settings
 from app.database import get_session
 from app.models import Opportunity
+from app.schemas.ingest import OpportunityIngestRequest, OpportunityIngestResponse
 from app.schemas.opportunity import OpportunityList, OpportunityRead
+from app.services.ingestion import ingest_opportunity_url
+from app.services.retrieval import RetrievalError
 
 router = APIRouter(tags=["opportunities"])
 
@@ -40,7 +40,7 @@ def list_opportunities(
     total = session.scalar(select(func.count()).select_from(Opportunity)) or 0
     rows = session.scalars(
         select(Opportunity)
-        .options(selectinload(Opportunity.sources))
+        .options(selectinload(Opportunity.sources), selectinload(Opportunity.evidence))
         .order_by(Opportunity.created_at.desc(), Opportunity.id)
         .limit(limit)
         .offset(offset)
@@ -51,3 +51,29 @@ def list_opportunities(
         limit=limit,
         offset=offset,
     )
+
+
+@router.post(
+    "/opportunities/ingest",
+    response_model=OpportunityIngestResponse,
+    summary="Ingest and extract a public opportunity URL",
+)
+def ingest_opportunity(
+    payload: OpportunityIngestRequest,
+    response: Response,
+    session: Annotated[Session, Depends(get_session)],
+) -> OpportunityIngestResponse:
+    settings = get_settings()
+    try:
+        result = ingest_opportunity_url(
+            url=payload.url,
+            session=session,
+            settings=settings,
+            force_refresh=payload.force_refresh,
+        )
+        response.status_code = (
+            status.HTTP_200_OK if result.is_duplicate else status.HTTP_201_CREATED
+        )
+        return result
+    except RetrievalError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.message) from exc

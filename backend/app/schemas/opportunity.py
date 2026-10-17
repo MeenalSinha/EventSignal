@@ -16,6 +16,7 @@ from urllib.parse import urlparse
 
 from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validator
 
+from app.models.field_evidence import EvidenceStatus, ExtractionMethod
 from app.models.opportunity import OpportunityType, ParticipationMode
 from app.models.source_reference import SourceType
 
@@ -105,6 +106,21 @@ class SourceReferenceRead(BaseModel):
     updated_at: datetime
 
 
+class FieldEvidenceRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: str
+    opportunity_id: str
+    source_id: str | None
+    field_name: str
+    extracted_value: str | None
+    supporting_excerpt: str | None
+    extraction_method: ExtractionMethod
+    evidence_status: EvidenceStatus
+    created_at: datetime
+    updated_at: datetime
+
+
 class OpportunityRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -123,6 +139,7 @@ class OpportunityRead(BaseModel):
     compensation: str | None
     application_url: str | None
     sources: list[SourceReferenceRead]
+    evidence: list[FieldEvidenceRead] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

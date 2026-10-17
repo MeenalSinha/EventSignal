@@ -8,12 +8,15 @@ function parseEvent(value: unknown): EventSummary {
   if (
     !isObject(value) ||
     typeof value.id !== "string" ||
-    !isNullableString(value.event_name) ||
     !isNullableString(value.organizer)
   ) {
     throw invalid("event record");
   }
-  return { id: value.id, event_name: value.event_name, organizer: value.organizer };
+  const rawEventName = isNullableString(value.event_name) ? value.event_name : null;
+  const rawTitle = isNullableString(value.title) ? value.title : null;
+  const name = rawEventName ?? rawTitle;
+
+  return { id: value.id, event_name: name, title: name, organizer: value.organizer };
 }
 
 export function parseEventList(body: unknown): EventList {

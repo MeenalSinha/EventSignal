@@ -55,6 +55,32 @@ class Settings(BaseSettings):
         default_factory=lambda: ["http://localhost:5173", "http://127.0.0.1:5173"]
     )
 
+    # Web retrieval & opportunity intake settings
+    ingest_request_timeout_seconds: float = Field(default=10.0, ge=1.0, le=60.0)
+    ingest_max_content_length_bytes: int = Field(default=5_000_000, ge=10_000, le=50_000_000)
+    ingest_max_redirects: int = Field(default=5, ge=0, le=10)
+    ingest_user_agent: str = Field(
+        default="EventSignal-Bot/1.0 (+https://github.com/MeenalSinha/EventSignal)"
+    )
+    ingest_allowed_content_types: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["text/html", "application/xhtml+xml"]
+    )
+    ingest_allowed_ports: Annotated[list[int], NoDecode] = Field(default_factory=lambda: [80, 443])
+
+    @field_validator("ingest_allowed_content_types", mode="before")
+    @classmethod
+    def _split_content_types(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [item.strip().lower() for item in value.split(",") if item.strip()]
+        return value
+
+    @field_validator("ingest_allowed_ports", mode="before")
+    @classmethod
+    def _split_ports(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [int(item.strip()) for item in value.split(",") if item.strip()]
+        return value
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def _split_origins(cls, value: object) -> object:

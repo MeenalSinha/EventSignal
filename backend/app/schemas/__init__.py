@@ -6,7 +6,9 @@ The old event.py file is retained as docs/archive/schemas_event_phase1.py for re
 
 from app.schemas.connection import ConnectionRequestCreate, ConnectionRequestRead
 from app.schemas.health import ComponentHealth, HealthResponse, HealthStatus
+from app.schemas.ingest import OpportunityIngestRequest, OpportunityIngestResponse
 from app.schemas.opportunity import (
+    FieldEvidenceRead,
     OpportunityCreate,
     OpportunityList,
     OpportunityRead,
@@ -26,9 +28,12 @@ __all__ = [
     "ComponentHealth",
     "ConnectionRequestCreate",
     "ConnectionRequestRead",
+    "FieldEvidenceRead",
     "HealthResponse",
     "HealthStatus",
     "OpportunityCreate",
+    "OpportunityIngestRequest",
+    "OpportunityIngestResponse",
     "OpportunityList",
     "OpportunityRead",
     "SourceReferenceCreate",

@@ -28,19 +28,18 @@ Student Intent
 
 ## Project Status
 
-This repository is currently at **Phase 2 - Domain Model Foundation & Product Realignment**.
+This repository is currently at **Phase 3 — Opportunity Intake & Evidence Collection**.
 
-| Foundation (Phase 1) | Completed in Phase 2 | Planned (Phase 3) | Not Yet Implemented |
+| Foundation (Phase 1) | Foundation (Phase 2) | Completed in Phase 3 | Planned (Phase 4 & Beyond) |
 | --- | --- | --- | --- |
-| FastAPI application factory and lifecycle | Opportunity model replacing Event with `opportunity_type`, `location`, `compensation` | Web ingestion pipeline for opportunity URLs | Automated LLM extraction pipeline |
-| Environment-driven configuration | Alembic migration framework (`alembic upgrade head`) | Rule-based explainable recommendation scorer | Real-time WebSocket chat (intentionally excluded from MVP) |
-| SQLite database initialization and health check | `FieldEvidence` source-linked evidence layer | Student intent and preference entry UI | Social feed / endless scroll (explicitly excluded) |
-| Read-only listing endpoint | `StudentProfile` model with self-reported goals and privacy levels | Alumni profile and mentorship availability UI | Scraping personal social media profiles |
-| React, Vite, TypeScript (strict), Tailwind frontend shell | `AlumniProfile` model with explicit `willing_to_connect` consent gate | Purpose-specific connection request flow | Fake / unverified "verification" badges |
-| Complete backend unit/integration tests | `MatchExplanation` persistence grounded in attributes | Profile and opportunity search filters | External production cluster infrastructure |
-| Quality gate verification suite (`scripts/verify.py`) | `ConnectionRequest` with explicit purpose categories and anti-self-loop validation | | |
-| | Updated `/opportunities` endpoint with backward-compatible `/events` support | | |
-| | Expanded test suite (90 passing backend tests, 29 passing frontend tests) | | |
+| FastAPI application factory and lifecycle | Opportunity model replacing Event with `opportunity_type`, `location`, `compensation` | Safe web retrieval service with robust SSRF protections (blocking loopback, private, link-local, metadata IPs) | Student intent & preference profiling UI |
+| Environment-driven configuration | Alembic migration framework (`alembic upgrade head`) | Generic 3-stage content extractor (JSON-LD structured, HTML metadata, rule-based heuristics) | Rule-based explainable recommendation scorer |
+| SQLite database initialization and health check | `FieldEvidence` source-linked evidence layer | Honest evidence attribution (`FOUND`, `NOT_FOUND`, etc.) with zero data fabrication | Alumni profile and mentorship availability matching UI |
+| Read-only listing endpoint | `StudentProfile` model with self-reported goals and privacy levels | Deterministic duplicate URL detection with optional `force_refresh` | Purpose-specific connection request workflow |
+| React, Vite, TypeScript (strict), Tailwind frontend shell | `AlumniProfile` model with explicit `willing_to_connect` consent gate | Opportunity intake API: `POST /api/v1/opportunities/ingest` | Automated LLM extraction provider integration (optional) |
+| Complete backend unit/integration tests | `MatchExplanation` persistence grounded in attributes | React frontend intake UI with URL validation, loading state, duplicate handling, and evidence breakdown table | Real-time chat (intentionally excluded from initial MVP) |
+| Quality gate verification suite (`scripts/verify.py`) | `ConnectionRequest` with explicit purpose categories and anti-self-loop validation | 138 backend tests (SSRF, retrieval, extractor, API) & 33 frontend tests | Scraping personal social media profiles (strictly prohibited) |
+| | Updated `/opportunities` endpoint with backward-compatible `/events` support | Full quality gate suite: 10/10 passing (`scripts/verify.py`) | |
 
 ---
 

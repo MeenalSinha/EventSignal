@@ -22,9 +22,12 @@ export interface JsonResponse {
 }
 
 interface RequestOptions {
-  signal?: AbortSignal;
+  method?: "GET" | "POST" | "PUT" | "DELETE" | undefined;
+  body?: unknown;
+  headers?: Record<string, string> | undefined;
+  signal?: AbortSignal | undefined;
   /** Non-2xx statuses whose JSON body is a meaningful, documented response (for example 503 on /health). */
-  acceptStatuses?: readonly number[];
+  acceptStatuses?: readonly number[] | undefined;
 }
 
 export async function requestJson(path: string, options: RequestOptions = {}): Promise<JsonResponse> {
@@ -39,13 +42,25 @@ export async function requestJson(path: string, options: RequestOptions = {}): P
   const timeout = AbortSignal.timeout(config.requestTimeoutMs);
   const signal = options.signal ? AbortSignal.any([options.signal, timeout]) : timeout;
 
+  const method = options.method ?? "GET";
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...(options.body !== undefined ? { "Content-Type": "application/json" } : {}),
+    ...options.headers,
+  };
+
+  const fetchInit: RequestInit = {
+    method,
+    headers,
+    signal,
+  };
+  if (options.body !== undefined) {
+    fetchInit.body = JSON.stringify(options.body);
+  }
+
   let response: Response;
   try {
-    response = await fetch(`${config.apiBaseUrl}${path}`, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      signal,
-    });
+    response = await fetch(`${config.apiBaseUrl}${path}`, fetchInit);
   } catch (error) {
     if (options.signal?.aborted) throw error; // caller cancelled; not a failure to report
     if (error instanceof DOMException && error.name === "TimeoutError") {
@@ -56,7 +71,18 @@ export async function requestJson(path: string, options: RequestOptions = {}): P
 
   const accepted = response.ok || (options.acceptStatuses?.includes(response.status) ?? false);
   if (!accepted) {
-    throw new ApiError("http", `The backend returned an error (HTTP ${response.status}).`, response.status);
+    let detailMessage = `The backend returned an error (HTTP ${response.status}).`;
+    try {
+      const errBody = (await response.json()) as { detail?: string; error?: { message?: string } };
+      if (typeof errBody.detail === "string") {
+        detailMessage = errBody.detail;
+      } else if (typeof errBody.error?.message === "string") {
+        detailMessage = errBody.error.message;
+      }
+    } catch {
+      // Ignore JSON parse error on error response
+    }
+    throw new ApiError("http", detailMessage, response.status);
   }
 
   try {
