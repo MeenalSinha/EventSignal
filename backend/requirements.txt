@@ -5,6 +5,9 @@ pydantic==2.14.1
 pydantic-settings==2.16.0
 SQLAlchemy==2.1.4
 
+# Phase 2: schema migration support.
+alembic==1.16.1
+
 # Declared now for the Phase 2 ingestion layer. Not used by any Phase 1 code path
 # (httpx is also required by FastAPI's TestClient).
 httpx==0.28.1

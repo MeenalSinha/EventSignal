@@ -96,7 +96,7 @@ def test_health_recovers_after_schema_restored(client: TestClient) -> None:
 def test_health_does_not_modify_data(client: TestClient, session: Session) -> None:
     from sqlalchemy import func, select
 
-    from app.models import Event
+    from app.models import Opportunity
 
     client.get(URL)
-    assert session.scalar(select(func.count()).select_from(Event)) == 0
+    assert session.scalar(select(func.count()).select_from(Opportunity)) == 0

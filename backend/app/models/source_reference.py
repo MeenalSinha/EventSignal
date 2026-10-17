@@ -1,8 +1,9 @@
-"""Source references: where information about an event may come from.
+"""Source references: provenance records for opportunity information.
 
-A source row records provenance only. Extracted values, excerpts and evidence
-statuses will live in a separate evidence table in a later phase and reference
-``source_references.id``.
+Adapted from Phase 1: ``event_id`` foreign key becomes ``opportunity_id``.
+The column semantics and constraints are unchanged.
+
+Migration note: this model is updated in Alembic revision 0001.
 """
 
 from __future__ import annotations
@@ -17,11 +18,12 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.models.base import Base, TimestampMixin, UTCDateTime, new_id
 
 if TYPE_CHECKING:
-    from app.models.event import Event
+    from app.models.field_evidence import FieldEvidence
+    from app.models.opportunity import Opportunity
 
 
 class SourceType(enum.StrEnum):
-    EVENT_LISTING = "event_listing"
+    OPPORTUNITY_LISTING = "opportunity_listing"
     ORGANIZER_WEBSITE = "organizer_website"
     REGISTRATION_PAGE = "registration_page"
     ANNOUNCEMENT = "announcement"
@@ -34,13 +36,14 @@ class SourceType(enum.StrEnum):
 class SourceReference(TimestampMixin, Base):
     __tablename__ = "source_references"
     __table_args__ = (
-        # A URL is recorded at most once per event. NULL urls (manual text) are allowed repeatedly.
-        UniqueConstraint("event_id", "url"),
+        # A URL is recorded at most once per opportunity.
+        # NULL urls (manual text) are allowed repeatedly.
+        UniqueConstraint("opportunity_id", "url"),
     )
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
-    event_id: Mapped[str] = mapped_column(
-        ForeignKey("events.id", ondelete="CASCADE"), nullable=False, index=True
+    opportunity_id: Mapped[str] = mapped_column(
+        ForeignKey("opportunities.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
     source_type: Mapped[SourceType] = mapped_column(
@@ -63,4 +66,5 @@ class SourceReference(TimestampMixin, Base):
     # Free-form retrieval/extraction metadata (HTTP status, content type, ...) for later phases.
     source_metadata: Mapped[dict[str, Any] | None] = mapped_column(JSON)
 
-    event: Mapped[Event] = relationship(back_populates="sources")
+    opportunity: Mapped[Opportunity] = relationship(back_populates="sources")
+    evidence: Mapped[list[FieldEvidence]] = relationship(back_populates="source")

@@ -58,7 +58,11 @@ def ensure_sqlite_directory(settings: Settings) -> None:
 
 
 def init_db(engine: Engine) -> None:
-    """Create ORM tables. Development-stage choice; swap for migrations later.
+    """Create ORM tables for a fresh database.
+
+    Used during development and for per-test in-memory databases. For any
+    persistent database where schema changes may affect existing data, run
+    Alembic migrations instead (``alembic upgrade head`` from backend/).
 
     Never inserts any rows.
     """

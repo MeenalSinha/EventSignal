@@ -16,7 +16,7 @@ from app.database import (
     missing_tables,
 )
 from app.main import create_app
-from app.models import Base, Event, SourceReference
+from app.models import AlumniProfile, Base, Opportunity, SourceReference, StudentProfile
 
 
 def test_startup_creates_directory_database_and_tables(
@@ -26,7 +26,15 @@ def test_startup_creates_directory_database_and_tables(
     assert path is not None and path.exists()
     assert path.parent.name == "nested"
     tables = set(inspect(client.app.state.engine).get_table_names())  # type: ignore[attr-defined]
-    assert {"events", "source_references"} <= tables
+    assert {
+        "opportunities",
+        "source_references",
+        "field_evidence",
+        "student_profiles",
+        "alumni_profiles",
+        "match_explanations",
+        "connection_requests",
+    } <= tables
 
 
 def test_tests_use_isolated_database(settings: Settings) -> None:
@@ -36,8 +44,10 @@ def test_tests_use_isolated_database(settings: Settings) -> None:
 
 
 def test_no_rows_are_seeded_at_startup(session: Session) -> None:
-    assert session.scalar(select(func.count()).select_from(Event)) == 0
+    assert session.scalar(select(func.count()).select_from(Opportunity)) == 0
     assert session.scalar(select(func.count()).select_from(SourceReference)) == 0
+    assert session.scalar(select(func.count()).select_from(StudentProfile)) == 0
+    assert session.scalar(select(func.count()).select_from(AlumniProfile)) == 0
 
 
 def test_init_db_is_idempotent(client: TestClient) -> None:
@@ -57,7 +67,9 @@ def test_check_connection_succeeds_and_fails_appropriately(client: TestClient, t
 
 def test_missing_tables_detects_absent_schema(tmp_path) -> None:  # type: ignore[no-untyped-def]
     engine = create_db_engine(f"sqlite:///{(tmp_path / 'empty.db').as_posix()}")
-    assert missing_tables(engine) == ["events", "source_references"]
+    absent = missing_tables(engine)
+    assert "opportunities" in absent
+    assert "source_references" in absent
     init_db(engine)
     assert missing_tables(engine) == []
 
@@ -100,7 +112,16 @@ def test_startup_survives_unusable_database_and_health_reports_it(
 
 
 def test_metadata_registers_expected_tables() -> None:
-    assert set(Base.metadata.tables) == {"events", "source_references"}
+    expected = {
+        "opportunities",
+        "source_references",
+        "field_evidence",
+        "student_profiles",
+        "alumni_profiles",
+        "match_explanations",
+        "connection_requests",
+    }
+    assert set(Base.metadata.tables) == expected
 
 
 def test_in_memory_database_works_across_connections() -> None:
