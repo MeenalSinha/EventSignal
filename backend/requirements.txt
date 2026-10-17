@@ -1,0 +1,11 @@
+# Runtime dependencies (pinned to the versions the Phase 1 test suite was run against).
+fastapi==0.143.3
+uvicorn[standard]==0.54.0
+pydantic==2.14.1
+pydantic-settings==2.16.0
+SQLAlchemy==2.1.4
+
+# Declared now for the Phase 2 ingestion layer. Not used by any Phase 1 code path
+# (httpx is also required by FastAPI's TestClient).
+httpx==0.28.1
+beautifulsoup4==4.15.0
