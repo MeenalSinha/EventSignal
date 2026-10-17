@@ -8,6 +8,7 @@ interface AuthModalProps {
   currentUser: UserProfile | null;
   onAuthSuccess: (profile: UserProfile | null) => void;
   onLogout: () => void;
+  promptDescription?: string | null;
 }
 
 export function AuthModal({
@@ -16,11 +17,13 @@ export function AuthModal({
   currentUser,
   onAuthSuccess,
   onLogout,
+  promptDescription,
 }: AuthModalProps) {
   const [isRegister, setIsRegister] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -134,8 +137,18 @@ export function AuthModal({
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            {promptDescription && (
+              <div className="rounded-xl border border-teal/30 bg-teal-wash p-3 text-xs text-teal flex items-start gap-2">
+                <span>🔒</span>
+                <div>
+                  <p className="font-semibold text-ink">Authentication Required</p>
+                  <p className="text-[11px] text-ink-soft mt-0.5">{promptDescription}</p>
+                </div>
+              </div>
+            )}
+
             {error && (
-              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-xs text-red-700">
                 {error}
               </div>
             )}
@@ -151,7 +164,7 @@ export function AuthModal({
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   placeholder="e.g. Alex Rivera"
-                  className="mt-1 w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                  className="mt-1 w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-xs text-ink outline-hidden focus:border-teal focus:ring-1 focus:ring-teal"
                 />
               </div>
             )}
@@ -166,29 +179,38 @@ export function AuthModal({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@university.edu"
-                className="mt-1 w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className="mt-1 w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-xs text-ink outline-hidden focus:border-teal focus:ring-1 focus:ring-teal"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-ink-soft">
-                Password
-              </label>
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-ink-soft">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[11px] font-medium text-teal hover:underline"
+                >
+                  {showPassword ? "Hide" : "Show"}
+                </button>
+              </div>
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 minLength={8}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="At least 8 characters"
-                className="mt-1 w-full rounded-xl border border-line bg-paper px-3.5 py-2.5 text-sm text-ink outline-none focus:border-accent focus:ring-2 focus:ring-accent/20"
+                className="mt-1 w-full rounded-xl border border-line bg-card px-3.5 py-2.5 text-xs text-ink outline-hidden focus:border-teal focus:ring-1 focus:ring-teal"
               />
             </div>
 
             <button
               type="submit"
               disabled={loading}
-              className="mt-4 w-full rounded-xl bg-ink py-2.5 text-sm font-semibold text-paper transition hover:bg-ink-light disabled:opacity-50"
+              className="mt-4 w-full rounded-xl bg-teal py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-teal-deep disabled:opacity-50"
             >
               {loading
                 ? "Processing..."
@@ -204,7 +226,7 @@ export function AuthModal({
                   setIsRegister(!isRegister);
                   setError(null);
                 }}
-                className="text-xs font-medium text-accent hover:underline"
+                className="text-xs font-medium text-teal hover:underline"
               >
                 {isRegister
                   ? "Already have an account? Sign in"

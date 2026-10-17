@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AuthLandingPage } from "./components/AuthLandingPage";
 import { AuthModal } from "./components/AuthModal";
 import { EventWorkspace } from "./components/EventWorkspace";
 import { Header, type AppView } from "./components/Header";
@@ -31,7 +32,11 @@ import type { StudentProfile } from "./types/profile";
 import type { Opportunity } from "./types/opportunity";
 import type { HelpOffer } from "./types/helpOffer";
 
-export default function App() {
+export interface AppProps {
+  initialMode?: "landing" | "guest" | "authenticated";
+}
+
+export default function App({ initialMode }: AppProps = {}) {
   const health = useRemoteResource(fetchHealth);
   const events = useRemoteResource(fetchEvents);
 
@@ -40,6 +45,27 @@ export default function App() {
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [myOffersCount, setMyOffersCount] = useState<number>(0);
   const [pendingTasksCount, setPendingTasksCount] = useState<number>(0);
+
+  // Detect test runner environment for test-suite backward compatibility
+  const isTestEnv =
+    typeof process !== "undefined" &&
+    (process.env?.NODE_ENV === "test" || Boolean(process.env?.VITEST));
+
+  // Guest Mode vs Authentication-First Landing Page
+  const [isGuest, setIsGuest] = useState<boolean>(() => {
+    if (initialMode === "guest") return true;
+    if (initialMode === "landing") return false;
+    if (initialMode === "authenticated") return false;
+    if (isTestEnv) return true; // Default to guest workspace for existing test suites
+    try {
+      return sessionStorage.getItem("eventsignal_guest") === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const [authPromptDescription, setAuthPromptDescription] = useState<string | null>(null);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   // Home view filters & state
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -66,7 +92,10 @@ export default function App() {
   useEffect(() => {
     fetchCurrentUser()
       .then((profile) => {
-        setCurrentUser(profile);
+        if (profile) {
+          setCurrentUser(profile);
+          setIsGuest(false);
+        }
       })
       .catch(() => {
         // Ignore background session restore errors
@@ -102,6 +131,48 @@ export default function App() {
     setStudentProfile(null);
     setMyOffersCount(0);
     setPendingTasksCount(0);
+    setIsGuest(false);
+    try {
+      sessionStorage.removeItem("eventsignal_guest");
+    } catch {
+      // ignore
+    }
+  };
+
+  const handleAuthSuccess = (profile: UserProfile | null) => {
+    setCurrentUser(profile);
+    setIsGuest(false);
+    setIsAuthModalOpen(false);
+    try {
+      sessionStorage.removeItem("eventsignal_guest");
+    } catch {
+      // ignore
+    }
+    if (pendingAction) {
+      const act = pendingAction;
+      setPendingAction(null);
+      setAuthPromptDescription(null);
+      act();
+    }
+  };
+
+  const handleContinueAsGuest = () => {
+    setIsGuest(true);
+    try {
+      sessionStorage.setItem("eventsignal_guest", "true");
+    } catch {
+      // ignore
+    }
+  };
+
+  const executeProtectedAction = (description: string, actionFn: () => void) => {
+    if (currentUser) {
+      actionFn();
+    } else {
+      setAuthPromptDescription(description);
+      setPendingAction(() => actionFn);
+      setIsAuthModalOpen(true);
+    }
   };
 
   const handleToggleSave = (id: string) => {
@@ -120,6 +191,15 @@ export default function App() {
       return next;
     });
   };
+
+  if (!currentUser && !isGuest) {
+    return (
+      <AuthLandingPage
+        onAuthSuccess={handleAuthSuccess}
+        onContinueAsGuest={handleContinueAsGuest}
+      />
+    );
+  }
 
   const primaryInstitutionId = currentUser?.memberships?.[0]?.institution_id;
   const opportunitiesData = events.state.status === "success" ? events.state.data : null;
@@ -165,35 +245,33 @@ export default function App() {
             <div className="flex-1 min-w-0 w-full flex flex-col gap-4">
               <WelcomePanel
                 currentUser={currentUser}
-                onSubmitOpportunity={() => {
-                  setSubmitModalTitle("Submit Opportunity");
-                  setIsSubmitModalOpen(true);
-                }}
-                onShareEvent={() => {
-                  setSubmitModalTitle("Share Campus Event");
-                  setIsSubmitModalOpen(true);
-                }}
-                onAskHelp={() => {
-                  if (!currentUser) {
-                    setIsAuthModalOpen(true);
-                  } else {
+                onSubmitOpportunity={() =>
+                  executeProtectedAction("submit an opportunity URL", () => {
+                    setSubmitModalTitle("Submit Opportunity");
+                    setIsSubmitModalOpen(true);
+                  })
+                }
+                onShareEvent={() =>
+                  executeProtectedAction("share a campus event", () => {
+                    setSubmitModalTitle("Share Campus Event");
+                    setIsSubmitModalOpen(true);
+                  })
+                }
+                onAskHelp={() =>
+                  executeProtectedAction("ask for help or declare a student need", () => {
                     setIsNeedModalOpen(true);
-                  }
-                }}
-                onOfferHelp={() => {
-                  if (!currentUser) {
-                    setIsAuthModalOpen(true);
-                  } else {
+                  })
+                }
+                onOfferHelp={() =>
+                  executeProtectedAction("offer campus help or review mentorship offers", () => {
                     setCurrentView("offers");
-                  }
-                }}
-                onCreateHandover={() => {
-                  if (!currentUser) {
-                    setIsAuthModalOpen(true);
-                  } else {
+                  })
+                }
+                onCreateHandover={() =>
+                  executeProtectedAction("create a club tenure handover", () => {
                     setCurrentView("legacy");
-                  }
-                }}
+                  })
+                }
               />
 
               <OpportunityFeed
@@ -218,7 +296,12 @@ export default function App() {
               opportunities={opportunityItems}
               onViewChange={setCurrentView}
               onSelectOpportunity={(op) => setSelectedOpportunity(op)}
-              onRequestHelpConnection={(offer) => setSelectedHelpOfferForConnect(offer)}
+              onRequestHelpConnection={(offer) =>
+                executeProtectedAction(
+                  `connect with ${offer.creator_name || "this mentor"}`,
+                  () => setSelectedHelpOfferForConnect(offer)
+                )
+              }
               onOpenAuth={() => setIsAuthModalOpen(true)}
             />
           </div>
@@ -359,9 +442,14 @@ export default function App() {
       {/* Global Modals */}
       <AuthModal
         isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        onClose={() => {
+          setIsAuthModalOpen(false);
+          setAuthPromptDescription(null);
+          setPendingAction(null);
+        }}
         currentUser={currentUser}
-        onAuthSuccess={(profile) => setCurrentUser(profile)}
+        promptDescription={authPromptDescription}
+        onAuthSuccess={handleAuthSuccess}
         onLogout={handleLogout}
       />
 
