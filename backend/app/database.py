@@ -89,3 +89,6 @@ def get_session(request: Request) -> Iterator[Session]:
         yield session
     finally:
         session.close()
+
+
+get_db = get_session

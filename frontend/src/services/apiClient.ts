@@ -22,7 +22,7 @@ export interface JsonResponse {
 }
 
 interface RequestOptions {
-  method?: "GET" | "POST" | "PUT" | "DELETE" | undefined;
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" | undefined;
   body?: unknown;
   headers?: Record<string, string> | undefined;
   signal?: AbortSignal | undefined;

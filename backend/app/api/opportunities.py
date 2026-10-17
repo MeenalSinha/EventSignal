@@ -36,15 +36,22 @@ def list_opportunities(
     session: Annotated[Session, Depends(get_session)],
     limit: Annotated[int, Query(ge=1, le=MAX_PAGE_SIZE)] = DEFAULT_PAGE_SIZE,
     offset: Annotated[int, Query(ge=0)] = 0,
+    institution_id: Annotated[str | None, Query()] = None,
 ) -> OpportunityList:
-    total = session.scalar(select(func.count()).select_from(Opportunity)) or 0
-    rows = session.scalars(
+    count_stmt = select(func.count()).select_from(Opportunity)
+    query_stmt = (
         select(Opportunity)
         .options(selectinload(Opportunity.sources), selectinload(Opportunity.evidence))
         .order_by(Opportunity.created_at.desc(), Opportunity.id)
         .limit(limit)
         .offset(offset)
-    ).all()
+    )
+    if institution_id:
+        count_stmt = count_stmt.where(Opportunity.institution_id == institution_id)
+        query_stmt = query_stmt.where(Opportunity.institution_id == institution_id)
+
+    total = session.scalar(count_stmt) or 0
+    rows = session.scalars(query_stmt).all()
     return OpportunityList(
         items=[OpportunityRead.model_validate(row) for row in rows],
         total=total,

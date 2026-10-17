@@ -121,6 +121,13 @@ def test_metadata_registers_expected_tables() -> None:
         "match_explanations",
         "connection_requests",
         "opportunity_assessments",
+        "users",
+        "institutions",
+        "institution_memberships",
+        "organizational_units",
+        "campus_position_definitions",
+        "campus_role_assignments",
+        "audit_logs",
     }
     assert set(Base.metadata.tables) == expected
 

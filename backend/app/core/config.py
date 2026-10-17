@@ -70,6 +70,14 @@ class Settings(BaseSettings):
     # Assessment policy path (configurable outside calculation functions)
     assessment_policy_path: str = Field(default="app/core/default_assessment_policy.json")
 
+    # Phase 5: Authentication & Institutional Security settings
+    auth_secret_key: str = Field(
+        default="eventsignal-dev-secret-key-change-in-production-min-32-chars", min_length=16
+    )
+    auth_token_expire_minutes: int = Field(default=1440, ge=1)
+    auth_bootstrap_admin_email: str | None = Field(default=None)
+    auth_bootstrap_admin_password: str | None = Field(default=None)
+
     @field_validator("ingest_allowed_content_types", mode="before")
     @classmethod
     def _split_content_types(cls, value: object) -> object:

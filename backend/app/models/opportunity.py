@@ -14,13 +14,14 @@ import enum
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Enum, String, Text
+from sqlalchemy import Enum, ForeignKey, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.models.base import Base, TimestampMixin, UTCDateTime, new_id
 
 if TYPE_CHECKING:
     from app.models.field_evidence import FieldEvidence
+    from app.models.institution import Institution
     from app.models.opportunity_assessment import OpportunityAssessment
     from app.models.source_reference import SourceReference
 
@@ -108,4 +109,12 @@ class Opportunity(TimestampMixin, Base):
         back_populates="opportunity",
         cascade="all, delete-orphan",
         uselist=False,
+    )
+
+    # Scoped institutional workspace (added Phase 5; None indicates platform-wide)
+    institution_id: Mapped[str | None] = mapped_column(
+        String(36), ForeignKey("institutions.id", ondelete="SET NULL"), index=True
+    )
+    institution: Mapped[Institution | None] = relationship(
+        back_populates="opportunities",
     )

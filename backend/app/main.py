@@ -10,7 +10,7 @@ from fastapi import APIRouter, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api import assessment, health, opportunities
+from app.api import assessment, auth, health, institutions, opportunities
 from app.core.config import Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
@@ -63,8 +63,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
-        allow_methods=["GET", "POST"],
-        allow_headers=["Content-Type"],
+        allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
     )
     register_error_handlers(app)
 
@@ -72,5 +72,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(health.router)
     v1.include_router(opportunities.router)
     v1.include_router(assessment.router)
+    v1.include_router(auth.router)
+    v1.include_router(institutions.router)
     app.include_router(v1)
     return app

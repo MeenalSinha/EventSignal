@@ -138,6 +138,7 @@ class OpportunityRead(BaseModel):
     skills_required: str | None
     compensation: str | None
     application_url: str | None
+    institution_id: str | None = None
     sources: list[SourceReferenceRead]
     evidence: list[FieldEvidenceRead] = Field(default_factory=list)
     created_at: datetime
