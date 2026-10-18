@@ -376,6 +376,7 @@ export default function App({ initialMode }: AppProps = {}) {
                       setCurrentView("legacy");
                     })
                   }
+                  onNavigateView={setCurrentView}
                 />
 
                 <OpportunityFeed

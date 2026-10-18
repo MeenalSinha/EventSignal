@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Annotated, Literal
 from urllib.parse import urlparse
 
-from pydantic import Field, ValidationError, field_validator
+from pydantic import Field, ValidationError, field_validator, model_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 from sqlalchemy.engine import make_url
 
@@ -80,8 +80,31 @@ class Settings(BaseSettings):
 
     # Demo Mode settings
     demo_mode_enabled: bool = Field(default=False)
+    demo_require_explicit_credentials: bool = Field(default=False)
     demo_user_email: str | None = Field(default="demo@eventsignal.local")
     demo_user_password: str | None = Field(default="DemoSignal2026!Secure")
+
+    @model_validator(mode="after")
+    def _validate_demo_configuration(self) -> Settings:
+        if self.demo_mode_enabled:
+            # Require explicit non-default credentials in production or when explicitly configured
+            if self.demo_require_explicit_credentials or self.app_env == "production":
+                normalized_email = (self.demo_user_email or "").strip().lower()
+                if not normalized_email or normalized_email == "demo@eventsignal.local":
+                    raise ValueError(
+                        "In production or when DEMO_REQUIRE_EXPLICIT_CREDENTIALS=true, "
+                        "DEMO_USER_EMAIL must be explicitly configured and cannot use default 'demo@eventsignal.local'."
+                    )
+                if not self.demo_user_password or self.demo_user_password == "DemoSignal2026!Secure":
+                    raise ValueError(
+                        "In production or when DEMO_REQUIRE_EXPLICIT_CREDENTIALS=true, "
+                        "DEMO_USER_PASSWORD must be explicitly configured with a secure non-default password."
+                    )
+            if self.demo_user_password and len(self.demo_user_password) < 8:
+                raise ValueError("DEMO_USER_PASSWORD must be at least 8 characters long.")
+            if self.demo_user_email and "@" not in self.demo_user_email:
+                raise ValueError("DEMO_USER_EMAIL must be a valid email address.")
+        return self
 
     @field_validator("ingest_allowed_content_types", mode="before")
     @classmethod

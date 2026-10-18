@@ -258,6 +258,15 @@ All 226 backend unit, integration, and security tests passed with zero failures 
     - Added tests verifying notification badge only renders when real notifications exist and remains hidden when count is 0.
 14. `docs/DEMO_MODE_AUDIT_REPORT.md`:
     - Comprehensive audit report documenting the entire review, defect resolutions, and verification evidence.
+15. `backend/app/api/auth.py`:
+    - Secured `POST /api/v1/auth/demo/seed` and `POST /api/v1/auth/demo/reset` endpoints. Anonymous calls reject with 401 Unauthorized; calls when demo mode is disabled or by non-demo callers reject with 403 Forbidden.
+16. `backend/app/core/config.py`:
+    - Added `demo_require_explicit_credentials` configuration. In production (`APP_ENV=production`) or when explicit credentials are required, predictable default credentials (`demo@eventsignal.local` and `DemoSignal2026!Secure`) are rejected at startup.
+17. `backend/app/services/demo_service.py`:
+    - Implemented collision protection during provisioning and seeding. If an email is already registered to a real user without the `is_demo` flag, seeding halts with a collision error instead of hijacking real records.
+    - Added guard during `reset_demo_environment` ensuring only records with `is_demo=True` can be deleted, and preserving the presenter account so active sessions remain valid.
+18. `frontend/src/components/WelcomePanel.tsx`:
+    - Added the interactive **Evaluator & Judge Guided Tour** card in Demo Mode featuring 5 direct jump links across the Signal Feed, Campus Network, Mutual Aid & Helper Exchange, Institutional Memory, and Corporate Partnerships.
 
 ---
 
@@ -265,29 +274,33 @@ All 226 backend unit, integration, and security tests passed with zero failures 
 
 ### Demo Credentials
 - **Sign-in Tab:** Demo Mode
-- **Email:** `demo@eventsignal.local`
-- **Password:** `DemoSignal2026!Secure`
-- **Assigned Workspace:** Apex Institute of Technology (Demo Workspace)
+- **Email:** `demo@eventsignal.local` (configurable via `DEMO_USER_EMAIL`)
+- **Password:** `DemoSignal2026!Secure` (configurable via `DEMO_USER_PASSWORD`)
+- **Assigned Workspace:** Apex Institute of Technology (Demo Workspace `demo-inst-apex-tech-001`)
 
 ### Presentation Flow
-1. **Landing Page:** Show "Demo Mode" tab, explain the 3-mode architectural separation, and sign in.
-2. **Dashboard:** Point out the amber Demo Mode banner, college workspace indicator, and verified opportunity feed.
-3. **Opportunities:** Ingest a new opportunity URL or filter existing opportunities by evidence tier.
-4. **Campus Network:** Browse campus profiles, filter by skills, and inspect student/alumni mentorship availability.
-5. **Help Offers ("Help Others"):** View active peer mentorship offers and demonstrate opening the "Ask for Help" modal.
-6. **Legacy & Matching:** Review student needs, explain the compatibility score breakdown, review past handovers and event memories, and toggle follow-up task statuses.
-7. **Partnerships & Pilot:** Review sponsorship prospectuses, update lifecycle status, test the Alumni Directory CSV dry run, and present auditable pilot metrics.
-8. **Sign Out:** Sign out to show clean session termination returning to the landing page.
+1. **Landing Page:** Show the "Demo Mode" tab, explain the 3-mode architectural separation, and sign in.
+2. **Evaluator Guided Journey:** Point out the amber Demo Mode banner and the 5-step Evaluator Guided Tour card on the welcome panel.
+3. **Stage 1 — Signal Feed (`home`):** Ingest an opportunity URL, review field-level provenance (`FieldEvidence`), and inspect automated credibility scores.
+4. **Stage 2 — Campus Network (`network`):** Browse 13 academic units/clubs, student/alumni member profiles, and official campus positions.
+5. **Stage 3 — Mutual Aid & Matching (`offers`):** Review student needs, inspect deterministic Gap-to-Helper score explanations, and test offering help.
+6. **Stage 4 — Institutional Memory (`legacy`):** Explore club officer handovers, event retrospectives, and toggle follow-up commitments.
+7. **Stage 5 — Partnerships & Pilot (`partnerships`):** Inspect corporate sponsors, tier prospectuses, inter-collegiate promotions, and verified pilot metrics.
+8. **Sign Out:** Sign out to verify session termination returning to the landing page.
 
 ### Safe Data Reset Procedure
 To reset all demo records to pristine initial state:
 
-**Option 1 — API (backend must be running):**
+**Option 1 — Authenticated API (backend must be running):**
 ```powershell
-# Remove existing demo records
-curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/reset
-# Re-seed from clean state
-curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/seed
+# 1. Obtain demo presenter token
+$token = (Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/login" -Method Post -ContentType "application/json" -Body '{"email":"demo@eventsignal.local","password":"DemoSignal2026!Secure"}').access_token
+
+# 2. Reset demonstration environment (requires auth)
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/demo/reset" -Method Post -Headers @{ Authorization = "Bearer $token" }
+
+# 3. Re-seed clean demonstration dataset (requires auth)
+Invoke-RestMethod -Uri "http://127.0.0.1:8000/api/v1/auth/demo/seed" -Method Post -Headers @{ Authorization = "Bearer $token" }
 ```
 
 **Option 2 — Restart the backend:**

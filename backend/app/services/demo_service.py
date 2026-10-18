@@ -164,10 +164,19 @@ class DemoService:
         email = (settings.demo_user_email or "demo@eventsignal.local").strip().lower()
         password = settings.demo_user_password or "DemoSignal2026!Secure"
 
-        existing = db.scalar(select(User).where(User.id == DEMO_USER_ID))
-        if not existing:
-            existing = db.scalar(select(User).where(User.email == email))
+        existing_by_id = db.scalar(select(User).where(User.id == DEMO_USER_ID))
+        existing_by_email = db.scalar(select(User).where(User.email == email))
 
+        # Collision guard: If email is registered to a user that is NOT DEMO_USER_ID and not marked as demo:
+        if existing_by_email and existing_by_email.id != DEMO_USER_ID:
+            is_demo = bool(existing_by_email.extra_data and existing_by_email.extra_data.get("is_demo") is True)
+            if not is_demo:
+                raise RuntimeError(
+                    f"Account collision: Demo email '{email}' is already registered to a real user account. "
+                    "Cannot overwrite real user records for demo mode."
+                )
+
+        existing = existing_by_id or existing_by_email
         if existing:
             existing.email = email
             existing.hashed_password = hash_password(password)
@@ -342,7 +351,17 @@ class DemoService:
         for uid, email, full_name, m_role, is_demo in users_specs:
             u = db.scalar(select(User).where(User.id == uid))
             if not u:
-                u = db.scalar(select(User).where(User.email == email))
+                existing_email_user = db.scalar(select(User).where(User.email == email))
+                if existing_email_user:
+                    is_demo_rec = bool(
+                        existing_email_user.extra_data and existing_email_user.extra_data.get("is_demo") is True
+                    )
+                    if not is_demo_rec:
+                        raise RuntimeError(
+                            f"Account collision during demo seeding: Email '{email}' is registered to a real user. "
+                            "Aborting seed to protect real user records."
+                        )
+                    u = existing_email_user
             if not u:
                 u = User(
                     id=uid,
@@ -1640,11 +1659,23 @@ class DemoService:
             db.execute(delete(InstitutionMembership).where(InstitutionMembership.institution_id == DEMO_INSTITUTION_ID))
             db.delete(inst)
 
-        # Remove demo accounts
+        # Remove demo accounts (strictly verifying is_demo marker to prevent touching real users)
+        # Note: We preserve the primary presenter DEMO_USER_ID account so the presenter's active session
+        # token remains valid to re-seed or perform demo admin operations. All memberships and
+        # institution-scoped assets for the presenter were cleanly deleted above.
         for uid in ALL_DEMO_USER_IDS:
+            if uid == DEMO_USER_ID:
+                continue
             u = db.scalar(select(User).where(User.id == uid))
             if u:
-                db.delete(u)
+                if u.extra_data and u.extra_data.get("is_demo") is True:
+                    db.delete(u)
+                else:
+                    logger.warning(
+                        "Skipping deletion of user ID '%s' (%s) during demo reset: missing is_demo marker.",
+                        uid,
+                        u.email,
+                    )
 
         db.commit()
         return {

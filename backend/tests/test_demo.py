@@ -234,15 +234,46 @@ def test_demo_pilot_metrics_warning_disclaimer(demo_client: TestClient) -> None:
 
 
 def test_demo_api_status_and_actions(demo_client: TestClient) -> None:
-    """Test /auth/demo/status, /auth/demo/seed, and /auth/demo/reset endpoints."""
-    # 1. Status
+    """Test /auth/demo/status, /auth/demo/seed, and /auth/demo/reset endpoints with authentication security."""
+    # 1. Status is public
     status_resp = demo_client.get("/api/v1/auth/demo/status")
     assert status_resp.status_code == 200
     assert status_resp.json()["demo_mode_enabled"] is True
     assert status_resp.json()["demo_institution_id"] == DEMO_INSTITUTION_ID
 
-    # 2. Reset
-    reset_resp = demo_client.post("/api/v1/auth/demo/reset")
+    # 2. Anonymous calls to mutating endpoints must fail with 401 Unauthorized
+    anon_reset = demo_client.post("/api/v1/auth/demo/reset")
+    assert anon_reset.status_code == 401
+
+    anon_seed = demo_client.post("/api/v1/auth/demo/seed")
+    assert anon_seed.status_code == 401
+
+    # 3. Non-demo regular user calling seed/reset must fail with 403 Forbidden
+    reg_resp = demo_client.post(
+        "/api/v1/auth/register",
+        json={"email": "regular.student@test.local", "password": "SecurePassword123!", "full_name": "Regular Student"},
+    )
+    reg_token = reg_resp.json()["access_token"]
+    reg_headers = {"Authorization": f"Bearer {reg_token}"}
+
+    forbidden_reset = demo_client.post("/api/v1/auth/demo/reset", headers=reg_headers)
+    assert forbidden_reset.status_code == 403
+    assert "Only authorized demonstration presenters" in forbidden_reset.json()["detail"]
+
+    forbidden_seed = demo_client.post("/api/v1/auth/demo/seed", headers=reg_headers)
+    assert forbidden_seed.status_code == 403
+    assert "Only authorized demonstration presenters" in forbidden_seed.json()["detail"]
+
+    # 4. Authenticated demo presenter can reset and seed
+    login_resp = demo_client.post(
+        "/api/v1/auth/login",
+        json={"email": "demo@eventsignal.local", "password": "DemoPassword123!"},
+    )
+    demo_token = login_resp.json()["access_token"]
+    demo_headers = {"Authorization": f"Bearer {demo_token}"}
+
+    # Reset with demo presenter auth
+    reset_resp = demo_client.post("/api/v1/auth/demo/reset", headers=demo_headers)
     assert reset_resp.status_code == 200
     assert reset_resp.json()["status"] == "success"
 
@@ -250,8 +281,8 @@ def test_demo_api_status_and_actions(demo_client: TestClient) -> None:
     status_resp2 = demo_client.get("/api/v1/auth/demo/status")
     assert status_resp2.json()["demo_dataset_seeded"] is False
 
-    # 3. Seed
-    seed_resp = demo_client.post("/api/v1/auth/demo/seed")
+    # Seed with demo presenter auth
+    seed_resp = demo_client.post("/api/v1/auth/demo/seed", headers=demo_headers)
     assert seed_resp.status_code == 200
     assert seed_resp.json()["status"] == "success"
 
@@ -416,5 +447,77 @@ def test_demo_endpoints_forbidden_when_demo_disabled(make_settings: Callable[...
         reset_resp = client.post("/api/v1/auth/demo/reset")
         assert reset_resp.status_code == 403
         assert "Demo mode is disabled" in reset_resp.json()["detail"]
+
+
+def test_demo_explicit_credentials_required_in_production(make_settings: Callable[..., Settings]) -> None:
+    """In production or when DEMO_REQUIRE_EXPLICIT_CREDENTIALS=True, default demo credentials are rejected."""
+    from app.core.config import ConfigurationError, load_settings
+
+    # 1. Default credentials rejected when demo_require_explicit_credentials=True
+    with pytest.raises(ConfigurationError) as exc_info:
+        load_settings(
+            demo_mode_enabled=True,
+            demo_require_explicit_credentials=True,
+            demo_user_email="demo@eventsignal.local",
+            demo_user_password="DemoSignal2026!Secure",
+        )
+    assert "DEMO_USER_EMAIL must be explicitly configured" in str(exc_info.value)
+
+    # 2. Default credentials rejected when app_env='production'
+    with pytest.raises(ConfigurationError) as exc_info2:
+        load_settings(
+            demo_mode_enabled=True,
+            app_env="production",
+            demo_user_email="demo@eventsignal.local",
+            demo_user_password="DemoSignal2026!Secure",
+        )
+    assert "DEMO_USER_EMAIL must be explicitly configured" in str(exc_info2.value)
+
+    # 3. Explicit secure credentials succeed
+    valid_settings = load_settings(
+        demo_mode_enabled=True,
+        demo_require_explicit_credentials=True,
+        demo_user_email="evaluator.presenter@apextech.edu",
+        demo_user_password="UniqueCustomPassword2026!",
+    )
+    assert valid_settings.demo_user_email == "evaluator.presenter@apextech.edu"
+    assert valid_settings.demo_user_password == "UniqueCustomPassword2026!"
+
+
+def test_account_collision_protection_during_seeding_and_reset(demo_settings: Settings) -> None:
+    """Pre-existing real user account cannot be hijacked by demo provisioning or deleted by demo reset."""
+    from app.services.auth import register_user
+
+    app = create_app(demo_settings)
+    with TestClient(app) as client:
+        session_factory = app.state.session_factory
+        with session_factory() as session:
+            # 1. Register a real student with real credentials
+            real_user = register_user(
+                session=session,
+                email="real.student@domain.edu",
+                password="RealPassword123!",
+                full_name="Real Student",
+            )
+            real_user_id = real_user.id
+            session.commit()
+
+            # 2. Attempting to provision demo account using real user's email must fail with collision error
+            collision_settings = demo_settings.model_copy(update={"demo_user_email": "real.student@domain.edu"})
+            with pytest.raises(RuntimeError) as exc_info:
+                DemoService.provision_demo_account(session, collision_settings)
+            assert "Account collision" in str(exc_info.value)
+
+            # Verify real user's record was untouched
+            persisted_real = session.query(User).filter_by(id=real_user_id).first()
+            assert persisted_real is not None
+            assert persisted_real.full_name == "Real Student"
+            assert not persisted_real.extra_data or not persisted_real.extra_data.get("is_demo")
+
+            # 3. Reset demo environment must NOT delete the real user
+            DemoService.reset_demo_environment(session, demo_settings)
+            persisted_real_after_reset = session.query(User).filter_by(id=real_user_id).first()
+            assert persisted_real_after_reset is not None, "Real user must never be deleted during demo reset"
+
 
 

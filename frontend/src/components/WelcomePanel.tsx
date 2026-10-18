@@ -7,6 +7,7 @@ interface WelcomePanelProps {
   onAskHelp: () => void;
   onOfferHelp: () => void;
   onCreateHandover: () => void;
+  onNavigateView?: (view: "home" | "opportunities" | "network" | "offers" | "legacy" | "partnerships") => void;
 }
 
 export function WelcomePanel({
@@ -16,13 +17,14 @@ export function WelcomePanel({
   onAskHelp,
   onOfferHelp,
   onCreateHandover,
+  onNavigateView,
 }: WelcomePanelProps) {
   const parts = currentUser?.user.full_name?.split(" ");
   const firstName = parts && parts.length > 0 && parts[0] ? parts[0].toUpperCase() : null;
 
   return (
     <section className="relative overflow-hidden rounded-2xl border border-line bg-card p-5 sm:p-6 shadow-xs">
-      <div className="relative z-10 max-w-xl">
+      <div className="relative z-10 max-w-2xl">
         {/* Subtitle / User Greeting */}
         <div className="text-[11px] font-bold uppercase tracking-widest text-ink-muted">
           {firstName ? `WELCOME BACK, ${firstName}!` : "WELCOME TO EVENTSIGNAL"}
@@ -95,6 +97,99 @@ export function WelcomePanel({
             <span>Create Handover</span>
           </button>
         </div>
+
+        {/* Evaluator & Judge Guided Tour (Only in Demo Mode) */}
+        {currentUser?.is_demo && onNavigateView && (
+          <div className="mt-5 rounded-xl border border-amber-300/80 bg-amber-50/70 p-4 shadow-2xs">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-white">
+                  ★
+                </span>
+                <span className="text-xs font-bold uppercase tracking-wider text-amber-900">
+                  Evaluator & Judge Guided Tour
+                </span>
+              </div>
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-800">
+                5-Stage Architecture Walkthrough
+              </span>
+            </div>
+            <p className="mt-1 text-xs text-amber-950/80">
+              Explore interconnected campus modules across the Apex Institute demonstration environment:
+            </p>
+            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => onNavigateView("home")}
+                className="group flex flex-col items-start rounded-lg border border-amber-200/90 bg-white p-2.5 text-left shadow-2xs transition hover:border-amber-400 hover:shadow-xs"
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span className="text-[11px] font-bold text-ink">1. Signal Feed</span>
+                  <span className="text-[10px] font-semibold text-amber-700 group-hover:translate-x-0.5 transition-transform">→</span>
+                </div>
+                <span className="mt-0.5 text-[11px] text-ink-muted">
+                  Scored hackathons, fellowships, and credibility assessments.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onNavigateView("network")}
+                className="group flex flex-col items-start rounded-lg border border-amber-200/90 bg-white p-2.5 text-left shadow-2xs transition hover:border-amber-400 hover:shadow-xs"
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span className="text-[11px] font-bold text-ink">2. Campus Network</span>
+                  <span className="text-[10px] font-semibold text-amber-700 group-hover:translate-x-0.5 transition-transform">→</span>
+                </div>
+                <span className="mt-0.5 text-[11px] text-ink-muted">
+                  13 academic units, clubs, leadership positions, and member roster.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onNavigateView("offers")}
+                className="group flex flex-col items-start rounded-lg border border-amber-200/90 bg-white p-2.5 text-left shadow-2xs transition hover:border-amber-400 hover:shadow-xs"
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span className="text-[11px] font-bold text-ink">3. Mutual Aid & Matching</span>
+                  <span className="text-[10px] font-semibold text-amber-700 group-hover:translate-x-0.5 transition-transform">→</span>
+                </div>
+                <span className="mt-0.5 text-[11px] text-ink-muted">
+                  Peer help offers, student needs, and intelligent skill matching.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onNavigateView("legacy")}
+                className="group flex flex-col items-start rounded-lg border border-amber-200/90 bg-white p-2.5 text-left shadow-2xs transition hover:border-amber-400 hover:shadow-xs"
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span className="text-[11px] font-bold text-ink">4. Institutional Memory</span>
+                  <span className="text-[10px] font-semibold text-amber-700 group-hover:translate-x-0.5 transition-transform">→</span>
+                </div>
+                <span className="mt-0.5 text-[11px] text-ink-muted">
+                  Club officer handovers, event archives, and follow-up tasks.
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => onNavigateView("partnerships")}
+                className="group flex flex-col items-start rounded-lg border border-amber-200/90 bg-white p-2.5 text-left shadow-2xs transition hover:border-amber-400 hover:shadow-xs"
+              >
+                <div className="flex w-full items-center justify-between">
+                  <span className="text-[11px] font-bold text-ink">5. Partnerships & Sponsors</span>
+                  <span className="text-[10px] font-semibold text-amber-700 group-hover:translate-x-0.5 transition-transform">→</span>
+                </div>
+                <span className="mt-0.5 text-[11px] text-ink-muted">
+                  Corporate partners, tier packages, and inter-collegiate campaigns.
+                </span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Decorative campus architecture line art illustration in background */}

@@ -7,7 +7,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_optional_current_user
 from app.core.config import Settings, get_settings
 from app.database import get_db
 from app.models.user import User
@@ -124,20 +124,37 @@ def demo_status(
     }
 
 
-@router.post(
-    "/demo/seed",
-    summary="Seed the isolated demonstration dataset",
-)
-def seed_demo(
-    db: Annotated[Session, Depends(get_db)],
-    settings: Annotated[Settings, Depends(get_settings)],
-) -> dict[str, Any]:
-    """Seed presentation demo records across all 8 modules. Idempotent."""
+def _require_demo_admin_access(current_user: User | None, settings: Settings) -> None:
     if not settings.demo_mode_enabled:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Demo mode is disabled in application configuration.",
         )
+    if not current_user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required to seed or reset demo environment.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    is_demo_user = bool(current_user.extra_data and current_user.extra_data.get("is_demo") is True)
+    if not (is_demo_user or current_user.is_superuser):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Only authorized demonstration presenters or administrators may seed or reset demo data.",
+        )
+
+
+@router.post(
+    "/demo/seed",
+    summary="Seed the isolated demonstration dataset",
+)
+def seed_demo(
+    current_user: Annotated[User | None, Depends(get_optional_current_user)],
+    db: Annotated[Session, Depends(get_db)],
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> dict[str, Any]:
+    """Seed presentation demo records across all 8 modules. Requires authorized demo presenter or administrator."""
+    _require_demo_admin_access(current_user, settings)
     from app.services.demo_service import DemoService
 
     return DemoService.seed_demo_environment(db, settings)
@@ -148,15 +165,12 @@ def seed_demo(
     summary="Reset and remove isolated demonstration dataset",
 )
 def reset_demo(
+    current_user: Annotated[User | None, Depends(get_optional_current_user)],
     db: Annotated[Session, Depends(get_db)],
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> dict[str, Any]:
-    """Safely reset isolated demo records without affecting production data."""
-    if not settings.demo_mode_enabled:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Demo mode is disabled in application configuration.",
-        )
+    """Safely reset isolated demo records without affecting production data. Requires authorized demo presenter or administrator."""
+    _require_demo_admin_access(current_user, settings)
     from app.services.demo_service import DemoService
 
     return DemoService.reset_demo_environment(db, settings)

@@ -418,26 +418,43 @@ npm run build
 
 | Suite | Result | Count |
 | --- | --- | --- |
-| Backend Pytest | ✅ All Pass | 226 tests across 19 test files |
-| Frontend Vitest | ✅ All Pass | 60 tests across 12 test files |
+| Backend Pytest | ✅ All Pass | 229 tests across 20 test files |
+| Frontend Vitest | ✅ All Pass | 71 tests across 14 test files |
 | TypeScript (`tsc --noEmit`) | ✅ 0 errors | — |
 | Vite production build | ✅ 0 errors | dist: ~501 kB JS, ~55 kB CSS |
 
 ---
 
-## Demo Reset Procedure
+## Demo Mode Architecture & Security
 
-To restore all demo records to their pristine initial state without affecting other data:
+EventSignal includes a fully isolated, 8-module demonstration dataset for judges and evaluators under the fictional **Apex Institute of Technology** (`demo-inst-apex-tech-001`).
+
+### Security Controls:
+1. **Secured Seed & Reset Endpoints:** `POST /api/v1/auth/demo/seed` and `POST /api/v1/auth/demo/reset` are restricted to authenticated demo presenters or platform administrators (401 Unauthorized for anonymous callers, 403 Forbidden for non-demo users or when `DEMO_MODE_ENABLED=False`).
+2. **Production Credential Validation:** In production environments (`APP_ENV=production`) or when `DEMO_REQUIRE_EXPLICIT_CREDENTIALS=true`, predictable default credentials (`demo@eventsignal.local` / `DemoSignal2026!Secure`) are rejected at startup. Explicit, strong credentials must be provided via `DEMO_USER_EMAIL` and `DEMO_USER_PASSWORD`.
+3. **Collision Protection:** Provisioning and seeding verify that synthetic demo accounts cannot hijack existing real user accounts. Demo reset strictly inspects the `is_demo=True` metadata marker, preventing accidental deletion of real user records.
+4. **Evaluator Guided Journey:** In Demo Mode, the home dashboard displays an interactive 5-stage tour card directing evaluators across the Signal Feed, Campus Network, Mutual Aid, Institutional Memory, and Corporate Partnerships.
+
+### Demo Reset Procedure
+
+To restore demo records to their pristine initial state without affecting other data:
 
 ```bash
-# Via the API (backend must be running):
-curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/reset
-curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/seed
+# 1. Obtain demo presenter token
+TOKEN=$(curl -s -X POST http://127.0.0.1:8000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "demo@eventsignal.local", "password": "DemoSignal2026!Secure"}' | jq -r .access_token)
 
-# Or restart the backend — automatic seeding runs on every startup.
+# 2. Reset demonstration environment (requires auth)
+curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/reset \
+  -H "Authorization: Bearer $TOKEN"
+
+# 3. Re-seed clean demonstration dataset (requires auth)
+curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/seed \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
-The seeding operation uses fixed UUIDs and SQLAlchemy `merge()` semantics, so it is safe to run repeatedly without creating duplicate records.
+The seeding operation uses fixed UUIDs and SQLAlchemy `merge()` semantics, making it strictly idempotent and safe to run repeatedly. Demo reset preserves the presenter's authenticated user account while completely resetting campus records and synthetic accounts.
 
 ---
 
