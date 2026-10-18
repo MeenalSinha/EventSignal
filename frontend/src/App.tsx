@@ -408,9 +408,8 @@ export default function App({ initialMode }: AppProps = {}) {
                   </p>
                 </div>
 
-                <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                <div>
                   <EventWorkspace state={events.state} onRetry={events.reload} />
-                  <ServiceStatusPanel state={health.state} onRetry={health.reload} />
                 </div>
               </div>
             )}
@@ -543,14 +542,23 @@ export default function App({ initialMode }: AppProps = {}) {
       </main>
 
       {/* Footer */}
-      <footer className="mt-auto border-t border-line bg-card py-6">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 space-y-4">
-          <ServiceStatusPanel state={health.state} onRetry={health.reload} />
-          <p className="text-xs text-ink-soft">
+      <footer className="mt-auto border-t border-line bg-card py-5">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-soft">
+          <p>
             EventSignal · AI extracts. Rules evaluate. Evidence explains. Students decide.
           </p>
+          <div className="flex items-center gap-4 text-[11px] text-ink-soft/80">
+            <span>Evidence Before You Register</span>
+            <span>•</span>
+            <span>Campus Intelligence Platform</span>
+          </div>
         </div>
       </footer>
+
+      {/* Floating Service Status - Visible ONLY in Guest Mode, NOT in Demo Mode */}
+      {!currentUser && (
+        <ServiceStatusPanel state={health.state} onRetry={health.reload} />
+      )}
 
       {/* Global Modals */}
       <AuthModal
