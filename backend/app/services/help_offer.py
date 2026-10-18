@@ -334,11 +334,13 @@ def discover_help_offers(
 
     total = len(filtered_items)
     paginated = filtered_items[offset : offset + limit]
+    distinct_categories = sorted({o.category for o in all_offers if o.category})
     return HelpOfferListResponse(
         items=paginated,
         total=total,
         limit=limit,
         offset=offset,
+        categories=distinct_categories,
     )
 
 

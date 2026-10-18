@@ -94,4 +94,70 @@ describe("LegacyMatchingPanel", () => {
       await screen.findByText("Campus Leadership Handovers")
     ).toBeInTheDocument();
   });
+
+  it("safely handles paginated helper match responses { items: [...] } without calling map on an object", async () => {
+    const mockMatchPayload = {
+      items: [
+        {
+          id: "match-1",
+          need_id: "need-1",
+          helper_id: "usr-alumni-1",
+          offer_owner_name: "Dr. Evelyn Reed",
+          helper_role: "faculty",
+          helper_email: "evelyn@campus.edu",
+          score: 0.88,
+          confidence: "high",
+          matched_skills: ["Python", "Algorithms"],
+          status: "suggested",
+          notes: "Top match for academic SWE preparation",
+          created_at: "2026-01-01T00:00:00Z",
+        },
+      ],
+      total: 1,
+      limit: 20,
+      offset: 0,
+    };
+
+    stubFetch({
+      "/api/v1/institutions/inst-1/needs": () => jsonResponse(mockNeedsResponse),
+      "/api/v1/institutions/inst-1/needs/need-1/matches": () => jsonResponse(mockMatchPayload),
+      "/api/v1/institutions/inst-1/handovers": () =>
+        jsonResponse({ items: [], total: 0, limit: 50, offset: 0 }),
+      "/api/v1/institutions/inst-1/memories": () =>
+        jsonResponse({ items: [], total: 0, limit: 50, offset: 0 }),
+      "/api/v1/institutions/inst-1/tasks": () =>
+        jsonResponse({ items: [], total: 0, limit: 50, offset: 0 }),
+    });
+
+    render(<LegacyMatchingPanel currentUser={testUser} onOpenAuth={() => {}} />);
+    expect(await screen.findByText("Mock Interview Help for SWE Placement")).toBeInTheDocument();
+    expect(await screen.findByText(/Dr\. Evelyn Reed/)).toBeInTheDocument();
+    expect(screen.getByText("88%")).toBeInTheDocument();
+  });
+
+  it("displays helpful error alert with retry button when needs request fails", async () => {
+    let failed = true;
+    stubFetch({
+      "/api/v1/institutions/inst-1/needs": () =>
+        failed
+          ? jsonResponse({ detail: "Database unavailable" }, 503)
+          : jsonResponse(mockNeedsResponse),
+      "/api/v1/institutions/inst-1/handovers": () =>
+        jsonResponse({ items: [], total: 0, limit: 50, offset: 0 }),
+      "/api/v1/institutions/inst-1/memories": () =>
+        jsonResponse({ items: [], total: 0, limit: 50, offset: 0 }),
+      "/api/v1/institutions/inst-1/tasks": () =>
+        jsonResponse({ items: [], total: 0, limit: 50, offset: 0 }),
+    });
+
+    render(<LegacyMatchingPanel currentUser={testUser} onOpenAuth={() => {}} />);
+    expect(await screen.findByText(/Database unavailable/i)).toBeInTheDocument();
+    const retryBtn = screen.getByRole("button", { name: "Retry" });
+    expect(retryBtn).toBeInTheDocument();
+
+    failed = false;
+    const user = userEvent.setup();
+    await user.click(retryBtn);
+    expect(await screen.findByText("Mock Interview Help for SWE Placement")).toBeInTheDocument();
+  });
 });

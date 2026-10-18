@@ -17,8 +17,8 @@ export function AuthLandingPage({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
-  const [demoEmail, setDemoEmail] = useState("");
-  const [demoPassword, setDemoPassword] = useState("");
+  const [demoEmail, setDemoEmail] = useState("demo@eventsignal.local");
+  const [demoPassword, setDemoPassword] = useState("DemoSignal2026!Secure");
   const [showPassword, setShowPassword] = useState(false);
   const [showDemoPassword, setShowDemoPassword] = useState(false);
   const [error, setError] = useState<string | null>(null);

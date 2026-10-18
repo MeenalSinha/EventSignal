@@ -136,3 +136,18 @@ class MemberDiscoveryRead(BaseModel):
     alumni_profile: AlumniProfileRead | None = None
     active_help_offers_count: int = 0
     official_positions: list[str] = Field(default_factory=list)
+    campus_positions: list[str] = Field(default_factory=list)
+    membership_role: str | None = None
+    status: str | None = None
+
+    @model_validator(mode="after")
+    def _populate_aliases(self) -> MemberDiscoveryRead:
+        if not self.campus_positions and self.official_positions:
+            self.campus_positions = list(self.official_positions)
+        if not self.official_positions and self.campus_positions:
+            self.official_positions = list(self.campus_positions)
+        if not self.membership_role and self.role:
+            self.membership_role = self.role
+        if not self.status and self.membership_status:
+            self.status = self.membership_status
+        return self

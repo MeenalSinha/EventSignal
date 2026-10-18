@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { discoverMembers } from "../services/profileService";
 import type { UserProfile } from "../types/auth";
 import type { MemberDiscovery } from "../types/profile";
@@ -28,6 +28,13 @@ export function MemberDiscoveryPanel({
   const [members, setMembers] = useState<MemberDiscovery[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [reloadTrigger, setReloadTrigger] = useState(0);
+
+  const loadMembers = useCallback(() => {
+    setLoading(true);
+    setError(null);
+    setReloadTrigger((n) => n + 1);
+  }, []);
 
   useEffect(() => {
     if (!currentUser || !effectiveInstId) return;
@@ -49,7 +56,7 @@ export function MemberDiscoveryPanel({
     return () => {
       isMounted = false;
     };
-  }, [currentUser, effectiveInstId, roleFilter, submittedQuery]);
+  }, [currentUser, effectiveInstId, roleFilter, submittedQuery, reloadTrigger]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -185,8 +192,15 @@ export function MemberDiscoveryPanel({
       </div>
 
       {error && (
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
-          Failed to load campus members: {error}
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+          <span>Failed to load campus members: {error}</span>
+          <button
+            type="button"
+            onClick={loadMembers}
+            className="rounded-lg bg-rose-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-800 shrink-0"
+          >
+            Retry
+          </button>
         </div>
       )}
 
@@ -206,9 +220,15 @@ export function MemberDiscoveryPanel({
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {members.map((member) => {
-            const isAlum = member.membership_role === "alumni";
+            const role = member.membership_role || (member as any).role || "member";
+            const isAlum = role === "alumni";
             const sp = member.student_profile;
             const ap = member.alumni_profile;
+            const positions: string[] = Array.isArray(member.campus_positions)
+              ? member.campus_positions
+              : Array.isArray((member as any).official_positions)
+              ? (member as any).official_positions
+              : [];
 
             return (
               <div
@@ -220,7 +240,7 @@ export function MemberDiscoveryPanel({
                     <div>
                       <h4 className="font-display font-semibold text-ink">{member.full_name}</h4>
                       <span className="inline-block mt-0.5 rounded-md bg-paper-warm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
-                        {member.membership_role}
+                        {role}
                       </span>
                     </div>
 
@@ -232,9 +252,9 @@ export function MemberDiscoveryPanel({
                   </div>
 
                   {/* Verified campus leadership appointments */}
-                  {member.campus_positions.length > 0 && (
+                  {positions.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1">
-                      {member.campus_positions.map((pos, i) => (
+                      {positions.map((pos, i) => (
                         <span
                           key={i}
                           className="inline-flex items-center gap-1 rounded-md bg-blue-50 border border-blue-200 px-2 py-0.5 text-[10px] font-medium text-blue-800"

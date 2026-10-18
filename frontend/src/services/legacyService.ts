@@ -66,7 +66,8 @@ export async function runMatchingForNeed(
       headers: makeHeaders(institutionId),
     }
   );
-  return response.body as HelperMatch[];
+  const data = response.body as { items?: HelperMatch[] } | HelperMatch[];
+  return Array.isArray(data) ? data : (data?.items ?? []);
 }
 
 export async function fetchMatchesForNeed(
@@ -79,7 +80,8 @@ export async function fetchMatchesForNeed(
       headers: makeHeaders(institutionId),
     }
   );
-  return response.body as HelperMatch[];
+  const data = response.body as { items?: HelperMatch[] } | HelperMatch[];
+  return Array.isArray(data) ? data : (data?.items ?? []);
 }
 
 export async function updateMatchStatus(

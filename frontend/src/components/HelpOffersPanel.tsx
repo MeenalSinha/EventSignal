@@ -77,8 +77,8 @@ export function HelpOffersPanel({
       })
         .then((res) => {
           if (!isMounted) return;
-          setOffers(res.items);
-          setAvailableCategories(res.categories);
+          setOffers(res.items || []);
+          setAvailableCategories(Array.isArray(res.categories) ? res.categories : []);
           setBrowseError(null);
           setBrowseLoading(false);
         })
@@ -285,7 +285,7 @@ export function HelpOffersPanel({
               </button>
             </form>
 
-            {availableCategories.length > 0 && (
+            {Array.isArray(availableCategories) && availableCategories.length > 0 && (
               <div className="flex flex-wrap items-center gap-1.5">
                 <button
                   onClick={() => {
@@ -321,8 +321,19 @@ export function HelpOffersPanel({
           </div>
 
           {browseError && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
-              Failed to load help offers: {browseError}
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+              <span>Failed to load help offers: {browseError}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  setBrowseLoading(true);
+                  setBrowseError(null);
+                  setRefreshCount((c) => c + 1);
+                }}
+                className="rounded-lg bg-rose-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-800 shrink-0"
+              >
+                Retry
+              </button>
             </div>
           )}
 
@@ -352,6 +363,16 @@ export function HelpOffersPanel({
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {offers.map((offer) => {
                 const isOwnOffer = offer.user_id === currentUser.user.id;
+                const deliveryMode = String(offer.delivery_mode || "remote").replace(/_/g, " ");
+                const targetAudience = String(offer.target_audience || (offer as any).intended_audience || "all").replace(/_/g, " ");
+                const creatorName = offer.creator_name || (offer as any).owner_name || "Community Member";
+                const creatorRole = offer.creator_role || (offer as any).owner_role || "";
+                const topics: string[] = Array.isArray(offer.topics)
+                  ? offer.topics
+                  : typeof (offer as any).applicable_skills === "string"
+                  ? (offer as any).applicable_skills.split(",").map((s: string) => s.trim()).filter(Boolean)
+                  : [];
+                const capacity = offer.capacity_per_month || (offer as any).extra_data?.max_recipients || 5;
 
                 return (
                   <div
@@ -364,7 +385,7 @@ export function HelpOffersPanel({
                           {offer.category}
                         </span>
                         <span className="rounded-md bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-medium text-emerald-800">
-                          {offer.delivery_mode.replace("_", " ")}
+                          {deliveryMode}
                         </span>
                       </div>
 
@@ -373,17 +394,17 @@ export function HelpOffersPanel({
                       </h4>
 
                       <div className="mt-1 text-xs text-ink-soft">
-                        Offered by <span className="font-medium text-ink">{offer.creator_name || "Community Member"}</span>
-                        {offer.creator_role && ` (${offer.creator_role})`}
+                        Offered by <span className="font-medium text-ink">{creatorName}</span>
+                        {creatorRole && ` (${creatorRole})`}
                       </div>
 
                       <p className="mt-3 text-xs text-ink leading-relaxed line-clamp-3">
                         {offer.description}
                       </p>
 
-                      {offer.topics && offer.topics.length > 0 && (
+                      {topics.length > 0 && (
                         <div className="mt-3 flex flex-wrap gap-1">
-                          {offer.topics.map((t, idx) => (
+                          {topics.map((t, idx) => (
                             <span
                               key={idx}
                               className="rounded bg-paper-warm px-1.5 py-0.5 text-[10px] text-ink-soft"
@@ -395,8 +416,8 @@ export function HelpOffersPanel({
                       )}
 
                       <div className="mt-3 text-[11px] text-ink-soft flex items-center justify-between border-t border-line/60 pt-2">
-                        <span>Audience: {offer.target_audience.replace("_", " ")}</span>
-                        <span>Capacity: ~{offer.capacity_per_month}/mo</span>
+                        <span>Audience: {targetAudience}</span>
+                        <span>Capacity: ~{capacity}/mo</span>
                       </div>
                     </div>
 

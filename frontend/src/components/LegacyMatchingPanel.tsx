@@ -178,6 +178,14 @@ export function LegacyMatchingPanel({
 
   const handleRunMatching = async (needId: string) => {
     if (!effectiveInstId) return;
+    const targetNeed = needs.find((n) => n.id === needId);
+    if (targetNeed && targetNeed.status !== "open") {
+      setFeedback({
+        type: "success",
+        message: `Matches are already evaluated for "${targetNeed.title}". Compatible mentors are listed below.`,
+      });
+      return;
+    }
     setIsLoading(true);
     try {
       const matches = await runMatchingForNeed(effectiveInstId, needId);
@@ -416,13 +424,22 @@ export function LegacyMatchingPanel({
 
       {feedback && (
         <div
-          className={`rounded-xl p-4 text-sm font-medium ${
+          className={`flex items-center justify-between gap-3 rounded-xl p-4 text-sm font-medium ${
             feedback.type === "success"
               ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
               : "bg-rose-50 text-rose-800 border border-rose-200"
           }`}
         >
-          {feedback.message}
+          <span>{feedback.message}</span>
+          {feedback.type === "error" && (
+            <button
+              type="button"
+              onClick={refreshData}
+              className="rounded-lg bg-rose-700 px-3 py-1.5 text-xs font-semibold text-white hover:bg-rose-800 shrink-0"
+            >
+              Retry
+            </button>
+          )}
         </div>
       )}
 
@@ -528,7 +545,10 @@ export function LegacyMatchingPanel({
           ) : (
             <div className="space-y-4">
               {needs.map((need) => {
-                const matches = matchesMap[need.id] || [];
+                const rawMatches = matchesMap[need.id];
+                const matches: HelperMatch[] = Array.isArray(rawMatches)
+                  ? rawMatches
+                  : (rawMatches as any)?.items || [];
                 return (
                   <div key={need.id} className="rounded-2xl border border-line bg-paper p-6 shadow-sm space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-3">
@@ -561,13 +581,19 @@ export function LegacyMatchingPanel({
                             Mark Resolved
                           </button>
                         )}
-                        <button
-                          onClick={() => handleRunMatching(need.id)}
-                          disabled={isLoading}
-                          className="rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-paper hover:bg-ink-soft transition disabled:opacity-50"
-                        >
-                          Find Helper Matches
-                        </button>
+                        {need.status === "open" ? (
+                          <button
+                            onClick={() => handleRunMatching(need.id)}
+                            disabled={isLoading}
+                            className="rounded-lg bg-ink px-3 py-1.5 text-xs font-semibold text-paper hover:bg-ink-soft transition disabled:opacity-50"
+                          >
+                            Find Helper Matches
+                          </button>
+                        ) : need.status === "matched" ? (
+                          <span className="rounded-lg border border-line bg-paper-warm px-2.5 py-1 text-[11px] font-medium text-ink-soft">
+                            Matches Evaluated
+                          </span>
+                        ) : null}
                       </div>
                     </div>
 
@@ -626,7 +652,7 @@ export function LegacyMatchingPanel({
                                 <span className="font-semibold text-[11px] uppercase tracking-wider text-ink-soft">
                                   Scoring Evidence:
                                 </span>
-                                {m.rule_results.map((r, i) => (
+                                {(Array.isArray(m.rule_results) ? m.rule_results : []).map((r, i) => (
                                   <div key={i} className="flex items-start justify-between gap-4 text-[11px]">
                                     <div className="flex items-center gap-1.5">
                                       <span

@@ -99,4 +99,47 @@ describe("MemberDiscoveryPanel", () => {
 
     expect(await screen.findByText("No Members Found")).toBeInTheDocument();
   });
+
+  it("safely handles members when campus_positions is missing or official_positions is returned", async () => {
+    const rawBackendMembers = [
+      {
+        user_id: "usr-alumni-2",
+        full_name: "Marcus Tech",
+        role: "alumni",
+        membership_status: "active",
+        official_positions: ["Head of Engineering Club"],
+        joined_at: "2026-01-01T00:00:00Z",
+        student_profile: null,
+        alumni_profile: null,
+        active_help_offers_count: 0,
+      },
+    ];
+
+    stubFetch({
+      "/api/v1/profiles/discovery": () => jsonResponse(rawBackendMembers),
+    });
+
+    render(<MemberDiscoveryPanel currentUser={testUser} onOpenAuth={vi.fn()} />);
+    expect(await screen.findByText("Marcus Tech")).toBeInTheDocument();
+    expect(screen.getByText("Head of Engineering Club")).toBeInTheDocument();
+  });
+
+  it("displays helpful error alert with retry button when API request fails", async () => {
+    let failed = true;
+    stubFetch({
+      "/api/v1/profiles/discovery": () =>
+        failed
+          ? jsonResponse({ detail: "Database connection failed" }, 500)
+          : jsonResponse(mockMembers),
+    });
+
+    render(<MemberDiscoveryPanel currentUser={testUser} onOpenAuth={vi.fn()} />);
+    expect(await screen.findByText(/Failed to load campus members/i)).toBeInTheDocument();
+    const retryBtn = screen.getByRole("button", { name: "Retry" });
+    expect(retryBtn).toBeInTheDocument();
+
+    failed = false;
+    retryBtn.click();
+    expect(await screen.findByText("Sarah Alum")).toBeInTheDocument();
+  });
 });

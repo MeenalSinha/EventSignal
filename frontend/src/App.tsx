@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { AuthLandingPage } from "./components/AuthLandingPage";
 import { AuthModal } from "./components/AuthModal";
 import { EventWorkspace } from "./components/EventWorkspace";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Header, type AppView } from "./components/Header";
 import { HelpOffersPanel } from "./components/HelpOffersPanel";
 import { InstitutionWorkspacePanel } from "./components/InstitutionWorkspacePanel";
@@ -415,10 +416,12 @@ export default function App({ initialMode }: AppProps = {}) {
                 </p>
               </div>
 
-              <InstitutionWorkspacePanel
-                currentUser={currentUser}
-                onOpenAuth={() => setIsAuthModalOpen(true)}
-              />
+              <ErrorBoundary fallbackTitle="Workspace Section Error">
+                <InstitutionWorkspacePanel
+                  currentUser={currentUser}
+                  onOpenAuth={() => setIsAuthModalOpen(true)}
+                />
+              </ErrorBoundary>
             </>
           )}
 
@@ -434,13 +437,15 @@ export default function App({ initialMode }: AppProps = {}) {
                 </p>
               </div>
 
-              <MemberDiscoveryPanel
-                currentUser={currentUser}
-                onOpenAuth={() => setIsAuthModalOpen(true)}
-                onSelectMemberForOffers={() => {
-                  setCurrentView("offers");
-                }}
-              />
+              <ErrorBoundary fallbackTitle="Campus Network Error">
+                <MemberDiscoveryPanel
+                  currentUser={currentUser}
+                  onOpenAuth={() => setIsAuthModalOpen(true)}
+                  onSelectMemberForOffers={() => {
+                    setCurrentView("offers");
+                  }}
+                />
+              </ErrorBoundary>
             </>
           )}
 
@@ -456,10 +461,12 @@ export default function App({ initialMode }: AppProps = {}) {
                 </p>
               </div>
 
-              <HelpOffersPanel
-                currentUser={currentUser}
-                onOpenAuth={() => setIsAuthModalOpen(true)}
-              />
+              <ErrorBoundary fallbackTitle="Help Offers Error">
+                <HelpOffersPanel
+                  currentUser={currentUser}
+                  onOpenAuth={() => setIsAuthModalOpen(true)}
+                />
+              </ErrorBoundary>
             </>
           )}
 
@@ -475,10 +482,12 @@ export default function App({ initialMode }: AppProps = {}) {
                 </p>
               </div>
 
-              <LegacyMatchingPanel
-                currentUser={currentUser}
-                onOpenAuth={() => setIsAuthModalOpen(true)}
-              />
+              <ErrorBoundary fallbackTitle="Legacy Matching Error">
+                <LegacyMatchingPanel
+                  currentUser={currentUser}
+                  onOpenAuth={() => setIsAuthModalOpen(true)}
+                />
+              </ErrorBoundary>
             </>
           )}
 
@@ -494,10 +503,12 @@ export default function App({ initialMode }: AppProps = {}) {
                 </p>
               </div>
 
-              <PartnershipsPromotionPanel
-                currentUser={currentUser}
-                onOpenAuth={() => setIsAuthModalOpen(true)}
-              />
+              <ErrorBoundary fallbackTitle="Partnerships & Pilot Readiness Error">
+                <PartnershipsPromotionPanel
+                  currentUser={currentUser}
+                  onOpenAuth={() => setIsAuthModalOpen(true)}
+                />
+              </ErrorBoundary>
             </>
           )}
         </main>

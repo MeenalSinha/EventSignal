@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class HelpOfferCreate(BaseModel):
@@ -80,6 +80,30 @@ class HelpOfferRead(BaseModel):
     owner_name: str | None = None
     owner_role: str | None = None
 
+    # Frontend compatibility aliases
+    target_audience: str | None = None
+    topics: list[str] = Field(default_factory=list)
+    creator_name: str | None = None
+    creator_role: str | None = None
+    capacity_per_month: int = 5
+
+    @model_validator(mode="after")
+    def populate_frontend_aliases(self) -> HelpOfferRead:
+        if not self.target_audience and self.intended_audience:
+            self.target_audience = self.intended_audience
+        if not self.creator_name and self.owner_name:
+            self.creator_name = self.owner_name
+        if not self.creator_role and self.owner_role:
+            self.creator_role = self.owner_role
+        if not self.topics and self.applicable_skills:
+            self.topics = [s.strip() for s in self.applicable_skills.split(",") if s.strip()]
+        if self.extra_data and "max_recipients" in self.extra_data:
+            try:
+                self.capacity_per_month = int(self.extra_data["max_recipients"])
+            except (ValueError, TypeError):
+                self.capacity_per_month = 5
+        return self
+
 
 class HelpOfferListResponse(BaseModel):
     """Paginated response of discoverable help offers."""
@@ -88,3 +112,4 @@ class HelpOfferListResponse(BaseModel):
     total: int
     limit: int
     offset: int
+    categories: list[str] = Field(default_factory=list)

@@ -111,4 +111,42 @@ describe("HelpOffersPanel", () => {
     expect(await screen.findByText("Publish a Help Offer")).toBeInTheDocument();
     expect(screen.getByText(/You haven't created any help offers/)).toBeInTheDocument();
   });
+
+  it("safely renders without blank screen when categories is omitted or undefined in backend response", async () => {
+    // Exact root cause reproduction payload: categories omitted entirely
+    const payloadWithoutCategories = {
+      items: [mockOffer],
+      total: 1,
+      limit: 20,
+      offset: 0,
+    };
+
+    stubFetch({
+      "/api/v1/help-offers/discovery": () => jsonResponse(payloadWithoutCategories),
+    });
+
+    render(<HelpOffersPanel currentUser={testUser} onOpenAuth={vi.fn()} />);
+    expect(await screen.findByText("Mock Technical Interview Practice")).toBeInTheDocument();
+    // Verify no crashing and renders offer details
+    expect(screen.getByText("Bob Alumnus")).toBeInTheDocument();
+  });
+
+  it("shows understandable error state with retry option when help offers API fails", async () => {
+    let failed = true;
+    stubFetch({
+      "/api/v1/help-offers/discovery": () =>
+        failed
+          ? jsonResponse({ detail: "Gateway timeout" }, 504)
+          : jsonResponse(mockListResponse),
+    });
+
+    render(<HelpOffersPanel currentUser={testUser} onOpenAuth={vi.fn()} />);
+    expect(await screen.findByText(/Failed to load help offers/i)).toBeInTheDocument();
+    const retryBtn = screen.getByRole("button", { name: "Retry" });
+    expect(retryBtn).toBeInTheDocument();
+
+    failed = false;
+    retryBtn.click();
+    expect(await screen.findByText("Mock Technical Interview Practice")).toBeInTheDocument();
+  });
 });
