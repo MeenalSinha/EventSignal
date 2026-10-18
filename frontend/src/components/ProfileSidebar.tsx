@@ -15,6 +15,7 @@ interface ProfileSidebarProps {
   onOpenAuth: () => void;
   onOpenSettings?: () => void;
   onSelectCategoryFilter?: (category: string) => void;
+  connectionsCount?: number;
 }
 
 export function ProfileSidebar({
@@ -23,6 +24,7 @@ export function ProfileSidebar({
   totalOpportunitiesCount,
   myOffersCount,
   pendingTasksCount,
+  connectionsCount,
   currentView,
   onViewChange,
   onOpenProfile,
@@ -138,7 +140,7 @@ export function ProfileSidebar({
               <div className="mt-3.5 grid grid-cols-3 divide-x divide-line border-t border-line pt-2.5 text-center">
                 <div className="px-1">
                   <div className="text-xs font-bold text-ink">
-                    {currentUser.memberships?.length ? currentUser.memberships.length * 12 : 1}
+                    {connectionsCount ?? (currentUser.is_demo ? 12 : 0)}
                   </div>
                   <div className="text-[9px] text-ink-soft">Connections</div>
                 </div>

@@ -386,3 +386,35 @@ def test_demo_partnerships_and_promotions(demo_settings: Settings) -> None:
             assert len(campaigns) == 2
             assert all(c.is_paid_placement is True for c in campaigns)
 
+
+def test_demo_endpoints_forbidden_when_demo_disabled(make_settings: Callable[..., Settings]) -> None:
+    """When DEMO_MODE_ENABLED=False, demo mutating endpoints return 403 Forbidden, and no demo records are created on startup."""
+    disabled_settings = make_settings(
+        demo_mode_enabled=False,
+    )
+    app = create_app(disabled_settings)
+    with TestClient(app) as client:
+        # 1. Startup did not provision demo institution or demo account
+        session_factory = app.state.session_factory
+        with session_factory() as session:
+            demo_inst = session.query(Institution).filter_by(id=DEMO_INSTITUTION_ID).first()
+            assert demo_inst is None, "Demo institution must not be provisioned in Real Mode"
+            demo_user = session.query(User).filter_by(email="demo@eventsignal.local").first()
+            assert demo_user is None, "Demo user must not be provisioned in Real Mode"
+
+        # 2. Demo status endpoint reports demo mode disabled
+        status_resp = client.get("/api/v1/auth/demo/status")
+        assert status_resp.status_code == 200
+        assert status_resp.json()["demo_mode_enabled"] is False
+
+        # 3. /demo/seed is forbidden
+        seed_resp = client.post("/api/v1/auth/demo/seed")
+        assert seed_resp.status_code == 403
+        assert "Demo mode is disabled" in seed_resp.json()["detail"]
+
+        # 4. /demo/reset is forbidden
+        reset_resp = client.post("/api/v1/auth/demo/reset")
+        assert reset_resp.status_code == 403
+        assert "Demo mode is disabled" in reset_resp.json()["detail"]
+
+

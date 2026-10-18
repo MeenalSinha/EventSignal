@@ -150,4 +150,34 @@ describe("Header Search Bar", () => {
     fireEvent.submit(form);
     expect(onSearchSubmit).toHaveBeenCalledWith("robotics");
   });
+
+  it("does not render notification badge when count is 0 or undefined", () => {
+    const { container, rerender } = render(
+      <Header
+        health={mockHealthState}
+        notificationsCount={0}
+      />
+    );
+    expect(container.querySelector(".bg-alert")).toBeNull();
+
+    rerender(
+      <Header
+        health={mockHealthState}
+      />
+    );
+    expect(container.querySelector(".bg-alert")).toBeNull();
+  });
+
+  it("renders notification badge with actual count when count > 0", () => {
+    const { container } = render(
+      <Header
+        health={mockHealthState}
+        notificationsCount={5}
+      />
+    );
+    const badge = container.querySelector(".bg-alert");
+    expect(badge).not.toBeNull();
+    expect(badge).toHaveTextContent("5");
+  });
 });
+

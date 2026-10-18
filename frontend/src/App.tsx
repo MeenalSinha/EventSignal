@@ -26,7 +26,7 @@ import { useRemoteResource } from "./hooks/useRemoteResource";
 import { fetchCurrentUser, logoutUser, seedDemoEnvironment } from "./services/authService";
 import { fetchEvents } from "./services/eventsService";
 import { fetchHealth } from "./services/healthService";
-import { fetchMyStudentProfile } from "./services/profileService";
+import { fetchMyStudentProfile, discoverMembers } from "./services/profileService";
 import { fetchMyHelpOffers } from "./services/helpOfferService";
 import { fetchMyFollowUpTasks } from "./services/legacyService";
 import type { UserProfile } from "./types/auth";
@@ -44,6 +44,7 @@ export default function App({ initialMode }: AppProps = {}) {
   const [studentProfile, setStudentProfile] = useState<StudentProfile | null>(null);
   const [myOffersCount, setMyOffersCount] = useState<number>(0);
   const [pendingTasksCount, setPendingTasksCount] = useState<number>(0);
+  const [connectionsCount, setConnectionsCount] = useState<number>(0);
   const [isSeedingDemo, setIsSeedingDemo] = useState<boolean>(false);
 
   const institutionId = currentUser?.memberships?.[0]?.institution_id;
@@ -133,6 +134,15 @@ export default function App({ initialMode }: AppProps = {}) {
     fetchMyFollowUpTasks(institutionId, { is_completed: false })
       .then((res) => setPendingTasksCount(res.total ?? res.items?.length ?? 0))
       .catch(() => setPendingTasksCount(0));
+
+    // 4. Real or Demo connections count
+    if (currentUser.is_demo) {
+      setConnectionsCount(12);
+    } else {
+      discoverMembers(institutionId)
+        .then((members) => setConnectionsCount(Math.max(0, members.length - 1)))
+        .catch(() => setConnectionsCount(0));
+    }
   }, [currentUser]);
 
   const handleLogout = () => {
@@ -141,6 +151,7 @@ export default function App({ initialMode }: AppProps = {}) {
     setStudentProfile(null);
     setMyOffersCount(0);
     setPendingTasksCount(0);
+    setConnectionsCount(0);
     setIsGuest(false);
     try {
       sessionStorage.removeItem("eventsignal_guest");
@@ -239,6 +250,7 @@ export default function App({ initialMode }: AppProps = {}) {
         }}
         opportunities={opportunityItems}
         onSelectOpportunity={(op) => setSelectedOpportunity(op)}
+        notificationsCount={pendingTasksCount}
       />
 
       {/* Demo Mode Top Banner */}
@@ -284,6 +296,7 @@ export default function App({ initialMode }: AppProps = {}) {
             totalOpportunitiesCount={totalOpportunitiesCount}
             myOffersCount={myOffersCount}
             pendingTasksCount={pendingTasksCount}
+            connectionsCount={connectionsCount}
             currentView={currentView}
             onViewChange={setCurrentView}
             onOpenProfile={() => setIsProfileModalOpen(true)}

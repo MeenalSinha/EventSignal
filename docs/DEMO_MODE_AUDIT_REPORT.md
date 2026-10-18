@@ -28,9 +28,9 @@ A comprehensive, end-to-end audit of EventSignal's **DEMO MODE** was performed a
    - Dynamic SVG identicon avatars integrated across all candidate profiles, opportunities, and headers to eliminate blank placeholder blocks.
    - Pilot and promotion metrics are clearly badged as **DEMONSTRATION METRICS** and calculated from real persisted records without misrepresenting commercial revenue.
 4. **Verification & Testing:**
-   - **Frontend Vitest Suite:** 60/60 tests passing across 12 test files.
-   - **Backend Pytest Suite:** 226/226 tests passing across 19 test files (including 12 dedicated demo integration tests in `test_demo.py`; 3 benign Starlette deprecation warnings, unrelated to EventSignal code).
-   - **TypeScript & Build:** `tsc --noEmit && vite build` passing with 0 errors, producing a ~501 kB JS bundle.
+   - **Frontend Vitest Suite:** 71/71 tests passing across 14 test files (including notification badge and authentication flow tests).
+   - **Backend Pytest Suite:** 227/227 tests passing across 20 test files (including 13 dedicated demo integration tests in `test_demo.py` verifying tenant isolation, idempotency, and forbidden mutating endpoints when demo mode is disabled).
+   - **TypeScript & Build:** `tsc --noEmit && vite build` passing with 0 errors, producing a clean JS bundle.
 
 ---
 
@@ -246,9 +246,17 @@ All 226 backend unit, integration, and security tests passed with zero failures 
 9. `backend/app/services/demo_service.py`:
    - Expanded demo dataset to a fully interconnected campus community: 30 synthetic members, 13 academic units & clubs, 10 official verified roles, 12 opportunities with field evidence, 12 active help offers, 4 student needs with 3 explainable algorithmic matches, 3 legacy handovers, 3 event memories, 6 follow-up tasks, 3 partners, 3 sponsorships, and 2 cross-college campaigns.
    - Guaranteed deterministic, idempotent seeding and clean cascading demo resets.
-10. `backend/tests/test_demo.py`:
-    - Added comprehensive integration tests covering interconnected community entities, opportunities and evidence, help offers and delivery modes, matching engine results, legacy records, partnerships, and promotions.
-11. `docs/DEMO_MODE_AUDIT_REPORT.md`:
+10. `frontend/src/components/Header.tsx` & `frontend/src/components/AppNavbar.tsx`:
+    - Eliminated hardcoded notification badge (`"3"`).
+    - Linked notification count dynamically to actual uncompleted follow-up tasks (`pendingTasksCount`); badge renders conditionally only when `notificationsCount > 0`.
+11. `frontend/src/components/ProfileSidebar.tsx` & `frontend/src/App.tsx`:
+    - Removed synthetic multiplier (`currentUser.memberships.length * 12 : 1`).
+    - Integrated real `connectionsCount` calculated from `discoverMembers` for authenticated real users while isolating synthetic presentation counts to Demo Mode.
+12. `backend/tests/test_demo.py`:
+    - Added comprehensive integration tests covering interconnected community entities, opportunities and evidence, help offers and delivery modes, matching engine results, legacy records, partnerships, promotions, and strict isolation when `DEMO_MODE_ENABLED=False` (403 on seed/reset, no startup demo provisioning).
+13. `frontend/src/components/Header.test.tsx`:
+    - Added tests verifying notification badge only renders when real notifications exist and remains hidden when count is 0.
+14. `docs/DEMO_MODE_AUDIT_REPORT.md`:
     - Comprehensive audit report documenting the entire review, defect resolutions, and verification evidence.
 
 ---
