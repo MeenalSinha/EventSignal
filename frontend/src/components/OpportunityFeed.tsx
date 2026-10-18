@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Opportunity } from "../types/opportunity";
 import type { ResourceState } from "../hooks/useRemoteResource";
 import type { OpportunityList } from "../services/eventsService";
+import { OpportunityAvatar } from "./Avatar";
 
 const EMPTY_OPPORTUNITIES: Opportunity[] = [];
 
@@ -383,17 +384,13 @@ export function OpportunityFeed({
 
                 {/* Main Content Layout: Left Thumbnail + Right Information */}
                 <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  {/* Left Thumbnail Illustration / Badge */}
-                  <div className="flex h-24 w-24 sm:h-28 sm:w-28 shrink-0 items-center justify-center rounded-xl border border-line bg-page overflow-hidden">
-                    <div className="flex flex-col items-center justify-center p-2 text-center">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold text-base mb-1">
-                        {displayTitle.charAt(0).toUpperCase()}
-                      </div>
-                      <span className="text-[10px] font-bold text-ink-soft uppercase tracking-wider line-clamp-1">
-                        {op.opportunity_type || "Event"}
-                      </span>
-                    </div>
-                  </div>
+                  {/* Left Thumbnail Illustration / Avatar */}
+                  <OpportunityAvatar
+                    title={displayTitle}
+                    opportunityType={op.opportunity_type}
+                    organizer={displayOrganizer}
+                    size="lg"
+                  />
 
                   {/* Right Content */}
                   <div className="flex-1 min-w-0">

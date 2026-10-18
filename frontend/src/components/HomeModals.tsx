@@ -5,6 +5,7 @@ import { AssessmentPanel } from "./AssessmentPanel";
 import { OpportunityIntakeForm } from "./OpportunityIntakeForm";
 import { requestHelpOffer } from "../services/helpOfferService";
 import { createStudentNeed, runMatchingForNeed } from "../services/legacyService";
+import { OpportunityAvatar, UserAvatar } from "./Avatar";
 
 // 1. Opportunity Details Modal
 interface OpportunityDetailModalProps {
@@ -21,11 +22,19 @@ export function OpportunityDetailModal({ opportunity, onClose, onRefresh }: Oppo
       <div className="relative w-full max-w-3xl rounded-2xl border border-line bg-card shadow-2xl overflow-hidden my-8 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-line px-6 py-4 bg-page">
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-teal">Opportunity Provenance</span>
-            <h3 className="font-display text-lg font-bold text-ink truncate max-w-lg">
-              {opportunity.title || opportunity.event_name || "Opportunity Details"}
-            </h3>
+          <div className="flex items-center gap-3 min-w-0">
+            <OpportunityAvatar
+              title={opportunity.title || opportunity.event_name || "Opportunity"}
+              opportunityType={opportunity.opportunity_type}
+              organizer={opportunity.organizer}
+              size="sm"
+            />
+            <div className="min-w-0">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-teal">Opportunity Provenance</span>
+              <h3 className="font-display text-lg font-bold text-ink truncate max-w-lg">
+                {opportunity.title || opportunity.event_name || "Opportunity Details"}
+              </h3>
+            </div>
           </div>
           <button
             onClick={onClose}
@@ -157,9 +166,12 @@ export function ConnectModal({ offer, institutionId, onClose, onSuccess }: Conne
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 backdrop-blur-xs p-4">
       <div className="relative w-full max-w-md rounded-2xl border border-line bg-card shadow-2xl p-5">
         <div className="flex items-center justify-between pb-3 border-b border-line">
-          <div>
-            <h3 className="font-display text-base font-bold text-ink">Request Connection</h3>
-            <p className="text-xs text-ink-soft">Connect with {offer.creator_name || "Mentor"}</p>
+          <div className="flex items-center gap-3">
+            <UserAvatar name={offer.creator_name || "Mentor"} role={offer.creator_role || offer.category} size="md" showBadge={true} />
+            <div>
+              <h3 className="font-display text-base font-bold text-ink">Request Connection</h3>
+              <p className="text-xs text-ink-soft">Connect with {offer.creator_name || "Mentor"}</p>
+            </div>
           </div>
           <button onClick={onClose} aria-label="Close" className="text-ink-soft hover:text-ink">
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

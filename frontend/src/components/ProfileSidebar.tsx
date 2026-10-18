@@ -1,6 +1,7 @@
 import type { UserProfile } from "../types/auth";
 import type { StudentProfile } from "../types/profile";
 import type { AppView } from "./AppNavbar";
+import { UserAvatar } from "./Avatar";
 
 interface ProfileSidebarProps {
   currentUser: UserProfile | null;
@@ -45,14 +46,6 @@ export function ProfileSidebar({
   const primaryMembership = currentUser?.memberships?.[0];
   const institutionName = primaryMembership?.institution_name || "Campus Workspace";
 
-  const userInitials = currentUser?.user.full_name
-    ? currentUser.user.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "ES";
 
   // Degree or Headline
   const roleHeadline =
@@ -83,9 +76,13 @@ export function ProfileSidebar({
         <div className="relative px-3.5 pb-4 pt-0">
           {/* Overlapping Avatar */}
           <div className="-mt-9 mb-2 flex items-center justify-between">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full border-2 border-card bg-teal-wash text-lg font-bold text-teal shadow-xs">
-              {userInitials}
-            </div>
+            <UserAvatar
+              name={currentUser?.user.full_name || "Guest"}
+              role={currentUser?.is_demo ? "Presenter" : (primaryMembership?.role || "Member")}
+              size="xl"
+              showBadge={true}
+              className="border-card shadow-xs"
+            />
             {currentUser && (
               <button
                 type="button"

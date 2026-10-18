@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { discoverMembers } from "../services/profileService";
 import type { UserProfile } from "../types/auth";
 import type { MemberDiscovery } from "../types/profile";
+import { UserAvatar } from "./Avatar";
 
 interface MemberDiscoveryPanelProps {
   currentUser: UserProfile | null;
@@ -237,11 +238,14 @@ export function MemberDiscoveryPanel({
               >
                 <div>
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h4 className="font-display font-semibold text-ink">{member.full_name}</h4>
-                      <span className="inline-block mt-0.5 rounded-md bg-paper-warm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
-                        {role}
-                      </span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <UserAvatar name={member.full_name} role={role} size="md" showBadge={true} />
+                      <div className="min-w-0">
+                        <h4 className="font-display font-semibold text-ink truncate">{member.full_name}</h4>
+                        <span className="inline-block mt-0.5 rounded-md bg-paper-warm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ink-soft">
+                          {role}
+                        </span>
+                      </div>
                     </div>
 
                     {member.active_help_offers_count > 0 && (

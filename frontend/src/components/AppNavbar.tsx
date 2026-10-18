@@ -3,6 +3,7 @@ import type { ResourceState } from "../hooks/useRemoteResource";
 import type { HealthResponse } from "../types/health";
 import type { UserProfile } from "../types/auth";
 import { describeConnection } from "./ConnectionStatus";
+import { UserAvatar } from "./Avatar";
 
 export type AppView =
   | "home"
@@ -37,15 +38,6 @@ export function AppNavbar({
   const { tone, label } = describeConnection(health);
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
 
-  // Derive user initials or default
-  const userInitials = currentUser?.user.full_name
-    ? currentUser.user.full_name
-        .split(" ")
-        .map((n) => n[0])
-        .slice(0, 2)
-        .join("")
-        .toUpperCase()
-    : "U";
 
   const primaryMembership = currentUser?.memberships?.[0];
 
@@ -217,9 +209,11 @@ export function AppNavbar({
                 aria-label="User account menu"
                 aria-expanded={isAccountMenuOpen}
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-full border border-teal/40 bg-teal-wash text-xs font-bold text-teal">
-                  {userInitials}
-                </div>
+                <UserAvatar
+                  name={currentUser.user.full_name}
+                  role={currentUser.is_demo ? "demo" : (primaryMembership?.role || "user")}
+                  size="sm"
+                />
                 <svg className="h-3.5 w-3.5 text-ink-soft hidden sm:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>

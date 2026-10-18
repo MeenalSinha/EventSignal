@@ -25,6 +25,7 @@ import type {
   NeedUrgency,
   StudentNeed,
 } from "../types/phase7";
+import { UserAvatar } from "./Avatar";
 
 interface InstitutionOption {
   id: string;
@@ -632,10 +633,13 @@ export function LegacyMatchingPanel({
                                       {m.status}
                                     </span>
                                   </div>
-                                  <p className="text-xs text-ink-soft mt-0.5">
-                                    Offered by: {m.offer_owner_name || "Campus Helper"} • Mode:{" "}
-                                    {m.offer_delivery_mode || "Remote"}
-                                  </p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <UserAvatar name={m.offer_owner_name || "Campus Helper"} size="xs" />
+                                    <p className="text-xs text-ink-soft">
+                                      Offered by: <span className="font-medium text-ink">{m.offer_owner_name || "Campus Helper"}</span> • Mode:{" "}
+                                      {m.offer_delivery_mode || "Remote"}
+                                    </p>
+                                  </div>
                                 </div>
                                 <div className="text-right">
                                   <span className="text-xs font-semibold text-ink-soft uppercase tracking-wider">

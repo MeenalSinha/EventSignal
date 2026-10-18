@@ -13,6 +13,7 @@ import type {
   HelpOfferDeliveryMode,
   HelpOfferStatus,
 } from "../types/helpOffer";
+import { UserAvatar } from "./Avatar";
 
 interface HelpOffersPanelProps {
   currentUser: UserProfile | null;
@@ -393,9 +394,12 @@ export function HelpOffersPanel({
                         {offer.title}
                       </h4>
 
-                      <div className="mt-1 text-xs text-ink-soft">
-                        Offered by <span className="font-medium text-ink">{creatorName}</span>
-                        {creatorRole && ` (${creatorRole})`}
+                      <div className="mt-2.5 flex items-center gap-2.5">
+                        <UserAvatar name={creatorName} role={creatorRole || offer.category} size="sm" showBadge={true} />
+                        <div className="text-xs text-ink-soft">
+                          Offered by <span className="font-semibold text-ink">{creatorName}</span>
+                          {creatorRole && <span className="text-ink-soft"> · {creatorRole}</span>}
+                        </div>
                       </div>
 
                       <p className="mt-3 text-xs text-ink leading-relaxed line-clamp-3">

@@ -8,6 +8,7 @@ import type { AppView } from "./AppNavbar";
 import { fetchHelpOffers } from "../services/helpOfferService";
 import { fetchMyFollowUpTasks, completeFollowUpTask } from "../services/legacyService";
 import { fetchPromotedFeed } from "../services/phase8Service";
+import { OpportunityAvatar, UserAvatar } from "./Avatar";
 
 interface DiscoveryPanelsProps {
   currentUser: UserProfile | null;
@@ -151,9 +152,12 @@ export function DiscoveryPanels({
                   onClick={() => onSelectOpportunity(evt)}
                   className="group flex items-start gap-3 py-2.5 cursor-pointer first:pt-0 last:pb-0"
                 >
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-teal-wash text-teal font-bold text-xs">
-                    {(evt.title || evt.event_name || "E").charAt(0).toUpperCase()}
-                  </div>
+                  <OpportunityAvatar
+                    title={evt.title || evt.event_name || "Campus Event"}
+                    opportunityType={evt.opportunity_type}
+                    organizer={evt.organizer}
+                    size="sm"
+                  />
                   <div className="min-w-0 flex-1">
                     <h4 className="text-xs font-bold text-ink group-hover:text-teal transition line-clamp-1">
                       {evt.title || evt.event_name || "Campus Event"}
@@ -203,19 +207,15 @@ export function DiscoveryPanels({
           ) : helpers.length > 0 ? (
             helpers.map((offer: HelpOffer) => {
               const name = offer.creator_name || "Community Mentor";
-              const helperInitials = name
-                .split(" ")
-                .map((n: string) => n[0])
-                .slice(0, 2)
-                .join("")
-                .toUpperCase();
 
               return (
                 <div key={offer.id} className="flex items-start justify-between gap-2.5 py-2.5 first:pt-0 last:pb-0">
                   <div className="flex items-start gap-2.5 min-w-0">
-                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-teal-wash text-xs font-bold text-teal">
-                      {helperInitials}
-                    </div>
+                    <UserAvatar
+                      name={name}
+                      role={offer.creator_role || offer.category}
+                      size="sm"
+                    />
                     <div className="min-w-0 flex-1">
                       <h4 className="text-xs font-bold text-ink truncate">{name}</h4>
                       <p className="text-[10px] text-ink-soft truncate">{offer.creator_role || offer.category}</p>
