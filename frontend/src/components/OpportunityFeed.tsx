@@ -14,6 +14,7 @@ interface OpportunityFeedProps {
   activeCategory: string;
   onCategoryChange: (category: string) => void;
   searchQuery: string;
+  onClearSearch?: () => void;
   savedOpportunityIds: Set<string>;
   onToggleSave: (id: string) => void;
 }
@@ -26,6 +27,7 @@ export function OpportunityFeed({
   activeCategory,
   onCategoryChange,
   searchQuery,
+  onClearSearch,
   savedOpportunityIds,
   onToggleSave,
 }: OpportunityFeedProps) {
@@ -179,6 +181,29 @@ export function OpportunityFeed({
         </button>
       </div>
 
+      {/* Active Search Banner */}
+      {searchQuery.trim() && (
+        <div className="flex items-center justify-between rounded-xl border border-teal/30 bg-teal-wash px-3.5 py-2 text-xs text-teal">
+          <div className="flex items-center gap-2">
+            <svg className="h-4 w-4 shrink-0 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <span>
+              Search results for <strong className="font-semibold text-ink">"{searchQuery}"</strong> ({filteredOpportunities.length} {filteredOpportunities.length === 1 ? "match" : "matches"})
+            </span>
+          </div>
+          {onClearSearch && (
+            <button
+              type="button"
+              onClick={onClearSearch}
+              className="inline-flex items-center gap-1 font-semibold text-teal hover:text-teal-deep hover:underline"
+            >
+              Clear search
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Filter Options Bar (collapsible) */}
       {isFilterDrawerOpen && (
         <div className="rounded-xl border border-line bg-card p-3 shadow-xs flex flex-wrap items-center gap-3 text-xs">
@@ -292,17 +317,26 @@ export function OpportunityFeed({
         allOpportunities.length > 0 &&
         filteredOpportunities.length === 0 && (
           <div className="rounded-2xl border border-line bg-card p-8 text-center shadow-xs">
-            <p className="text-sm font-semibold text-ink">No opportunities match your filter criteria.</p>
-            <p className="mt-1 text-xs text-ink-soft">Try switching tabs or resetting your active search keywords.</p>
+            <p className="text-sm font-semibold text-ink">
+              {searchQuery.trim()
+                ? `No opportunities match "${searchQuery}".`
+                : "No opportunities match your filter criteria."}
+            </p>
+            <p className="mt-1 text-xs text-ink-soft">
+              {searchQuery.trim()
+                ? "Try checking your spelling, using broader keywords, or clearing your search."
+                : "Try switching tabs or resetting your active filters."}
+            </p>
             <button
               onClick={() => {
                 onCategoryChange("all");
                 setFilterMode("all");
                 setFilterEvidence("all");
+                onClearSearch?.();
               }}
               className="mt-3 text-xs font-semibold text-teal hover:underline"
             >
-              Show all opportunities
+              {searchQuery.trim() ? "Clear search & show all" : "Show all opportunities"}
             </button>
           </div>
         )}

@@ -229,8 +229,16 @@ export default function App({ initialMode }: AppProps = {}) {
         currentUser={currentUser}
         onOpenAuth={() => setIsAuthModalOpen(true)}
         onOpenProfile={() => setIsProfileModalOpen(true)}
+        onOpenSettings={() => setIsSettingsModalOpen(true)}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
+        onSearchSubmit={(q) => {
+          setSearchQuery(q);
+          setActiveCategory("all");
+          setCurrentView("home");
+        }}
+        opportunities={opportunityItems}
+        onSelectOpportunity={(op) => setSelectedOpportunity(op)}
       />
 
       {/* Demo Mode Top Banner */}
@@ -368,6 +376,7 @@ export default function App({ initialMode }: AppProps = {}) {
                   activeCategory={activeCategory}
                   onCategoryChange={setActiveCategory}
                   searchQuery={searchQuery}
+                  onClearSearch={() => setSearchQuery("")}
                   savedOpportunityIds={savedOpportunityIds}
                   onToggleSave={handleToggleSave}
                 />
