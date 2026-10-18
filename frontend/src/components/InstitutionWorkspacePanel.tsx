@@ -12,6 +12,7 @@ import {
   createCampusPosition,
   createInstitution,
   createOrganizationalUnit,
+  fetchInstitution,
   fetchInstitutions,
   fetchWorkspaceAssignments,
   fetchWorkspaceMembers,
@@ -20,6 +21,7 @@ import {
   fetchWorkspaceUnits,
   joinWorkspace,
 } from "../services/institutionService";
+import { fetchDemoStatus } from "../services/authService";
 
 interface InstitutionWorkspacePanelProps {
   currentUser: UserProfile | null;
@@ -70,28 +72,91 @@ export function InstitutionWorkspacePanel({
 
   useEffect(() => {
     let isMounted = true;
+    setLoading(true);
+
     fetchInstitutions()
-      .then((list) => {
+      .then(async (list) => {
         if (!isMounted) return;
-        setInstitutions(list);
-        if (list.length > 0) {
-          const first = list[0];
-          if (first) {
-            setSelectedInstId((prev) => prev ?? first.id);
+        const instMap = new Map<string, Institution>();
+        list.forEach((i) => instMap.set(i.id, i));
+
+        // 1. If currentUser has memberships, ensure their institution is represented
+        if (currentUser?.memberships?.length) {
+          for (const m of currentUser.memberships) {
+            if (!instMap.has(m.institution_id)) {
+              try {
+                const inst = await fetchInstitution(m.institution_id);
+                if (inst) instMap.set(inst.id, inst);
+              } catch {
+                instMap.set(m.institution_id, {
+                  id: m.institution_id,
+                  name: m.institution_name || "College Workspace",
+                  slug: m.institution_slug || m.institution_id.slice(0, 10),
+                  domain: null,
+                  description: null,
+                  location: null,
+                  contact_email: null,
+                  website_url: null,
+                  status: "active",
+                  verification_status: "verified",
+                  verified_at: null,
+                  created_at: "",
+                  updated_at: "",
+                });
+              }
+            }
           }
+        }
+
+        // 2. If directory is empty, check demo status to allow inspecting the demo collegiate workspace
+        if (instMap.size === 0) {
+          try {
+            const demoStatus = await fetchDemoStatus();
+            if (demoStatus.demo_mode_enabled && demoStatus.demo_institution_id) {
+              const demoInst = await fetchInstitution(demoStatus.demo_institution_id);
+              if (demoInst) instMap.set(demoInst.id, demoInst);
+            }
+          } catch {
+            // Ignore demo status fetch failure
+          }
+        }
+
+        if (!isMounted) return;
+        const finalList = Array.from(instMap.values());
+        setInstitutions(finalList);
+
+        if (finalList.length > 0) {
+          const preferredId =
+            currentUser?.memberships?.[0]?.institution_id ||
+            finalList[0]?.id;
+          setSelectedInstId((prev) => (prev && instMap.has(prev) ? prev : (preferredId ?? null)));
+        } else {
+          setSelectedInstId(null);
+          setLoading(false);
         }
       })
       .catch((err: unknown) => {
         if (isMounted && err instanceof Error) setError(err.message);
+        if (isMounted) setLoading(false);
       });
+
     return () => {
       isMounted = false;
     };
-  }, [refreshCount]);
+  }, [currentUser, refreshCount]);
 
   useEffect(() => {
-    if (!selectedInstId) return;
+    if (!selectedInstId) {
+      setSummary(null);
+      setPositions([]);
+      setAssignments([]);
+      setUnits([]);
+      setMembers([]);
+      setLoading(false);
+      return;
+    }
     let isMounted = true;
+    setLoading(true);
     Promise.all([
       fetchWorkspaceSummary(selectedInstId),
       fetchWorkspacePositions(selectedInstId),
@@ -210,20 +275,27 @@ export function InstitutionWorkspacePanel({
     <div className="space-y-8">
       {/* Top Bar: Selector & Register College button */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <label className="text-xs font-semibold uppercase tracking-wider text-ink-soft">
             College Workspace:
           </label>
           <select
             value={selectedInstId || ""}
             onChange={(e) => setSelectedInstId(e.target.value)}
-            className="rounded-xl border border-line bg-paper px-3 py-2 text-sm font-semibold text-ink outline-none focus:border-accent"
+            disabled={institutions.length === 0}
+            className="min-w-[280px] rounded-xl border border-line bg-paper px-3 py-2 text-sm font-semibold text-ink outline-none focus:border-accent disabled:bg-paper-warm disabled:text-ink-soft/60"
           >
-            {institutions.map((inst) => (
-              <option key={inst.id} value={inst.id}>
-                {inst.name} ({inst.slug})
+            {institutions.length === 0 ? (
+              <option value="" disabled>
+                {loading ? "Loading workspaces..." : "No college workspaces found"}
               </option>
-            ))}
+            ) : (
+              institutions.map((inst) => (
+                <option key={inst.id} value={inst.id}>
+                  {inst.name} ({inst.slug})
+                </option>
+              ))
+            )}
           </select>
           {loading && (
             <span className="text-xs font-medium text-ink-soft animate-pulse">
@@ -255,6 +327,33 @@ export function InstitutionWorkspacePanel({
       {successMsg && (
         <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
           {successMsg}
+        </div>
+      )}
+
+      {/* Empty State Banner if no workspaces */}
+      {institutions.length === 0 && !loading && (
+        <div className="rounded-2xl border border-line bg-paper p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent mb-4">
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+          </div>
+          <h3 className="font-display text-lg font-bold text-ink">No College Workspaces Available</h3>
+          <p className="mt-2 text-sm text-ink-soft max-w-md mx-auto">
+            {!currentUser
+              ? "You are exploring in Guest Mode. Launch Demo Mode to explore the Apex Institute of Technology collegiate workspace, or register a new campus workspace."
+              : "Register your college workspace above to initialize campus leadership roles, departments, and verified member directories."}
+          </p>
+          {!currentUser && (
+            <div className="mt-6 flex justify-center gap-3">
+              <button
+                onClick={onOpenAuth}
+                className="rounded-xl bg-accent px-5 py-2.5 text-sm font-semibold text-white shadow transition hover:bg-accent/90"
+              >
+                Sign In / Launch Demo Mode
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -372,7 +471,9 @@ export function InstitutionWorkspacePanel({
       )}
 
       {/* Tabs navigation */}
-      <div className="border-b border-line">
+      {selectedInst && (
+        <>
+          <div className="border-b border-line">
         <nav className="flex space-x-8">
           <button
             onClick={() => setActiveTab("positions")}
@@ -575,6 +676,8 @@ export function InstitutionWorkspacePanel({
             </table>
           </div>
         </div>
+      )}
+        </>
       )}
 
       {/* Modal: Register New College */}

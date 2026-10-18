@@ -1,6 +1,6 @@
 /** Authentication service and session management. */
 
-import type { TokenResponse, UserProfile } from "../types/auth";
+import type { DemoStatusResponse, TokenResponse, UserProfile } from "../types/auth";
 import { ApiError, requestJson } from "./apiClient";
 
 const TOKEN_KEY = "eventsignal_token";
@@ -101,10 +101,10 @@ export function logoutUser(): void {
   clearStoredToken();
 }
 
-export async function fetchDemoStatus(): Promise<{ demo_mode_enabled: boolean; demo_dataset_seeded: boolean }> {
+export async function fetchDemoStatus(): Promise<DemoStatusResponse> {
   try {
     const response = await requestJson("/api/v1/auth/demo/status", { method: "GET" });
-    return response.body as { demo_mode_enabled: boolean; demo_dataset_seeded: boolean };
+    return response.body as DemoStatusResponse;
   } catch {
     return { demo_mode_enabled: false, demo_dataset_seeded: false };
   }

@@ -35,5 +35,6 @@ export interface TokenResponse {
 export interface DemoStatusResponse {
   demo_mode_enabled: boolean;
   demo_dataset_seeded: boolean;
+  demo_institution_id?: string;
 }
 

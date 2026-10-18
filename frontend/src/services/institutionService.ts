@@ -13,7 +13,9 @@ import { ApiError, requestJson } from "./apiClient";
 
 export async function fetchInstitutions(): Promise<Institution[]> {
   try {
-    const response = await requestJson("/api/v1/institutions");
+    const response = await requestJson("/api/v1/institutions", {
+      headers: getAuthHeaders(),
+    });
     return response.body as Institution[];
   } catch (error) {
     if (error instanceof ApiError) {
@@ -25,7 +27,9 @@ export async function fetchInstitutions(): Promise<Institution[]> {
 
 export async function fetchInstitution(idOrSlug: string): Promise<Institution> {
   try {
-    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(idOrSlug)}`);
+    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(idOrSlug)}`, {
+      headers: getAuthHeaders(),
+    });
     return response.body as Institution;
   } catch (error) {
     if (error instanceof ApiError) {
@@ -37,7 +41,9 @@ export async function fetchInstitution(idOrSlug: string): Promise<Institution> {
 
 export async function fetchWorkspaceSummary(institutionId: string): Promise<WorkspaceSummary> {
   try {
-    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/workspace`);
+    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/workspace`, {
+      headers: getAuthHeaders(),
+    });
     return response.body as WorkspaceSummary;
   } catch (error) {
     if (error instanceof ApiError) {
@@ -63,7 +69,9 @@ export async function fetchWorkspaceMembers(institutionId: string): Promise<Memb
 
 export async function fetchWorkspaceUnits(institutionId: string): Promise<OrganizationalUnit[]> {
   try {
-    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/units`);
+    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/units`, {
+      headers: getAuthHeaders(),
+    });
     return response.body as OrganizationalUnit[];
   } catch (error) {
     if (error instanceof ApiError) {
@@ -75,7 +83,9 @@ export async function fetchWorkspaceUnits(institutionId: string): Promise<Organi
 
 export async function fetchWorkspacePositions(institutionId: string): Promise<CampusPosition[]> {
   try {
-    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/positions`);
+    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/positions`, {
+      headers: getAuthHeaders(),
+    });
     return response.body as CampusPosition[];
   } catch (error) {
     if (error instanceof ApiError) {
@@ -87,7 +97,9 @@ export async function fetchWorkspacePositions(institutionId: string): Promise<Ca
 
 export async function fetchWorkspaceAssignments(institutionId: string): Promise<CampusAssignment[]> {
   try {
-    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/assignments`);
+    const response = await requestJson(`/api/v1/institutions/${encodeURIComponent(institutionId)}/assignments`, {
+      headers: getAuthHeaders(),
+    });
     return response.body as CampusAssignment[];
   } catch (error) {
     if (error instanceof ApiError) {
