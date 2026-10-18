@@ -29,8 +29,8 @@ A comprehensive, end-to-end audit of EventSignal's **DEMO MODE** was performed a
    - Pilot and promotion metrics are clearly badged as **DEMONSTRATION METRICS** and calculated from real persisted records without misrepresenting commercial revenue.
 4. **Verification & Testing:**
    - **Frontend Vitest Suite:** 60/60 tests passing across 12 test files.
-   - **Backend Pytest Suite:** 226/226 tests passing across all test suites (including 12 dedicated demo tests).
-   - **TypeScript & Build:** `tsc --noEmit && vite build` passing with 0 errors.
+   - **Backend Pytest Suite:** 226/226 tests passing across 19 test files (including 12 dedicated demo integration tests in `test_demo.py`; 3 benign Starlette deprecation warnings, unrelated to EventSignal code).
+   - **TypeScript & Build:** `tsc --noEmit && vite build` passing with 0 errors, producing a ~501 kB JS bundle.
 
 ---
 
@@ -145,24 +145,25 @@ Demo mode uses a fully populated, internally consistent set of synthetic demonst
 ```mermaid
 graph TD
     DemoUser["Demo Presenter (Alex Vance)<br/>demo@eventsignal.local"] -->|Member of| DemoInst["Apex Institute of Technology<br/>demo-inst-apex-tech-001"]
-    DemoInst --> Opportunities["3 Seeded Opportunities<br/>(NASA L'SPACE, Google Summer of Code, AI Sprint)"]
-    DemoInst --> Profiles["3 Campus Profiles<br/>(Sarah Lin, Marcus Chen, Dr. Anita Roy)"]
-    DemoInst --> HelpOffers["2 Active Help Offers<br/>(AI Systems Mentorship, Academic Research)"]
-    DemoInst --> StudentNeeds["2 Student Needs<br/>(GSoC Guidance, Research Lab Prep)"]
-    DemoInst --> Matches["2 Helper Matches<br/>(88% & 92% Compatibility Scores)"]
-    DemoInst --> Handovers["2 Legacy Handovers<br/>(Robotics Club, Annual Hackathon)"]
-    DemoInst --> Memories["2 Event Memories<br/>(Hackathon Lessons & Budget Advice)"]
-    DemoInst --> Tasks["2 Follow-up Tasks<br/>(Sponsorship Outreach, Venue Booking)"]
-    DemoInst --> Partners["2 Partner Orgs<br/>(Apex Alumni Network, TechVentures)"]
-    DemoInst --> Sponsorships["2 Sponsorship Requests<br/>(Under Review, Accepted)"]
-    DemoInst --> Campaigns["2 Promotion Campaigns<br/>(Sponsored Career Fair, Robotics)"]
-    DemoInst --> PilotMetrics["Auditable Pilot Metrics<br/>(Live DB Calculation)"]
+    DemoInst --> Units["13 Academic Units & Clubs"]
+    DemoInst --> Positions["10 Campus Positions"]
+    DemoInst --> Members["30 Synthetic Members<br/>(Students, Alumni, Faculty)"]
+    Members --> Profiles["Student & Alumni Profiles<br/>(Privacy-gated)"]
+    Members --> HelpOffers["12 Active Help Offers<br/>(Career, Technical, Research)"]
+    DemoInst --> Opportunities["12 Opportunities<br/>(Hackathons, Fellowships, Research)"]
+    DemoInst --> StudentNeeds["4 Student Needs<br/>(With Explainable Matches)"]
+    StudentNeeds --> Matches["3+ Helper Matches<br/>(Deterministic Scores)"]
+    DemoInst --> Legacy["3 Handovers + 3 Memories<br/>+ 6 Follow-up Tasks"]
+    DemoInst --> Partners["3 Verified Partners<br/>+ 3 Sponsorships"]
+    DemoInst --> Campaigns["2 Promotion Campaigns"]
+    DemoInst --> Import["1 Alumni Import Job<br/>(CSV dry-run preview)"]
+    DemoInst --> PilotMetrics["Pilot Metrics<br/>(Live DB Calculation)"]
 ```
 
 ### Isolation Guarantees:
-1. **Foreign Key Integrity:** All synthetic demo records reference `institution_id = "demo-inst-apex-tech-001"`.
-2. **Idempotent Reset:** `backend/app/demo_seed.py` uses fixed UUIDs and SQLAlchemy `db.merge()` to ensure that reseeding resets data cleanly without creating duplicates.
-3. **No Cross-Contamination:** Public feeds and normal tenant queries filter strictly by user institution memberships, preventing synthetic records from appearing in real tenant views.
+1. **Foreign Key Integrity:** All synthetic demo records reference `institution_id = "demo-inst-apex-tech-001"` and `extra_data["is_demo"] = true`.
+2. **Idempotent Seeding:** `backend/app/services/demo_service.py` uses fixed UUIDs and SQLAlchemy `db.merge()` to ensure reseeding resets data cleanly without creating duplicates.
+3. **No Cross-Contamination:** Public feeds and all multi-tenant queries filter strictly by user institution memberships, preventing synthetic records from appearing in real tenant views.
 
 ---
 
@@ -214,9 +215,9 @@ dist/assets/index-BE-J_MsV.js   500.92 kB
 
 ### Backend Test Suite (Pytest)
 ```
-==================== 222 passed in 38.45s ====================
+==================== 226 passed, 3 warnings in 191.06s ====================
 ```
-All 222 backend unit, integration, and security tests passed with zero failures.
+All 226 backend unit, integration, and security tests passed with zero failures (3 benign deprecation warnings from the Starlette HTTP constant rename, unrelated to EventSignal code).
 
 ---
 
@@ -272,11 +273,19 @@ All 222 backend unit, integration, and security tests passed with zero failures.
 
 ### Safe Data Reset Procedure
 To reset all demo records to pristine initial state:
+
+**Option 1 — API (backend must be running):**
 ```powershell
-cd backend
-.\.venv\Scripts\python.exe -m app.demo_seed
+# Remove existing demo records
+curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/reset
+# Re-seed from clean state
+curl -X POST http://127.0.0.1:8000/api/v1/auth/demo/seed
 ```
-This script executes idempotent upserts (`db.merge()`), safely restoring all initial demo opportunities, profiles, help offers, handovers, and pilot records without leaving orphaned or duplicate entries.
+
+**Option 2 — Restart the backend:**
+Demo seeding runs automatically on every startup when `DEMO_MODE_ENABLED=true`.
+
+Both methods use `DemoService.seed_demo_environment()`, which applies idempotent `db.merge()` upserts via fixed UUIDs, safely restoring all demo records without leaving orphaned or duplicate entries.
 
 ---
 
