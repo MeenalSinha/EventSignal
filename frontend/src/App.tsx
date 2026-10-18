@@ -264,108 +264,242 @@ export default function App({ initialMode }: AppProps = {}) {
       )}
 
       {/* Main Content Area */}
-      {currentView === "home" && (
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6">
-          <div className="flex flex-col lg:flex-row gap-5 items-start">
-            {/* Left Column: Profile Card & Campus Navigation */}
-            <ProfileSidebar
-              currentUser={currentUser}
-              studentProfile={studentProfile}
-              totalOpportunitiesCount={totalOpportunitiesCount}
-              myOffersCount={myOffersCount}
-              pendingTasksCount={pendingTasksCount}
-              currentView={currentView}
-              onViewChange={setCurrentView}
-              onOpenProfile={() => setIsProfileModalOpen(true)}
-              onOpenAuth={() => setIsAuthModalOpen(true)}
-              onSelectCategoryFilter={(cat) => setActiveCategory(cat)}
-            />
+      {/* Main Unified Content Area */}
+      <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6">
+        <div className="flex flex-col lg:flex-row gap-5 items-start">
+          {/* Left Column: Profile Card & Campus Navigation (Always Visible Across All Pages) */}
+          <ProfileSidebar
+            currentUser={currentUser}
+            studentProfile={studentProfile}
+            totalOpportunitiesCount={totalOpportunitiesCount}
+            myOffersCount={myOffersCount}
+            pendingTasksCount={pendingTasksCount}
+            currentView={currentView}
+            onViewChange={setCurrentView}
+            onOpenProfile={() => setIsProfileModalOpen(true)}
+            onOpenAuth={() => setIsAuthModalOpen(true)}
+            onSelectCategoryFilter={(cat) => {
+              setActiveCategory(cat);
+              setCurrentView("home");
+            }}
+          />
 
-            {/* Center Column: Welcome Banner, Quick Actions & Opportunity Feed */}
-            <div className="flex-1 min-w-0 w-full flex flex-col gap-4">
-              {/* Unseeded Demo Environment Notice */}
-              {currentUser?.is_demo && totalOpportunitiesCount === 0 && (
-                <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-xs text-center space-y-3">
-                  <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-800">
-                    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+          {/* Center Column: Active View Content */}
+          <div className="flex-1 min-w-0 w-full flex flex-col gap-4">
+            {currentView === "home" && (
+              <>
+                {/* Unseeded Demo Environment Notice */}
+                {currentUser?.is_demo && totalOpportunitiesCount === 0 && (
+                  <div className="rounded-xl border border-amber-300 bg-amber-50 p-5 shadow-xs text-center space-y-3">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-800">
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-amber-900">Demo Environment Not Seeded</h3>
+                      <p className="mt-1 text-xs text-amber-700 max-w-md mx-auto">
+                        The demonstration workspace has not been populated with synthetic records yet. Seed the demo dataset to initialize opportunities, mentorship offers, legacy handovers, and pilot metrics.
+                      </p>
+                    </div>
+                    <div className="flex justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsSeedingDemo(true);
+                          try {
+                            await seedDemoEnvironment();
+                            events.reload();
+                          } finally {
+                            setIsSeedingDemo(false);
+                          }
+                        }}
+                        disabled={isSeedingDemo}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-amber-700 transition disabled:opacity-50"
+                      >
+                        {isSeedingDemo ? "Seeding Demo Data..." : "Seed Demonstration Data"}
+                      </button>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-bold text-amber-900">Demo Environment Not Seeded</h3>
-                    <p className="mt-1 text-xs text-amber-700 max-w-md mx-auto">
-                      The demonstration workspace has not been populated with synthetic records yet. Seed the demo dataset to initialize opportunities, mentorship offers, legacy handovers, and pilot metrics.
-                    </p>
-                  </div>
-                  <div className="flex justify-center gap-3">
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        setIsSeedingDemo(true);
-                        try {
-                          await seedDemoEnvironment();
-                          events.reload();
-                        } finally {
-                          setIsSeedingDemo(false);
-                        }
-                      }}
-                      disabled={isSeedingDemo}
-                      className="inline-flex items-center gap-1.5 rounded-lg bg-amber-600 px-3.5 py-2 text-xs font-semibold text-white shadow-xs hover:bg-amber-700 transition disabled:opacity-50"
-                    >
-                      {isSeedingDemo ? "Seeding Demo Data..." : "Seed Demonstration Data"}
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
 
-              <WelcomePanel
-                currentUser={currentUser}
-                onSubmitOpportunity={() =>
-                  executeProtectedAction("submit an opportunity URL", () => {
+                <WelcomePanel
+                  currentUser={currentUser}
+                  onSubmitOpportunity={() =>
+                    executeProtectedAction("submit an opportunity URL", () => {
+                      setSubmitModalTitle("Submit Opportunity");
+                      setIsSubmitModalOpen(true);
+                    })
+                  }
+                  onShareEvent={() =>
+                    executeProtectedAction("share a campus event", () => {
+                      setSubmitModalTitle("Share Campus Event");
+                      setIsSubmitModalOpen(true);
+                    })
+                  }
+                  onAskHelp={() =>
+                    executeProtectedAction("ask for help or declare a student need", () => {
+                      setIsNeedModalOpen(true);
+                    })
+                  }
+                  onOfferHelp={() =>
+                    executeProtectedAction("offer campus help or review mentorship offers", () => {
+                      setCurrentView("offers");
+                    })
+                  }
+                  onCreateHandover={() =>
+                    executeProtectedAction("create a club tenure handover", () => {
+                      setCurrentView("legacy");
+                    })
+                  }
+                />
+
+                <OpportunityFeed
+                  eventsState={events.state}
+                  onRetry={events.reload}
+                  onSelectOpportunity={(op) => setSelectedOpportunity(op)}
+                  onSubmitOpportunity={() => {
                     setSubmitModalTitle("Submit Opportunity");
                     setIsSubmitModalOpen(true);
-                  })
-                }
-                onShareEvent={() =>
-                  executeProtectedAction("share a campus event", () => {
-                    setSubmitModalTitle("Share Campus Event");
-                    setIsSubmitModalOpen(true);
-                  })
-                }
-                onAskHelp={() =>
-                  executeProtectedAction("ask for help or declare a student need", () => {
-                    setIsNeedModalOpen(true);
-                  })
-                }
-                onOfferHelp={() =>
-                  executeProtectedAction("offer campus help or review mentorship offers", () => {
-                    setCurrentView("offers");
-                  })
-                }
-                onCreateHandover={() =>
-                  executeProtectedAction("create a club tenure handover", () => {
-                    setCurrentView("legacy");
-                  })
-                }
-              />
+                  }}
+                  activeCategory={activeCategory}
+                  onCategoryChange={setActiveCategory}
+                  searchQuery={searchQuery}
+                  savedOpportunityIds={savedOpportunityIds}
+                  onToggleSave={handleToggleSave}
+                />
+              </>
+            )}
 
-              <OpportunityFeed
-                eventsState={events.state}
-                onRetry={events.reload}
-                onSelectOpportunity={(op) => setSelectedOpportunity(op)}
-                onSubmitOpportunity={() => {
-                  setSubmitModalTitle("Submit Opportunity");
-                  setIsSubmitModalOpen(true);
-                }}
-                activeCategory={activeCategory}
-                onCategoryChange={setActiveCategory}
-                searchQuery={searchQuery}
-                savedOpportunityIds={savedOpportunityIds}
-                onToggleSave={handleToggleSave}
-              />
-            </div>
+            {currentView === "opportunities" && (
+              <div className="rounded-2xl border border-line bg-card p-6 sm:p-8 shadow-xs">
+                <div className="max-w-2xl mb-8">
+                  <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
+                    Evidence Before You Register.
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                    Evaluate and compare events using source-linked evidence. EventSignal shows what each claim rests on, so the
+                    decision stays with you.
+                  </p>
+                </div>
 
-            {/* Right Column: Discovery Panels */}
+                <div className="grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+                  <EventWorkspace state={events.state} onRetry={events.reload} />
+                  <ServiceStatusPanel state={health.state} onRetry={health.reload} />
+                </div>
+              </div>
+            )}
+
+            {currentView === "institutions" && (
+              <div className="rounded-2xl border border-line bg-card p-6 sm:p-8 shadow-xs">
+                <div className="max-w-2xl mb-8">
+                  <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
+                    Institutional Workspaces & Identity
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                    Multi-college isolation, authorized community members, official campus leadership, and verified appointments.
+                  </p>
+                </div>
+
+                <ErrorBoundary fallbackTitle="Workspace Section Error">
+                  <InstitutionWorkspacePanel
+                    currentUser={currentUser}
+                    onOpenAuth={() => setIsAuthModalOpen(true)}
+                  />
+                </ErrorBoundary>
+              </div>
+            )}
+
+            {currentView === "network" && (
+              <div className="rounded-2xl border border-line bg-card p-6 sm:p-8 shadow-xs">
+                <div className="max-w-2xl mb-8">
+                  <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
+                    Campus Network & Discovery
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                    Discover students, alumni mentors, and official campus leaders within your college workspace.
+                    Building a network, not a static directory.
+                  </p>
+                </div>
+
+                <ErrorBoundary fallbackTitle="Campus Network Error">
+                  <MemberDiscoveryPanel
+                    currentUser={currentUser}
+                    onOpenAuth={() => setIsAuthModalOpen(true)}
+                    onSelectMemberForOffers={() => {
+                      setCurrentView("offers");
+                    }}
+                  />
+                </ErrorBoundary>
+              </div>
+            )}
+
+            {currentView === "offers" && (
+              <div className="rounded-2xl border border-line bg-card p-6 sm:p-8 shadow-xs">
+                <div className="max-w-2xl mb-8">
+                  <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
+                    Campus Mentorship & Help Offers
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                    Explicit, consent-backed help offers from alumni, faculty, and senior peers.
+                    Request portfolio reviews, mock interviews, or project feedback.
+                  </p>
+                </div>
+
+                <ErrorBoundary fallbackTitle="Help Offers Error">
+                  <HelpOffersPanel
+                    currentUser={currentUser}
+                    onOpenAuth={() => setIsAuthModalOpen(true)}
+                  />
+                </ErrorBoundary>
+              </div>
+            )}
+
+            {currentView === "legacy" && (
+              <div className="rounded-2xl border border-line bg-card p-6 sm:p-8 shadow-xs">
+                <div className="max-w-2xl mb-8">
+                  <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
+                    Gap Matching & EventSignal Legacy
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                    Declare specific academic or career challenges for deterministic helper matching. Preserve institutional
+                    memory, tenure handovers, event retrospectives, and follow-up commitments.
+                  </p>
+                </div>
+
+                <ErrorBoundary fallbackTitle="Legacy Matching Error">
+                  <LegacyMatchingPanel
+                    currentUser={currentUser}
+                    onOpenAuth={() => setIsAuthModalOpen(true)}
+                  />
+                </ErrorBoundary>
+              </div>
+            )}
+
+            {currentView === "partnerships" && (
+              <div className="rounded-2xl border border-line bg-card p-6 sm:p-8 shadow-xs">
+                <div className="max-w-2xl mb-8">
+                  <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
+                    Partnerships, Promotion & Pilot Readiness
+                  </h2>
+                  <p className="mt-3 text-sm leading-relaxed text-ink-soft">
+                    Connect events with verified brand partners, request transparent cross-college promotion campaigns,
+                    securely import approved alumni records with strict consent privacy, and monitor real pilot metrics.
+                  </p>
+                </div>
+
+                <ErrorBoundary fallbackTitle="Partnerships & Pilot Readiness Error">
+                  <PartnershipsPromotionPanel
+                    currentUser={currentUser}
+                    onOpenAuth={() => setIsAuthModalOpen(true)}
+                  />
+                </ErrorBoundary>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Discovery Panels (Shown on home view) */}
+          {currentView === "home" && (
             <DiscoveryPanels
               currentUser={currentUser}
               opportunities={opportunityItems}
@@ -379,140 +513,9 @@ export default function App({ initialMode }: AppProps = {}) {
               }
               onOpenAuth={() => setIsAuthModalOpen(true)}
             />
-          </div>
-        </main>
-      )}
-
-      {/* Specialized Product Area Views */}
-      {currentView !== "home" && (
-        <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-8 sm:px-8 sm:py-10">
-          {currentView === "opportunities" && (
-            <>
-              <div className="max-w-2xl">
-                <h2 className="font-display text-4xl font-semibold leading-[1.1] tracking-tight sm:text-5xl text-ink">
-                  Evidence Before You Register.
-                </h2>
-                <p className="mt-4 text-base leading-relaxed text-ink-soft">
-                  Evaluate and compare events using source-linked evidence. EventSignal shows what each claim rests on, so the
-                  decision stays with you.
-                </p>
-              </div>
-
-              <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-                <EventWorkspace state={events.state} onRetry={events.reload} />
-                <ServiceStatusPanel state={health.state} onRetry={health.reload} />
-              </div>
-            </>
           )}
-
-          {currentView === "institutions" && (
-            <>
-              <div className="max-w-2xl mb-8">
-                <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
-                  Institutional Workspaces & Identity
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                  Multi-college isolation, authorized community members, official campus leadership, and verified appointments.
-                </p>
-              </div>
-
-              <ErrorBoundary fallbackTitle="Workspace Section Error">
-                <InstitutionWorkspacePanel
-                  currentUser={currentUser}
-                  onOpenAuth={() => setIsAuthModalOpen(true)}
-                />
-              </ErrorBoundary>
-            </>
-          )}
-
-          {currentView === "network" && (
-            <>
-              <div className="max-w-2xl mb-8">
-                <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
-                  Campus Network & Discovery
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                  Discover students, alumni mentors, and official campus leaders within your college workspace.
-                  Building a network, not a static directory.
-                </p>
-              </div>
-
-              <ErrorBoundary fallbackTitle="Campus Network Error">
-                <MemberDiscoveryPanel
-                  currentUser={currentUser}
-                  onOpenAuth={() => setIsAuthModalOpen(true)}
-                  onSelectMemberForOffers={() => {
-                    setCurrentView("offers");
-                  }}
-                />
-              </ErrorBoundary>
-            </>
-          )}
-
-          {currentView === "offers" && (
-            <>
-              <div className="max-w-2xl mb-8">
-                <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
-                  Campus Mentorship & Help Offers
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                  Explicit, consent-backed help offers from alumni, faculty, and senior peers.
-                  Request portfolio reviews, mock interviews, or project feedback.
-                </p>
-              </div>
-
-              <ErrorBoundary fallbackTitle="Help Offers Error">
-                <HelpOffersPanel
-                  currentUser={currentUser}
-                  onOpenAuth={() => setIsAuthModalOpen(true)}
-                />
-              </ErrorBoundary>
-            </>
-          )}
-
-          {currentView === "legacy" && (
-            <>
-              <div className="max-w-2xl mb-8">
-                <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
-                  Gap Matching & EventSignal Legacy
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                  Declare specific academic or career challenges for deterministic helper matching. Preserve institutional
-                  memory, tenure handovers, event retrospectives, and follow-up commitments.
-                </p>
-              </div>
-
-              <ErrorBoundary fallbackTitle="Legacy Matching Error">
-                <LegacyMatchingPanel
-                  currentUser={currentUser}
-                  onOpenAuth={() => setIsAuthModalOpen(true)}
-                />
-              </ErrorBoundary>
-            </>
-          )}
-
-          {currentView === "partnerships" && (
-            <>
-              <div className="max-w-2xl mb-8">
-                <h2 className="font-display text-3xl font-bold tracking-tight sm:text-4xl text-ink">
-                  Partnerships, Promotion & Pilot Readiness
-                </h2>
-                <p className="mt-3 text-sm leading-relaxed text-ink-soft">
-                  Connect events with verified brand partners, request transparent cross-college promotion campaigns,
-                  securely import approved alumni records with strict consent privacy, and monitor real pilot metrics.
-                </p>
-              </div>
-
-              <ErrorBoundary fallbackTitle="Partnerships & Pilot Readiness Error">
-                <PartnershipsPromotionPanel
-                  currentUser={currentUser}
-                  onOpenAuth={() => setIsAuthModalOpen(true)}
-                />
-              </ErrorBoundary>
-            </>
-          )}
-        </main>
-      )}
+        </div>
+      </main>
 
       {/* Footer */}
       <footer className="mt-auto border-t border-line bg-card py-6">

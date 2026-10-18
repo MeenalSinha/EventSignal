@@ -270,6 +270,20 @@ export function ProfileSidebar({
               </span>
             )}
           </button>
+
+          <button
+            onClick={() => onViewChange("partnerships")}
+            className={`flex items-center gap-2.5 rounded-lg px-3 py-2 text-left transition ${
+              currentView === "partnerships"
+                ? "bg-teal-wash text-teal font-semibold border-l-3 border-teal"
+                : "text-ink-soft hover:bg-page hover:text-ink"
+            }`}
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+            </svg>
+            <span>Partnerships & Pilots</span>
+          </button>
         </nav>
 
         {/* 3. My Institution Section */}
@@ -286,7 +300,10 @@ export function ProfileSidebar({
 
           <div className="mt-1 flex flex-col gap-0.5 text-[11px] text-ink-soft">
             <button
-              onClick={() => onSelectCategoryFilter?.("campus_event")}
+              onClick={() => {
+                onSelectCategoryFilter?.("campus_event");
+                onViewChange("home");
+              }}
               className="flex items-center gap-2 rounded-md px-3 py-1 text-left hover:bg-page hover:text-teal transition"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
