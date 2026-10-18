@@ -9,6 +9,7 @@ import { InstitutionWorkspacePanel } from "./components/InstitutionWorkspacePane
 import { LegacyMatchingPanel } from "./components/LegacyMatchingPanel";
 import { MemberDiscoveryPanel } from "./components/MemberDiscoveryPanel";
 import { MyProfileModal } from "./components/MyProfileModal";
+import { SettingsModal } from "./components/SettingsModal";
 import { PartnershipsPromotionPanel } from "./components/PartnershipsPromotionPanel";
 import { ServiceStatusPanel } from "./components/ServiceStatusPanel";
 import { ProfileSidebar } from "./components/ProfileSidebar";
@@ -90,6 +91,7 @@ export default function App({ initialMode }: AppProps = {}) {
   // Modals state
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [selectedOpportunity, setSelectedOpportunity] = useState<Opportunity | null>(null);
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState(false);
   const [submitModalTitle, setSubmitModalTitle] = useState("Submit Opportunity");
@@ -278,6 +280,7 @@ export default function App({ initialMode }: AppProps = {}) {
             onViewChange={setCurrentView}
             onOpenProfile={() => setIsProfileModalOpen(true)}
             onOpenAuth={() => setIsAuthModalOpen(true)}
+            onOpenSettings={() => setIsSettingsModalOpen(true)}
             onSelectCategoryFilter={(cat) => {
               setActiveCategory(cat);
               setCurrentView("home");
@@ -548,6 +551,22 @@ export default function App({ initialMode }: AppProps = {}) {
           currentUser={currentUser}
         />
       )}
+
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        currentUser={currentUser}
+        onOpenProfile={() => {
+          setIsSettingsModalOpen(false);
+          setIsProfileModalOpen(true);
+        }}
+        onLogout={handleLogout}
+        onOpenAuth={() => {
+          setIsSettingsModalOpen(false);
+          setIsAuthModalOpen(true);
+        }}
+        onRefreshData={() => events.reload()}
+      />
 
       <OpportunityDetailModal
         opportunity={selectedOpportunity}

@@ -13,6 +13,7 @@ interface ProfileSidebarProps {
   onViewChange: (view: AppView) => void;
   onOpenProfile: () => void;
   onOpenAuth: () => void;
+  onOpenSettings?: () => void;
   onSelectCategoryFilter?: (category: string) => void;
 }
 
@@ -26,6 +27,7 @@ export function ProfileSidebar({
   onViewChange,
   onOpenProfile,
   onOpenAuth,
+  onOpenSettings,
   onSelectCategoryFilter,
 }: ProfileSidebarProps) {
   // Calculate completion percentage from real profile data
@@ -348,7 +350,7 @@ export function ProfileSidebar({
           </div>
           <div className="flex flex-col gap-0.5 text-[11px] text-ink-soft">
             <button
-              onClick={() => onViewChange("institutions")}
+              onClick={onOpenSettings}
               className="flex items-center gap-2 rounded-md px-3 py-1 text-left hover:bg-page hover:text-ink transition"
             >
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
