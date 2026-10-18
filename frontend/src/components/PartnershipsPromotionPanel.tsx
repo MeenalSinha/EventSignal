@@ -436,9 +436,20 @@ export function PartnershipsPromotionPanel({
           }`}
         >
           <span>{feedback.message}</span>
-          <button onClick={() => setFeedback(null)} className="ml-4 text-xs font-bold uppercase hover:opacity-75">
-            Dismiss
-          </button>
+          <div className="flex items-center gap-2">
+            {feedback.type === "error" && (
+              <button
+                type="button"
+                onClick={refreshData}
+                className="rounded-lg bg-rose-700 px-2.5 py-1 text-xs font-semibold text-white hover:bg-rose-800"
+              >
+                Retry
+              </button>
+            )}
+            <button onClick={() => setFeedback(null)} className="ml-2 text-xs font-bold uppercase hover:opacity-75">
+              Dismiss
+            </button>
+          </div>
         </div>
       )}
 
@@ -668,7 +679,7 @@ export function PartnershipsPromotionPanel({
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <span className="inline-block rounded-md bg-paper-warm px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-ink-soft">
-                        {req.support_type.replace("_", " ")}
+                        {(req.support_type || "").replace(/_/g, " ")}
                       </span>
                       <h3 className="font-semibold text-base text-ink mt-1">{req.objective}</h3>
                     </div>
@@ -685,7 +696,7 @@ export function PartnershipsPromotionPanel({
                           : "bg-paper-warm text-ink-soft"
                       }`}
                     >
-                      {req.status.replace("_", " ")}
+                      {(req.status || "").replace(/_/g, " ")}
                     </span>
                   </div>
 
@@ -1107,7 +1118,7 @@ export function PartnershipsPromotionPanel({
             </div>
             {metrics && (
               <span className="rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 px-3 py-1 text-xs font-bold uppercase tracking-wider">
-                {metrics.readiness_status.replace(/_/g, " ")}
+                {(metrics.readiness_status || "").replace(/_/g, " ")}
               </span>
             )}
           </div>
