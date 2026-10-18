@@ -121,7 +121,7 @@ export function OpportunityIntakeForm({ onIngestSuccess, onClose }: Props) {
             <button
               type="submit"
               disabled={submitting}
-              className="inline-flex items-center justify-center rounded-md bg-ink px-4 py-2 text-sm font-medium text-canvas hover:bg-ink-soft focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2 disabled:opacity-50"
+              className="inline-flex items-center justify-center rounded-xl bg-ink px-5 py-2.5 text-sm font-semibold text-white shadow-xs hover:bg-ink-soft focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2 disabled:opacity-50 transition"
             >
               {submitting ? "Retrieving & Analyzing..." : "Analyze & Ingest Opportunity"}
             </button>
