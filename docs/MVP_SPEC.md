@@ -201,3 +201,5 @@ All releases and evaluator builds must satisfy the automated quality gates:
 | **Production Build** | `vite build` | Production minification & assets | ✅ **PASS (556 kB JS)** |
 | **Linear Migration Chain** | Alembic | Migrations 0001 through 0007 | ✅ **Linear & Complete** |
 | **Tenant & SSRF Isolation** | Pytest security fixtures | Multi-tenant route dependencies | ✅ **Verified Secure** |
+
+> **Note on Test-Status Consistency:** Historical documentation recorded 214 tests (Phase 8 initial commit `21e94d0`) and 226 tests (Phase 8 closeout). The current test suite contains **229 backend tests** and **71 frontend tests** (**300 total passing automated tests**), reflecting phased test expansion for demo isolation, account collision protection, and Settings modal verification. All 300 tests were freshly verified on October 25, 2026.

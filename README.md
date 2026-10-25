@@ -30,7 +30,149 @@ The project originated at **HackShift — Cmd+Shift+Create 2026** under the them
 
 ---
 
-## 3. Problem Statement
+## 3. Core Product Workflow
+
+EventSignal structures campus interaction around a 3-pillar workflow:
+
+$$\textbf{Discover} \longrightarrow \textbf{Connect} \longrightarrow \textbf{Preserve}$$
+
+1. **Discover (Opportunity Intake & Credibility Assessment):** Students browse and evaluate hackathons, fellowships, and internships with transparent, field-level extraction provenance (`FieldEvidence`) and declarative credibility tiers (High, Moderate, Speculative).
+2. **Connect (Deterministic Gap-to-Helper Matching):** Students declare learning gaps; an explainable rules engine matches them with verified peers and alumni mentors who have explicitly granted consent (`willing_to_connect = true`), eliminating cold outreach spam.
+3. **Preserve (EventSignal Legacy & Institutional Memory):** Student leaders document officer handovers (`LegacyHandover`), post-event retrospectives (`EventMemory`), and post-event follow-up commitments (`FollowUpTask`), preventing campus amnesia as seniors graduate.
+
+---
+
+## 4. 🚀 Quick Start (Up & Running in 5 Minutes)
+
+This Quick Start contains verified repository instructions for setting up, running, and exploring EventSignal locally.
+
+### 4.1 Prerequisites
+Ensure the following tools are installed on your machine:
+- **Python:** `3.11+` (Verified on Python `3.14.2`)
+- **Node.js:** `18+` (Verified on Node `22.x` & npm `10.x`)
+- **Git:** Standard git client
+
+### 4.2 Clone the Repository
+```bash
+git clone https://github.com/MeenalSinha/EventSignal.git
+cd EventSignal
+```
+
+### 4.3 Configure Environment Variables
+Copy the safe development configuration template from `.env.example` to `.env` in the repository root:
+
+**Windows (PowerShell):**
+```powershell
+Copy-Item .env.example .env
+```
+
+**macOS / Linux:**
+```bash
+cp .env.example .env
+```
+
+> [!NOTE]
+> `.env.example` ships with safe local development defaults. No external API keys (e.g. Cloudinary, payment gateways) are required for local execution or presentation demo evaluation. All sensitive secrets remain strictly server-side and excluded from version control.
+
+---
+
+### 4.4 Start the Complete Application (2 Terminals)
+
+#### Terminal 1 — Backend (FastAPI)
+
+**Windows (PowerShell):**
+```powershell
+cd backend
+python -m venv .venv
+# Activate virtual environment
+.\.venv\Scripts\Activate.ps1
+# Install development & runtime dependencies
+pip install -r requirements-dev.txt
+# Start the backend server
+python -m app
+```
+*(Alternative without script activation: `.\.venv\Scripts\pip install -r requirements-dev.txt` then `.\.venv\Scripts\python.exe -m app`)*
+
+**macOS / Linux:**
+```bash
+cd backend
+python3 -m venv .venv
+# Activate virtual environment
+source .venv/bin/activate
+# Install development & runtime dependencies
+pip install -r requirements-dev.txt
+# Start the backend server
+python -m app
+```
+
+- **Backend Status:** Listens on `http://127.0.0.1:8000`
+- **Interactive OpenAPI Documentation:** `http://127.0.0.1:8000/docs`
+- **Health Check Endpoint:** `http://127.0.0.1:8000/api/v1/health`
+- **Database Initialization:** The local SQLite database (`data/eventsignal.db`) and its containing folder are automatically initialized upon startup. If `DEMO_MODE_ENABLED=true` (the default in `.env.example`), the synthetic demonstration community is seeded automatically and idempotently.
+
+---
+
+#### Terminal 2 — Frontend (React 19 + Vite)
+
+```bash
+cd frontend
+# Install pinned dependencies
+npm ci
+# Launch Vite development server
+npm run dev
+```
+
+- **Frontend Client:** Available at `http://localhost:5173`
+- **Dev Server Proxy:** Vite automatically communicates with the backend API at `http://127.0.0.1:8000`.
+
+---
+
+### 4.5 Exploring Access Modes
+When opening `http://localhost:5173`, select one of three access modes:
+
+1. **Presentation Demo Mode (Recommended for Evaluators):**
+   - Click the **"Demo Mode"** tab.
+   - Use default demo credentials: `demo@eventsignal.local` / `DemoSignal2026!Secure`.
+   - Explores the isolated **Apex Institute of Technology** (`demo-inst-apex-tech-001`) with 30 synthetic members, 13 academic units, 12 opportunities, 12 help offers, and an interactive 5-stage tour card.
+2. **Guest Mode:**
+   - Click **"Continue as Guest"**.
+   - Browse public opportunity listings in read-only mode without authentication. Institutional APIs return HTTP 401/403.
+3. **Normal User Mode:**
+   - Register or sign in with your own credentials to create authentic institutional records.
+
+---
+
+### 4.6 Quick Verification Smoke Test
+To verify that your local installation is healthy, run the test suites:
+
+```powershell
+# Run backend regression tests (229 tests, ~3 mins)
+cd backend
+.\.venv\Scripts\pytest -q
+
+# Run frontend tests & type checks (71 tests, ~1 min)
+cd ../frontend
+npm test -- --run
+npm run typecheck
+npm run build
+```
+
+---
+
+### 4.7 First-Run Troubleshooting Guide
+
+| Symptom | Probable Cause | Diagnostic & Resolution Step |
+| :--- | :--- | :--- |
+| **"Cannot connect to backend"** banner | Backend is not running or port conflict | Confirm Terminal 1 shows `Uvicorn running on http://127.0.0.1:8000`. Verify `VITE_API_BASE_URL=http://127.0.0.1:8000` in `.env`. |
+| **`ConfigurationError: Missing .env`** | Environment file not copied | Run `Copy-Item .env.example .env` (or `cp .env.example .env`) in the repository root. |
+| **PowerShell script execution error** | Script execution policy restricted | Run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass` or directly invoke `.\.venv\Scripts\python.exe -m app`. |
+| **Port 8000 already in use** | Another local service using port 8000 | In `.env`, change `BACKEND_PORT=8001`, update `VITE_API_BASE_URL=http://127.0.0.1:8001`, and update `CORS_ORIGINS`. |
+| **Demo Tab missing on landing page** | `DEMO_MODE_ENABLED` set to `false` | In `.env`, set `DEMO_MODE_ENABLED=true` and restart the backend server in Terminal 1. |
+| **Database lock or migration mismatch** | Stale local SQLite file | Delete `data/eventsignal.db` and restart `python -m app` to auto-recreate and re-seed clean tables. |
+
+---
+
+## 5. Problem Statement
 
 Modern college ecosystems face critical structural inequalities in student opportunity and professional growth:
 
@@ -40,9 +182,9 @@ Modern college ecosystems face critical structural inequalities in student oppor
 
 ---
 
-## 4. Target Users & Social Impact
+## 6. Target Users & Social Impact
 
-### 4.1 Target Users
+### 6.1 Target Users
 - **Students:** Seeking credible, evidence-backed hackathons, fellowships, and internships, and requesting purpose-specific guidance from compatible mentors.
 - **Seniors & Alumni Mentors:** Sharing domain expertise, publishing structured help offers, and setting explicit availability and consent thresholds.
 - **Campus Club Leaders & Organizers:** Managing student organizations, conducting transparent leadership handovers, and preserving post-event lessons.
@@ -50,7 +192,7 @@ Modern college ecosystems face critical structural inequalities in student oppor
 - **Corporate & Community Partners:** Sponsoring student initiatives through transparent prospectuses and cross-college campaigns with conspicuous disclosure.
 - **Hackathon Judges & Evaluators:** Exploring the platform using an isolated presentation environment (**Demo Mode**) pre-populated with an interconnected synthetic college community.
 
-### 4.2 Social Impact
+### 6.2 Social Impact
 EventSignal acts as an equalizer for campus communities:
 - **Democratizes Access:** Leveling the playing field so every student, regardless of existing social network or seniority, can access verified opportunities.
 - **Protects Student Time & Trust:** Field-level evidence provenance (`FieldEvidence`) prevents students from falling victim to misleading opportunity claims.
@@ -59,42 +201,36 @@ EventSignal acts as an equalizer for campus communities:
 
 ---
 
-## 5. Proposed Solution & Core Features
+## 7. Deep-Dive Core Features
 
-EventSignal structures campus interaction around a 3-pillar workflow:
+### 7.1 Opportunity Discovery (Discover)
+- **Secure Public URL Ingestion:** Streamlined intake with robust Server-Side Request Forgery (SSRF) protection, port allowlists (80/443), and private IP blocking.
+- **Generic 3-Stage Extraction:** Multi-stage content extraction across JSON-LD structured data, OpenGraph tags, and semantic heuristic trees.
+- **Field-Level Provenance (`FieldEvidence`):** Distinguishes extraction outcomes (`FOUND`, `NOT_FOUND`, `SOURCES_DISAGREE`, `EXTRACTION_FAILED`).
+- **Deterministic Deduplication:** Canonical URL normalization prevents duplicate listings while supporting administrative refresh.
+- **Declarative Evidence Assessment:** Policy-driven scoring of completeness, evidence tiers (High, Moderate, Speculative), and source conflict tracking.
 
-$$\textbf{Discover} \longrightarrow \textbf{Connect} \longrightarrow \textbf{Preserve}$$
+### 7.2 Gap-to-Helper Engine (Connect)
+- **Student Need Declaration:** Students articulate specific challenges, required skills, urgency, and privacy scope.
+- **Deterministic Matching Engine:** Rule-based compatibility scoring pairing student needs with active help offers and alumni expertise.
+- **Grounded Match Explanations (`MatchExplanation`):** Transparent rationales explaining domain overlap, skill synergy, and availability.
+- **Explicit Help Offers (`HelpOffer`):** Mentors publish structured offers with defined delivery modes and monthly capacities.
+- **Consent-Gated Connection Routing:** Enforces `willing_to_connect = true` and monthly connection caps before requests can be routed.
 
-### Core Features:
+### 7.3 EventSignal Legacy (Preserve)
+- **Leadership Handovers (`LegacyHandover`):** Multi-stage transition records (`draft`, `submitted`, `acknowledged`, `superseded`) from outgoing to incoming club officers.
+- **Institutional Event Memories (`EventMemory`):** Retrospectives capturing achievements, operational mistakes, vendor contacts, and institutional lessons.
+- **Follow-up Commitments (`FollowUpTask`):** Accountable post-event tasks with priority levels and permanent completion locking.
 
-1. **Opportunity Discovery (Discover):**
-   - **Secure Public URL Ingestion:** Streamlined intake with robust Server-Side Request Forgery (SSRF) protection, port allowlists (80/443), and private IP blocking.
-   - **Generic 3-Stage Extraction:** Multi-stage content extraction across JSON-LD structured data, OpenGraph tags, and semantic heuristic trees.
-   - **Field-Level Provenance (`FieldEvidence`):** Distinguishes extraction outcomes (`FOUND`, `NOT_FOUND`, `SOURCES_DISAGREE`, `EXTRACTION_FAILED`).
-   - **Deterministic Deduplication:** Canonical URL normalization prevents duplicate listings while supporting administrative refresh.
-   - **Declarative Evidence Assessment:** Policy-driven scoring of completeness, evidence tiers (High, Moderate, Speculative), and source conflict tracking.
-
-2. **Gap-to-Helper Engine (Connect):**
-   - **Student Need Declaration:** Students articulate specific challenges, required skills, urgency, and privacy scope.
-   - **Deterministic Matching Engine:** Rule-based compatibility scoring pairing student needs with active help offers and alumni expertise.
-   - **Grounded Match Explanations (`MatchExplanation`):** Transparent rationales explaining domain overlap, skill synergy, and availability.
-   - **Explicit Help Offers (`HelpOffer`):** Mentors publish structured offers with defined delivery modes and monthly capacities.
-   - **Consent-Gated Connection Routing:** Enforces `willing_to_connect = true` and monthly connection caps before requests can be routed.
-
-3. **EventSignal Legacy (Preserve):**
-   - **Leadership Handovers (`LegacyHandover`):** Multi-stage transition records (`draft`, `submitted`, `acknowledged`, `superseded`) from outgoing to incoming club officers.
-   - **Institutional Event Memories (`EventMemory`):** Retrospectives capturing achievements, operational mistakes, vendor contacts, and institutional lessons.
-   - **Follow-up Commitments (`FollowUpTask`):** Accountable post-event tasks with priority levels and permanent completion locking.
-
-4. **Institutional Workspace & Pilot Suite:**
-   - Multi-tenant college workspaces with Role-Based Access Control (`PLATFORM_ADMIN`, `INSTITUTION_ADMIN`, `MEMBER`).
-   - Verified partner directory, tiered sponsorship prospectuses, and cross-college campaigns with mandatory "Featured — Sponsored" disclosures.
-   - Pre-commit dry-run CSV alumni directory import with zero default consent.
-   - Measurable operational pilot metrics calculated from persisted records.
+### 7.4 Institutional Workspace & Pilot Suite
+- Multi-tenant college workspaces with Role-Based Access Control (`PLATFORM_ADMIN`, `INSTITUTION_ADMIN`, `MEMBER`).
+- Verified partner directory, tiered sponsorship prospectuses, and cross-college campaigns with mandatory "Featured — Sponsored" disclosures.
+- Pre-commit dry-run CSV alumni directory import with zero default consent.
+- Measurable operational pilot metrics calculated from persisted records.
 
 ---
 
-## 6. Key Differentiators
+## 8. Key Differentiators
 
 | Traditional Campus Portals | EventSignal Platform |
 | :--- | :--- |
@@ -106,7 +242,7 @@ $$\textbf{Discover} \longrightarrow \textbf{Connect} \longrightarrow \textbf{Pre
 
 ---
 
-## 7. Actual Technology Stack
+## 9. Actual Technology Stack
 
 The stack is strictly aligned with the codebase manifests (`backend/requirements.txt`, `frontend/package.json`):
 
@@ -136,7 +272,7 @@ The stack is strictly aligned with the codebase manifests (`backend/requirements
 
 ---
 
-## 8. Architecture Diagram
+## 10. Architecture Diagram
 
 The diagram below reflects the verified application components. Solid lines indicate fully implemented and verified flows; dashed lines indicate the proposed Cloudinary media integration:
 
@@ -223,51 +359,7 @@ graph TD
 
 ---
 
-## 9. Application Workflows
-
-### 9.1 Opportunity Discovery Workflow (Discover)
-```
-1. Authorized user submits public opportunity URL
-2. Backend verifies URL against SSRF rules (port 80/443, private IP blocked)
-3. Generic extractor extracts OpenGraph, JSON-LD, and heuristic fields
-4. FieldEvidence records provenance: FOUND, NOT_FOUND, or SOURCES_DISAGREE
-5. OpportunityAssessment calculates credibility tier (High, Moderate, Speculative)
-6. Students explore feed with clear evidence badges before registering
-```
-
-### 9.2 Gap-to-Helper Matching Workflow (Connect)
-```
-1. Student declares learning or preparation need with skill tags and urgency
-2. Deterministic matching engine filters active help offers and alumni profiles
-3. Engine verifies consent gate: willing_to_connect == true
-4. Engine calculates match scores and generates transparent MatchExplanation
-5. Student reviews grounded explanation and sends purpose-specific connection request
-6. Alumnus accepts or declines with contextual feedback
-```
-
-### 9.3 Institutional Legacy Workflow (Preserve)
-```
-1. Outgoing student officer drafts LegacyHandover with checklists and credentials advice
-2. Handover moves: draft -> submitted -> acknowledged -> superseded
-3. Event organizers author EventMemory capturing successes, mistakes, and vendor contacts
-4. Team registers FollowUpTask commitments with priority classification
-5. Tasks are marked complete with permanent state lock preventing accidental re-opening
-```
-
-### 9.4 Evaluator Guided Journey (Demo Mode)
-```
-1. Presenter signs in via "Demo Mode" tab using demo@eventsignal.local
-2. Amber demo banner and 5-stage Evaluator Guided Tour card appear
-3. Stage 1 (Feed): Ingest opportunity URL & inspect evidence card
-4. Stage 2 (Network): Browse 30 synthetic members & 13 academic units
-5. Stage 3 (Offers): Inspect student needs & deterministic helper match explanations
-6. Stage 4 (Legacy): Review club handovers, event retrospectives, & toggle tasks
-7. Stage 5 (Partnerships): Inspect sponsors, campaigns, CSV dry-run, & pilot metrics
-```
-
----
-
-## 10. Security and Privacy Principles
+## 11. Security and Privacy Principles
 
 1. **Password Hashing:** PBKDF2-HMAC-SHA256 with unique per-user salt; plaintext passwords are never stored or logged.
 2. **Token Security:** HS256-signed JWT tokens with expiration validation. No session hijacking through local storage spoofing.
@@ -280,7 +372,37 @@ graph TD
 
 ---
 
-## 11. Repository Structure
+## 12. Three-Mode Access Model & Demo Community
+
+EventSignal enforces a strict three-mode access boundary:
+
+| Feature | Normal User Mode | Guest Mode | Presentation Demo Mode |
+| :--- | :--- | :--- | :--- |
+| **Authentication** | Personal Email & Password | None (Unauthenticated) | Dedicated Demo Credentials |
+| **Session Token** | Signed JWT (`is_demo: false`) | None | Signed JWT (`is_demo: true`) |
+| **Workspace Scope** | Real Institutional Workspace | Global Public Feed Only | Apex Institute of Technology (`demo-inst-apex-tech-001`) |
+| **Institutional APIs** | Authorized access | Blocked (HTTP 401/403) | Scoped to demo data |
+| **Visual Indicator** | Standard Header | Guest Mode Indicator | Amber Persistent Demo Banner |
+
+### 12.1 Apex Institute of Technology Synthetic Community
+Demo Mode provisions a complete, interconnected demonstration dataset on backend startup:
+- **13 Academic Units & Clubs:** Departments (CSE, AI/DS, ECE, Design, Management) and societies (ACM Chapter, Robotics, E-Cell).
+- **10 Official Campus Positions:** Club presidents, vice-presidents, and secretaries.
+- **30 Synthetic Members:** Students, alumni mentors, and faculty with active profiles.
+- **12 Curated Opportunities:** Hackathons, fellowships, and internships with field-level evidence provenance.
+- **12 Active Help Offers:** Multi-track mentorship offers.
+- **4 Student Needs & 3+ Helper Matches:** Real deterministic match scores with explanations.
+- **3 Handovers, 3 Event Memories, 6 Follow-Up Tasks:** Institutional continuity records.
+- **3 Verified Partners, 3 Sponsorships, 2 Campaigns, 1 CSV Import Job.**
+
+### 12.2 Demo Seeding & Reset Endpoints
+- `GET /api/v1/auth/demo/status`: Returns current seeding status.
+- `POST /api/v1/auth/demo/seed`: Idempotently seeds all demo records (requires authentication).
+- `POST /api/v1/auth/demo/reset`: Safely clears demo records without touching real data (requires authentication).
+
+---
+
+## 13. Repository Structure
 
 ```text
 eventsignal/
@@ -329,171 +451,101 @@ eventsignal/
 
 ---
 
-## 12. Installation and Setup
-
-### Prerequisites
-- Python `3.11+` (tested on Python `3.14.2`)
-- Node.js `18+` & npm
-
-### 12.1 Backend Installation
-
-**Windows (PowerShell):**
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\pip install -r requirements-dev.txt
-cd ..
-Copy-Item .env.example .env
-```
-
-**macOS / Linux:**
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements-dev.txt
-cd ..
-cp .env.example .env
-```
-
-### 12.2 Database Initialization
-The application initializes database tables automatically upon first startup. To execute Alembic migrations explicitly:
-
-**Windows (PowerShell):**
-```powershell
-cd backend
-.\.venv\Scripts\alembic upgrade head
-```
-
-**macOS / Linux:**
-```bash
-cd backend
-.venv/bin/alembic upgrade head
-```
-
-### 12.3 Frontend Installation
-```bash
-cd frontend
-npm ci
-```
-
----
-
-## 13. Environment Configuration
+## 14. Environment Configuration Reference
 
 All environment variables are declared and validated in `backend/app/core/config.py`. Copy `.env.example` to `.env` in the repository root:
 
-| Variable | Default Value | Purpose |
-| :--- | :--- | :--- |
-| `APP_ENV` | `development` | Application environment (`development`, `staging`, `production`) |
-| `BACKEND_PORT` | `8000` | Port for the FastAPI server |
-| `DATABASE_URL` | `sqlite:///./data/eventsignal.db` | SQLAlchemy database connection string |
-| `AUTH_SECRET_KEY` | `dev-insecure-secret-key-change-me` | Secret key for signing HS256 JWT tokens |
-| `AUTH_TOKEN_EXPIRE_MINUTES` | `1440` (24 hours) | JWT bearer token expiration lifetime |
-| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Allowed frontend origins (wildcards rejected) |
-| `DEMO_MODE_ENABLED` | `true` | Enables/disables presentation demo environment |
-| `DEMO_USER_EMAIL` | `demo@eventsignal.local` | Email for dedicated presentation presenter |
-| `DEMO_USER_PASSWORD` | `DemoSignal2026!Secure` | Password for dedicated presentation presenter |
-| `VITE_API_BASE_URL` | `http://127.0.0.1:8000` | Frontend API base URL |
-
----
-
-## 14. Running the Backend and Frontend
-
-### 14.1 Running the Backend
-**Windows (PowerShell):**
-```powershell
-cd backend
-.\.venv\Scripts\python -m app
-```
-
-**macOS / Linux:**
-```bash
-cd backend
-.venv/bin/python -m app
-```
-- Server serves at: `http://127.0.0.1:8000`
-- Interactive OpenAPI Docs: `http://127.0.0.1:8000/docs`
-- Health check: `http://127.0.0.1:8000/api/v1/health`
-
-### 14.2 Running the Frontend
-```bash
-cd frontend
-npm run dev
-```
-- Client serves at: `http://localhost:5173`
-
----
-
-## 15. Authentication, Guest Mode, and Demo Mode
-
-EventSignal enforces a strict three-mode access boundary:
-
-| Feature | Normal User Mode | Guest Mode | Presentation Demo Mode |
+| Variable | Default Safe Value | Classification | Description |
 | :--- | :--- | :--- | :--- |
-| **Authentication** | Personal Email & Password | None (Unauthenticated) | Dedicated Demo Credentials |
-| **Session Token** | Signed JWT (`is_demo: false`) | None | Signed JWT (`is_demo: true`) |
-| **Workspace Scope** | Real Institutional Workspace | Global Public Feed Only | Apex Institute of Technology (`demo-inst-apex-tech-001`) |
-| **Institutional APIs** | Authorized access | Blocked (HTTP 401/403) | Scoped to demo data |
-| **Visual Indicator** | Standard Header | Guest Mode Indicator | Amber Persistent Demo Banner |
-
-### 15.1 Apex Institute of Technology Synthetic Community
-Demo Mode provisions a complete, interconnected demonstration dataset on backend startup:
-- **13 Academic Units & Clubs:** Departments (CSE, AI/DS, ECE, Design, Management) and societies (ACM Chapter, Robotics, E-Cell).
-- **10 Official Campus Positions:** Club presidents, vice-presidents, and secretaries.
-- **30 Synthetic Members:** Students, alumni mentors, and faculty with active profiles.
-- **12 Curated Opportunities:** Hackathons, fellowships, and internships with field-level evidence provenance.
-- **12 Active Help Offers:** Multi-track mentorship offers.
-- **4 Student Needs & 3+ Helper Matches:** Real deterministic match scores with explanations.
-- **3 Handovers, 3 Event Memories, 6 Follow-Up Tasks:** Institutional continuity records.
-- **3 Verified Partners, 3 Sponsorships, 2 Campaigns, 1 CSV Import Job.**
-
-### 15.2 Demo Seeding & Reset Endpoints
-- `GET /api/v1/auth/demo/status`: Returns current seeding status.
-- `POST /api/v1/auth/demo/seed`: Idempotently seeds all demo records (requires authentication).
-- `POST /api/v1/auth/demo/reset`: Safely clears demo records without touching real data (requires authentication).
+| `APP_NAME` | `EventSignal` | General | Display name reported by health endpoint |
+| `APP_VERSION` | `0.1.0` | General | Application version reported in API specs |
+| `APP_ENV` | `development` | Core | Environment name (`development`, `test`, `production`) |
+| `LOG_LEVEL` | `INFO` | Core | Logging verbosity (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
+| `BACKEND_HOST` | `127.0.0.1` | Network | Host interface for backend server |
+| `BACKEND_PORT` | `8000` | Network | TCP port for backend server |
+| `BACKEND_RELOAD` | `false` | Dev | Auto-reload on backend code changes |
+| `DATABASE_URL` | `sqlite:///./data/eventsignal.db` | Persistence | SQLAlchemy database connection string |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Security | Allowed frontend origins (no wildcards) |
+| `AUTH_SECRET_KEY` | `eventsignal-dev-secret-key-...` | Security (Secret) | HS256 JWT signing key (replace in production) |
+| `AUTH_TOKEN_EXPIRE_MINUTES` | `1440` | Security | JWT session validity duration in minutes |
+| `DEMO_MODE_ENABLED` | `true` | Presentation | Toggles presentation demo environment |
+| `DEMO_USER_EMAIL` | `demo@eventsignal.local` | Presentation | Dedicated demo presenter account email |
+| `DEMO_USER_PASSWORD` | `DemoSignal2026!Secure` | Presentation | Dedicated demo presenter account password |
+| `VITE_API_BASE_URL` | `http://127.0.0.1:8000` | Frontend | Full API URL accessed by the client browser |
 
 ---
 
-## 16. Testing and Verification
+## 15. Database Architecture & Migrations
 
-### 16.1 Automated Quality Suite Execution
-Run the automated test suites using the repository commands:
+- **Engine:** SQLite by default (`data/eventsignal.db`), resolved from repository root.
+- **Auto-Initialization:** On application startup, `backend/app/main.py` executes `init_db(engine)`, ensuring tables exist without manual commands.
+- **Alembic Migrations:** 7 linear, fully reversible migration revisions (`0001` through `0007`) in `backend/migrations/versions/`.
+- **Manual Migration Command:**
+  ```bash
+  cd backend
+  alembic upgrade head
+  ```
+- **PostgreSQL Readiness:** The ORM code and Alembic revisions are fully backend-agnostic. To target PostgreSQL, change `DATABASE_URL=postgresql+psycopg2://user:pass@host:5432/dbname` in `.env`.
 
-**Backend Tests (Pytest):**
-```powershell
+---
+
+## 16. Reproducible Verification Guide & Quality Gates
+
+This section documents the authoritative commands used to validate the project, along with a transparent three-state distinction between historical, documented, and freshly verified results.
+
+### 16.1 Three-State Test Classification
+
+To resolve any potential ambiguity across reports, EventSignal documentation strictly categorizes test totals into three verifiable states:
+
+1. **Historical Results:** Totals recorded at previous development checkpoints:
+   - *Phase 8 Initial Audit (commit `21e94d0`):* 214 backend tests, 47 frontend tests (261 total).
+   - *Phase 8 Closeout Summary:* 226 backend tests, 60 frontend tests (286 total).
+2. **Latest Repository-Reported Baseline:** The documented pre-audit total before this testing session: 229 backend tests, 71 frontend tests (300 total).
+3. **Freshly Verified Results (Executed on October 25, 2026 at commit `e235ff4`):**
+   - **Backend Tests:** **229 collected, 229 passed, 0 failed** across 20 test files in 193.93 s.
+   - **Frontend Tests:** **71 collected, 71 passed, 0 failed** across 14 test files in 70.84 s.
+   - **TypeScript Typecheck:** **0 errors** (Strict mode clean).
+   - **Production Build:** **PASS** (Clean bundle: 556 kB JS, 75.8 kB CSS).
+   - **Combined Test Total:** **300 passed / 0 failed** (100% pass rate).
+
+### 16.2 Execution Commands
+
+#### 1. Backend Test Suite (Pytest)
+```bash
 cd backend
+# Windows:
 .\.venv\Scripts\pytest
+# macOS/Linux:
+pytest
 ```
+*Expected output: `229 passed, 3 warnings in ~190s` across 20 test files.*
 
-**Frontend Tests (Vitest):**
+#### 2. Frontend Test Suite (Vitest)
 ```bash
 cd frontend
 npm test
 ```
+*Expected output: `Test Files 14 passed (14), Tests 71 passed (71)` in ~70s.*
 
-**Strict TypeScript Check:**
+#### 3. Strict TypeScript Typecheck
 ```bash
 cd frontend
 npm run typecheck
 ```
+*Expected output: Clean exit (code 0) with zero diagnostics.*
 
-**Production Build:**
+#### 4. Frontend Production Build
 ```bash
 cd frontend
 npm run build
 ```
+*Expected output: Successful Vite build outputting to `dist/`.*
 
-### 16.2 Latest Verified Execution Results (October 25, 2026)
-
-| Suite / Gate | Tool | Execution Command | Result | Details |
-| :--- | :--- | :--- | :--- | :--- |
-| **Backend Tests** | Pytest 9.1.1 | `python -m pytest` | ✅ **229 PASS** / 0 FAIL | 20 test files, 193.93 s duration |
-| **Frontend Tests** | Vitest 5.0.5 | `npm test` | ✅ **71 PASS** / 0 FAIL | 14 test files, 70.84 s duration |
-| **Combined Test Total** | Automated CI | — | ✅ **300 PASS** / 0 FAIL | **100% test pass rate** |
-| **TypeScript Check** | TypeScript ~5.9.3 | `tsc --noEmit` | ✅ **0 Errors** | Strict mode clean |
-| **Production Build** | Vite 8.3.4 | `npm run build` | ✅ **PASS** | Bundle: 556 kB JS, 75.8 kB CSS |
-| **Database Migrations** | Alembic 1.16.1 | `alembic upgrade head` | ✅ **Intact** | 7 linear migration revisions |
+#### 5. Automated Verification Script
+Run all gates in sequence via the repository verification script:
+```powershell
+python scripts/verify.py --skip-integration
+```
 
 ---
 
@@ -515,14 +567,17 @@ All 8 phases of the application architecture are implemented and backed by autom
 | **Frontend Test Suite** | UI components & clients | Auth landing, feed, network, offers, legacy, partnerships, settings | 71 tests |
 | **Total Automated Tests** | — | — | **300 PASS (0 FAIL)** |
 
-> **Resolution of Historical Discrepancy:** Earlier documentation recorded 214 tests (Phase 8 initial commit `21e94d0`), 226 tests (Phase 8 completion summary), and 227 tests (initial demo audit). The verified baseline now stands at **229 backend tests** and **71 frontend tests** (**300 total passing automated tests**).
-
 ---
 
-## 18. Known Limitations
+## 18. Risks, Limitations & Defect Resolutions
 
-1. **Cloudinary Media Storage Not Implemented:** Cloud media storage for event posters and memory photos is not yet built. Avatars use mathematical SVG identicons, and partner logos use inline SVG graphics or standard URLs.
-2. **Local SQLite Default:** SQLite is utilized as the default local development database. Deployments serving concurrent multi-institutional traffic must configure `DATABASE_URL` for PostgreSQL.
+### 18.1 Resolution of Historical Test Consistency Risk
+- **Former Concern:** An earlier documentation note indicated that historical test totals showed varying figures (214, 226, 229 backend; 47, 60, 71 frontend).
+- **Status & Resolution:** **Fully Resolved & Verified.** Independent audit and fresh execution confirm that the variation reflected legitimate test suite growth across development phases (e.g., adding dedicated demo isolation tests, account collision protection tests, SettingsModal tabs, and ErrorBoundary recovery tests). Fresh execution on October 25, 2026 confirms that **229 backend tests** and **71 frontend tests** (**300 total**) execute cleanly with zero failures.
+
+### 18.2 Current Known Limitations
+1. **Cloudinary Media Storage Outstanding:** Cloud media storage for event posters and memory photos is not yet built. Avatars use mathematical SVG identicons, and partner logos use inline SVG graphics or standard URLs.
+2. **Local SQLite Concurrency:** SQLite is utilized as the default local development database. Deployments serving concurrent multi-institutional traffic must configure `DATABASE_URL` for PostgreSQL.
 3. **Synchronous CSV Directory Processing:** The Alumni Directory Import runs synchronously on the API thread. For large institutional rosters (>1,000 rows), processing should be migrated to a background Celery or ARQ worker.
 4. **Email & Payment Gateways:** Outbound transactional emails and payment gateway checkouts operate as graceful mock stubs during evaluator demonstrations.
 
@@ -535,7 +590,7 @@ This milestone for **Hacktober HackDays 2026 (SheBuilds, Tech for Social Good)**
 1. **Tech for Social Good Realignment:** Repositioned EventSignal around civic impact—tackling campus opportunity inequality, preventing mentorship fatigue, and protecting institutional memory.
 2. **Exhaustive Codebase Audit:** Conducted an independent audit of all 29 git commits, executing all quality gates and establishing an authoritative baseline of 300 passing automated tests.
 3. **Authoritative Cloudinary Integration Audit & Specification:** Verified that Cloudinary is currently **Not Implemented (Level 1)**, preventing inaccurate claims, and authored an enterprise-grade technical specification with signed HMAC workflows in [`docs/HACKTOBER_HACKDAYS_2026.md`](docs/HACKTOBER_HACKDAYS_2026.md).
-4. **Unified Documentation Suite:** Overhauled the `README.md`, updated the `MVP_SPEC.md`, reconciled discrepancies across `FINAL_AUDIT_REPORT.md` and `DEMO_MODE_AUDIT_REPORT.md`, and established a complete competition record.
+4. **Unified Documentation & Quick Start Suite:** Introduced a prominent, reproducible Quick Start near the top of the README, overhauled setup instructions, and harmonized verification standards across all reports.
 
 ---
 

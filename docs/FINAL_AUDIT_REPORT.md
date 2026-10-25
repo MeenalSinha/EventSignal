@@ -214,27 +214,36 @@ Executed via `npm test`:
 
 ---
 
-## 7. Resolution of Historical Test Count Discrepancies
+## 7. Test-Status Consistency & Three-State Classification
 
-Earlier documentation reported varying test totals across different development checkpoints:
-- **Phase 8 Initial Audit (`21e94d0`):** 214 backend tests, 47 frontend tests.
-- **Phase 8 Closeout README:** 226 backend tests, 60 frontend tests.
-- **Demo Mode Audit (`87ee290` / `c2f6d67`):** 227–229 backend tests, 71 frontend tests.
+To resolve any potential ambiguity across reports, EventSignal documentation strictly categorizes test totals into three verifiable states:
 
-**Definitive Verified Baseline (October 25, 2026):**
-- **Backend:** **229 tests** passing across 20 test files.
-- **Frontend:** **71 tests** passing across 14 test files.
-- **Total:** **300 automated tests** passing with 0 failures.
+1. **Historical Results:** Totals recorded at previous development checkpoints:
+   - *Phase 8 Initial Audit (commit `21e94d0`):* 214 backend tests, 47 frontend tests (261 total).
+   - *Phase 8 Closeout Summary:* 226 backend tests, 60 frontend tests (286 total).
+2. **Latest Repository-Reported Baseline:** The documented pre-audit total before this testing session: 229 backend tests, 71 frontend tests (300 total).
+3. **Freshly Verified Results (Executed on October 25, 2026 at commit `e235ff4`):**
+   - **Backend Tests (`python -m pytest`):** **229 collected, 229 passed, 0 failed** across 20 test files in 193.93 s.
+   - **Frontend Tests (`npm test`):** **71 collected, 71 passed, 0 failed** across 14 test files in 70.84 s.
+   - **TypeScript Typecheck (`tsc --noEmit`):** **0 errors** (Strict mode clean).
+   - **Production Build (`npm run build`):** **PASS** (Clean bundle: 556 kB JS, 75.8 kB CSS).
+   - **Combined Test Total:** **300 passed / 0 failed** (100% pass rate).
 
 ---
 
-## 8. Remaining Limitations & Blockers
+## 8. Risks, Limitations & Release Blockers
 
-### Release Blockers for Production Launch:
+### 8.1 Resolution of Historical Test Consistency Risk
+- **Former Documented Concern:** An earlier risk entry stated: *"Test totals are inconsistent."*
+- **Status & Resolution:** **Fully Resolved & Independently Verified.**
+  - **Root Cause:** Historical variation between earlier documentation and current code reflected legitimate phased test expansion rather than defects or regressions. Specifically, 15 dedicated demo isolation and collision tests were introduced in `test_demo.py` (growing backend tests from 214 $\rightarrow$ 226 $\rightarrow$ 229), and 24 frontend tests were added for `SettingsModal`, `ErrorBoundary`, and auth flows (growing frontend tests from 47 $\rightarrow$ 60 $\rightarrow$ 71).
+  - **Verification:** Fresh execution confirms that 229 backend tests and 71 frontend tests (300 total) pass cleanly with zero failures.
+
+### 8.2 Release Blockers for Production Launch:
 1. **Cloudinary Integration:** Must be built according to the specification in [`docs/HACKTOBER_HACKDAYS_2026.md`](HACKTOBER_HACKDAYS_2026.md) before production media uploads can be supported.
 2. **PostgreSQL Migration:** SQLite must be replaced with PostgreSQL for multi-institutional concurrent loads.
 
-### Non-Blocking Limitations for Institutional Pilot:
+### 8.3 Non-Blocking Limitations for Institutional Pilot:
 1. **CSV Synchronous Processing:** Large directory files should be processed via Celery or ARQ background tasks.
 2. **Email & Payment Gateways:** Transactional emails and payment gateway checkouts operate as graceful mock stubs in demo mode.
 3. **Static Analysis Cleanup:** MyPy and ESLint errors should be resolved during the post-pilot refactoring sprint.

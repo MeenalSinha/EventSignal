@@ -172,7 +172,15 @@ The development history of EventSignal is substantiated by the 29 sequential com
 
 A fresh, independent execution of the test suites and static analysis tools was performed on October 25, 2026:
 
-### 7.1 Automated Test Execution Results
+### 7.1 Automated Test Execution Results & Three-State Classification
+
+To ensure complete transparency, testing metrics are distinguished into three verifiable states:
+
+1. **Historical Results:** Documented at earlier project milestones:
+   - *Phase 8 Initial Audit (commit `21e94d0`):* 214 backend tests, 47 frontend tests (261 total).
+   - *Phase 8 Closeout Summary:* 226 backend tests, 60 frontend tests (286 total).
+2. **Latest Repository-Reported Baseline:** 229 backend tests, 71 frontend tests (300 total).
+3. **Freshly Verified Results (Executed on October 25, 2026 at commit `e235ff4`):**
 
 | Test Suite | Environment / Command | Tests Executed | Passed | Failed | Status |
 | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -180,7 +188,7 @@ A fresh, independent execution of the test suites and static analysis tools was 
 | **Frontend Vitest** | Node.js · `npm test` | 71 | **71** | 0 | ✅ **PASS** (70.84 s) |
 | **Combined Test Total** | Automated regression suite | **300** | **300** | **0** | ✅ **100% PASS** |
 
-> **Resolution of Historical Discrepancy:** Earlier documentation reported 214 tests (initial Phase 8), 226 tests (Phase 8 closeout), and 227 tests (initial demo audit). The current test suite contains **229 backend tests across 20 test files** and **71 frontend tests across 14 test files**, reflecting subsequent coverage added for demo isolation, Settings modal tabs, and collision protection.
+> **Resolution of Historical Discrepancy:** The variation between earlier reports and the current test suite reflects legitimate test suite growth across development phases (e.g. adding 15 dedicated demo isolation and collision tests in `test_demo.py` and 24 frontend tests for `SettingsModal`, `ErrorBoundary`, and auth flows) rather than defects or regressions. Fresh execution confirms that all **300 automated tests** pass cleanly with zero failures.
 
 ### 7.2 Quality Gate & Static Analysis Results
 
@@ -196,6 +204,11 @@ A fresh, independent execution of the test suites and static analysis tools was 
 
 ## 8. Known Limitations & Remaining Risks
 
+### 8.1 Test Consistency Risk Resolution
+- **Former Concern:** *"Test totals are inconsistent."*
+- **Resolution:** **Resolved.** Discrepancies have been traced to chronological test suite expansion and reconciled against the freshly verified baseline of 229 backend and 71 frontend tests (300 total).
+
+### 8.2 Architectural & Integration Limitations
 1. **Cloudinary Integration Outstanding:** Third-party cloud media storage is not yet implemented. All images are rendered through client-side SVGs or standard URL strings.
 2. **Local SQLite Concurrency:** SQLite is currently utilized as the default local store. High-concurrency institutional deployment requires switching `DATABASE_URL` to PostgreSQL.
 3. **Synchronous CSV Processing:** The Alumni Directory Import processes rows synchronously on the request thread. Large enterprise CSV files should be offloaded to an asynchronous task queue (e.g., Celery/Redis).
