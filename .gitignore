@@ -30,6 +30,7 @@ frontend/coverage/
 # Logs and temporary files
 *.log
 *.tmp
+*.zip
 .DS_Store
 Thumbs.db
 
