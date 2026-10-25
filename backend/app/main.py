@@ -5,9 +5,12 @@ from __future__ import annotations
 import logging
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.exc import SQLAlchemyError
 
 from app.api import (
@@ -22,7 +25,7 @@ from app.api import (
     phase8,
     profiles,
 )
-from app.core.config import Settings, get_settings
+from app.core.config import PROJECT_ROOT, Settings, get_settings
 from app.core.errors import register_error_handlers
 from app.core.logging import configure_logging
 from app.database import (
@@ -106,4 +109,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(media.router)
     v1.include_router(media.inst_router)
     app.include_router(v1)
+
+    # Mount frontend static distribution for unified container deployments
+    if settings.app_env != "test":
+        dist_dir = PROJECT_ROOT / "frontend" / "dist"
+        if not dist_dir.is_dir():
+            dist_dir = Path("/app/frontend/dist")
+        if dist_dir.is_dir() and (dist_dir / "index.html").is_file():
+            assets_dir = dist_dir / "assets"
+            if assets_dir.is_dir():
+                app.mount("/assets", StaticFiles(directory=str(assets_dir)), name="frontend_assets")
+
+            @app.get("/{full_path:path}", include_in_schema=False)
+            async def serve_frontend_spa(full_path: str) -> FileResponse:
+                if full_path.startswith("api/") or full_path in {"docs", "redoc", "openapi.json"}:
+                    raise HTTPException(status_code=404, detail="Not Found")
+                file_candidate = dist_dir / full_path
+                if full_path and file_candidate.is_file():
+                    return FileResponse(file_candidate)
+                return FileResponse(dist_dir / "index.html")
+
     return app

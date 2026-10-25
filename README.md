@@ -8,6 +8,7 @@ Built for **Hacktober HackDays 2026 — SheBuilds, Tech for Social Good**, conti
 
 > **"AI extracts. Rules evaluate. Evidence explains. Students decide."**
 
+- **Live Deployment on Google Cloud (Cloud Run):** [https://eventsignal-457551806052.asia-south1.run.app](https://eventsignal-457551806052.asia-south1.run.app)
 - **Authoritative Product Specification:** [`docs/MVP_SPEC.md`](docs/MVP_SPEC.md)
 - **Competition Implementation Record:** [`docs/HACKTOBER_HACKDAYS_2026.md`](docs/HACKTOBER_HACKDAYS_2026.md)
 - **Comprehensive Quality Audit Report:** [`docs/FINAL_AUDIT_REPORT.md`](docs/FINAL_AUDIT_REPORT.md)
@@ -42,7 +43,23 @@ $$\textbf{Discover} \longrightarrow \textbf{Connect} \longrightarrow \textbf{Pre
 
 ---
 
-## 4. 🚀 Quick Start (Up & Running in 5 Minutes)
+## 4. 🌐 Live Cloud Run Deployment (Google Cloud)
+
+EventSignal is deployed and running live on **Google Cloud Platform (Cloud Run)**:
+
+- **Live Service URL:** [https://eventsignal-457551806052.asia-south1.run.app](https://eventsignal-457551806052.asia-south1.run.app)
+- **Google Cloud Project ID:** `eventsignal-512717` (Project Number: `457551806052`)
+- **Cloud Run Region:** `asia-south1` (Mumbai)
+- **Architecture:** Unified container serving React 19 SPA + FastAPI API + SQLite pre-seeded Demo Community + Cloudinary CDN Media Integration.
+- **One-Click Demo Evaluator Access:**
+  1. Open [https://eventsignal-457551806052.asia-south1.run.app](https://eventsignal-457551806052.asia-south1.run.app)
+  2. Select the **Demo Mode** tab on the authentication landing page.
+  3. Click **Sign in to Demo Account** (pre-populated with `demo@eventsignal.local` / `DemoSignal2026!Secure`).
+  4. Explore opportunities, credibility assessments, Gap-to-Helper matches, officer handovers, and Cloudinary media uploads on the live deployment.
+
+---
+
+## 5. 🚀 Local Quick Start (Up & Running in 5 Minutes)
 
 This Quick Start contains verified repository instructions for setting up, running, and exploring EventSignal locally.
 
