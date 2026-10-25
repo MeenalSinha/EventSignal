@@ -29,7 +29,7 @@ A comprehensive, end-to-end audit of EventSignal's **DEMO MODE** was performed a
    - Pilot and promotion metrics are clearly badged as **DEMONSTRATION METRICS** and calculated from real persisted records without misrepresenting commercial revenue.
 4. **Verification & Testing:**
    - **Frontend Vitest Suite:** 71/71 tests passing across 14 test files (including notification badge and authentication flow tests).
-   - **Backend Pytest Suite:** 227/227 tests passing across 20 test files (including 13 dedicated demo integration tests in `test_demo.py` verifying tenant isolation, idempotency, and forbidden mutating endpoints when demo mode is disabled).
+   - **Backend Pytest Suite:** 229/229 tests passing across 20 test files (including 15 dedicated demo integration tests in `test_demo.py` verifying tenant isolation, idempotency, production credential rules, account collision defense, and forbidden mutating endpoints when demo mode is disabled).
    - **TypeScript & Build:** `tsc --noEmit && vite build` passing with 0 errors, producing a clean JS bundle.
 
 ---

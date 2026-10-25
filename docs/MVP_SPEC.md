@@ -1,207 +1,203 @@
-# EventSignal — MVP Specification (Phase 8: Partnerships, Cross-College Promotion, Pilot & Release Readiness)
+# EventSignal — Authoritative MVP Specification
 
-> **Theme**: Alumni Network & Professional Connections
-> **Emphasis**: Building a Network, Not a Directory
-> **Tagline**: Evidence Before You Register. Connections Grounded in Purpose.
-> **Team**: NeuroIgniter
-> **Competition**: HackShift — Cmd+Shift+Create 2026, IIIT Delhi
-> **Historical Reference**: The original EventRank specification is preserved at [`docs/archive/MVP_SPEC_PHASE1.md`](docs/archive/MVP_SPEC_PHASE1.md).
+**Document Version:** 2.0  
+**Target Competition:** Hacktober HackDays 2026 — SheBuilds, Tech for Social Good  
+**Tagline:** Evidence Before You Register. Connections Grounded in Purpose.  
+**Core Product Workflow:** Discover → Connect → Preserve  
+**Original Provenance:** HackShift — Cmd+Shift+Create 2026, IIIT Delhi (Team NeuroIgniter)  
+**Historical References:** Preserved at [`docs/archive/MVP_SPEC_PHASE1.md`](archive/MVP_SPEC_PHASE1.md) and [`docs/HACKTOBER_HACKDAYS_2026.md`](HACKTOBER_HACKDAYS_2026.md).  
 
 ---
 
-## 1. Executive Summary & Vision
+## 1. Executive Summary & Social Good Vision
 
-EventSignal is an intelligent professional networking platform connecting students with relevant opportunities and the alumni and mentors who can help them pursue those opportunities.
+EventSignal is an intelligent campus opportunity discovery and purpose-driven networking platform designed to eliminate information inequality, replace static directories with explainable mentorship matching, and halt institutional knowledge loss across student leadership cycles.
 
-Unlike static directories, EventSignal operates on a structured, intent-driven workflow:
+### 1.1 The Social Good Problem
+
+College campuses are vibrant centers of opportunity, but access to these opportunities is highly uneven:
+
+1. **Information Inequality in Opportunity Discovery:** High-impact hackathons, research fellowships, mutual aid grants, and internships are fragmented across disparate WhatsApp groups, Discord servers, personal LinkedIn posts, and unindexed departmental webpages. Junior students and students from outside well-connected social circles frequently miss deadlines or waste effort on unverified, predatory events.
+2. **Superficial, Directory-Style Networking:** Conventional university alumni directories function as static rosters. Students make blind outreach attempts with low response rates, while alumni suffer from untargeted, uncontextualized requests that ignore their availability and domain interest.
+3. **Institutional Amnesia (Campus Brain Drain):** Student organizations and campus clubs suffer severe operational amnesia every 1–2 years when senior leaders graduate. Retrospectives, vendor contacts, sponsor relationships, and leadership lessons are lost, forcing incoming teams to start from scratch.
+
+### 1.2 Proposed Outcomes & Core Principles
+
+EventSignal addresses these challenges through a unified three-pillar workflow:
 
 ```
-Student Intent
-    -> Relevant Opportunities
-    -> Relevant Alumni and Mentors
-    -> Explainable Recommendations
-    -> Purpose-Specific Connection Requests
+┌─────────────────┐       ┌─────────────────┐       ┌──────────────────┐
+│    DISCOVER     │  ───▶ │     CONNECT     │  ───▶ │     PRESERVE     │
+│ Evidence-backed │       │ Purpose-grounded│       │ Institutional    │
+│  opportunities  │       │  Gap-to-Helper  │       │  memory & legacy │
+└─────────────────┘       └─────────────────┘       └──────────────────┘
 ```
 
-The platform's distinguishing principle:
+The platform operates on an unbending architectural principle:
 
 > **"AI extracts. Rules evaluate. Evidence explains. Students decide."**
 
-- Opportunities have source-linked information wherever applicable.
-- Unknown or conflicting information is explicitly identifiable (never presented as clean nulls).
-- The platform never invents qualifications, evidence, verification results, opportunities, alumni identities, or recommendation explanations.
-- In Demo Mode, synthetic data is clearly identified and isolated from real institutional data.
+- **Source Provenance:** Every opportunity requirement, prize, fee, and deadline links back to source evidence (`FieldEvidence`).
+- **Honest Uncertainty:** Missing or conflicting details are explicitly surfaced as `NOT_FOUND` or `SOURCES_DISAGREE`—never masked as clean nulls.
+- **Zero Hallucination:** The platform never fabricates opportunities, member credentials, verification claims, or match rationales.
+- **Privacy by Default:** Student profiles default to private visibility; alumni outreach is strictly blocked unless the mentor has set `willing_to_connect = true`.
 
 ---
 
 ## 2. Target Users
 
-### Primary Users
-1. **Students**: Seeking career, research, internship, and learning opportunities, along with alumni who share relevant expertise and can provide guidance.
-2. **Alumni and Mentors**: Willing to offer domain expertise, review opportunities, provide industry insight, and mentor students within explicit availability and consent boundaries.
-
-### Additional Stakeholders
-3. **Institutional Administrators**: Managing college workspaces, RBAC memberships, campus positions, and organizational units.
-4. **Recruiters & Founding Partners**: Sponsoring opportunities or seeking talent aligned with specific challenges.
-5. **Faculty & Advisors**: Guiding research, institutional collaborations, and mentoring programs.
-6. **Demo Presenters / Evaluators**: Using the dedicated Demo Mode to explore the full platform experience without creating real data.
+1. **Students:** Exploring verified hackathons, fellowships, and internships; seeking targeted, purpose-specific guidance from mentors and peers.
+2. **Seniors & Alumni Mentors:** Sharing domain knowledge, offering contextual help, and controlling availability via explicit capacity thresholds and consent toggles.
+3. **Campus Club Leaders & Organizers:** Managing student organizations, conducting structured handovers, documenting event retrospectives, and tracking follow-up commitments.
+4. **Faculty & Institutional Administrators:** Overseeing campus workspaces, monitoring organizational units, appointing official campus positions, and reviewing pilot metrics.
+5. **Corporate & Community Partners:** Sponsoring student initiatives via structured prospectuses and cross-college campaigns with conspicuous disclosure.
+6. **Hackathon Judges & Evaluators:** Exploring platform workflows via an isolated presentation environment (**Demo Mode**) populated with an interconnected synthetic college community.
 
 ---
 
-## 3. User Journeys
+## 3. Core MVP Capabilities (The 3 Pillars + Institutional Suite)
 
-### 3.1 Primary Student Journey
-1. **Describe Intent & Goals**: Declare interests, skills, career aspirations, and preferred opportunity types (self-reported, private by default).
-2. **Discover Opportunities**: Explore hackathons, fellowships, internships, and research calls with transparent evidence statuses for key requirements and dates.
-3. **Understand Match Rationale**: Read explainable recommendations grounded in actual profile attributes (skill overlap, declared domain interest).
-4. **Find Relevant Alumni/Mentors**: Discover alumni with relevant experience or active help offers related to that opportunity or field.
-5. **Evaluate Relevance**: Review explainable match notes without fabricated pedigree or claims.
-6. **Initiate Purpose-Specific Connections**: Send structured connection requests respecting alumni consent thresholds.
+### Pillar 1: Opportunity Discovery (Discover)
+- **Secure Public URL Ingestion:** Validates submitted URLs with robust Server-Side Request Forgery (SSRF) defense (blocking loopback, link-local, and private RFC-1918 IPv4/IPv6 ranges), enforces port allowlists (80/443), and inspects content types.
+- **Generic 3-Stage Content Extraction:** Extracts event metadata across JSON-LD structured data, OpenGraph tags, and semantic heuristic trees without hardcoded domain scrapers.
+- **Field-Level Provenance (`FieldEvidence`):** Tracks the exact extraction confidence for every critical attribute (`FOUND`, `NOT_FOUND`, `SOURCES_DISAGREE`, `EXTRACTION_FAILED`).
+- **Deterministic Deduplication:** Canonicalizes URLs to prevent duplicate listings while permitting administrative `force_refresh`.
+- **Declarative Evidence Assessment:** Policy-driven rules engine that evaluates opportunity completeness, verification tiers (High, Moderate, Speculative), and multi-source conflict records.
 
-### 3.2 Primary Alumni Journey
-1. **Declare Expertise & Domain**: Provide self-reported professional domains, industry background, and skills.
-2. **Set Mentoring Availability & Consent**: Set `willing_to_connect` (defaults to `false`) and define monthly connection thresholds.
-3. **Control Visibility**: Choose profile visibility (`PRIVATE`, `STUDENTS_ONLY`, or `PUBLIC`).
-4. **Publish Help Offers**: Create configurable `HelpOffer` records with topics, delivery mode, and capacity.
-5. **Manage Connection Requests**: Receive, review, accept, or decline purpose-specific requests with contextual messages.
+### Pillar 2: Gap-to-Helper Engine (Connect)
+- **Student Need Declaration:** Students articulate specific challenges, required skill domains, urgency, and privacy scope.
+- **Deterministic Eligibility & Matching Engine:** Evaluates student needs against available help offers and profiles using an auditable, rule-based scoring engine (no black-box scoring).
+- **Grounded Match Explanations (`MatchExplanation`):** Generates transparent explanations showing exactly why a match was recommended (domain overlap, skill synergy, availability).
+- **Explicit Help Offers (`HelpOffer`):** Seniors and alumni publish structured offers (Career Advice, Technical Mentorship, Research Support) with explicit delivery formats and monthly capacities.
+- **Consent-Gated Connection Routing:** Prevents unprompted outreach by enforcing `willing_to_connect = true` and monthly connection limits.
 
-### 3.3 Demo Presenter Journey
-1. **Sign In via Demo Mode Tab**: Use dedicated credentials (`demo@eventsignal.local`).
-2. **Explore Dashboard**: View amber demo banner, college workspace, and synthetic opportunity feed.
-3. **Navigate All 8 Modules**: Every platform section is pre-populated with realistic synthetic data.
-4. **Demonstrate Key Workflows**: Ingest an opportunity URL, run the matching engine, review a legacy handover, and inspect a sponsorship prospectus.
-5. **Reset Data**: Restore pristine demo state via the reset API or by restarting the backend.
+### Pillar 3: EventSignal Legacy (Preserve)
+- **Leadership Handovers (`LegacyHandover`):** Incoming and outgoing student leaders record official transition documents, operational checklists, credentials references, and continuity advice across a 4-state lifecycle (`draft`, `submitted`, `acknowledged`, `superseded`).
+- **Institutional Event Memories (`EventMemory`):** Post-event retrospectives capturing event achievements, operational failures, vendor contacts, and institutional lessons learned.
+- **Accountable Follow-up Tasks (`FollowUpTask`):** Post-event commitments assigned to responsible parties with priority scoring and completion locks preventing re-opening closed tasks.
 
----
-
-## 4. Core MVP Capabilities
-
-| Capability | Description | Phase |
-| --- | --- | --- |
-| **Opportunity Intake** | Secure public URL ingestion, SSRF protection, redirect verification, body-limit streaming | Phase 3 |
-| **Generic Content Extraction** | Multi-stage extraction (JSON-LD, OpenGraph, semantic heuristics) without site-specific hardcoding | Phase 3 |
-| **Evidence Collection** | Field-level provenance (`FieldEvidence`) separating `FOUND`, `NOT_FOUND`, `SOURCES_DISAGREE`, and `EXTRACTION_FAILED` | Phase 3 |
-| **Duplicate Prevention** | Deterministic URL normalization preventing silent duplicates; `force_refresh` to re-extract | Phase 3 |
-| **Opportunity Discovery** | Filter and explore opportunities with date/mode validation and evidence tier cards | Phase 3 |
-| **Evidence Assessment Engine** | Declarative policy-driven scoring (completeness, evidence quality, source consistency) | Phase 4 |
-| **Multi-Source Evaluation** | Cross-source conflict detection, competing values analysis, and source attribution | Phase 4 |
-| **Institutional Workspaces & RBAC** | Multi-college workspaces, tenant isolation, official campus positions, and immutable audit logging | Phase 5 |
-| **Student Profiles** | Self-reported skills, interests, and preferences with server-enforced privacy controls | Phase 6 |
-| **Alumni Profiles** | Expertise, mentoring topics, and explicit consent gates (`willing_to_connect`) | Phase 6 |
-| **Explicit Help Offers** | Configurable help offers, lifecycle management (`active`, `paused`, `archived`), and discovery | Phase 6 |
-| **Campus Network Discovery** | Privacy-aware, institution-scoped discovery of people and active help offers | Phase 6 |
-| **Purpose-Specific Help Requests** | Structured requests on published help offers with introductory intent | Phase 6 |
-| **Gap-to-Helper Matching** | Student needs, deterministic eligibility filtering, grounded explanations, and honest no-match handling | Phase 7 |
-| **EventSignal Legacy & Handovers** | Preserving institutional memory across leadership transitions, retrospective event memories, and follow-up commitments | Phase 7 |
-| **Sponsorship Facilitation** | Structured event sponsorship prospectuses, honest partner verification, and manual commercial terms tracking | Phase 8 |
-| **Cross-College Promotion** | Configurable pricing packages, multi-campus feed targeting, admin review, and conspicuous "Featured — Sponsored" disclosure | Phase 8 |
-| **Approved Alumni Directory Import** | Secure CSV import, pre-commit dry-run validation, and strict zero-default consent guarantees | Phase 8 |
-| **Pilot Evaluation & Operational Metrics** | Live measurable indicators from stored records across all 8 modules with `DEMONSTRATION METRICS` disclosure in Demo Mode | Phase 8 |
-| **Dedicated Demo Mode** | Isolated synthetic college community, dedicated credentials, automatic seeding, idempotent reset, and strict tenant isolation | Phase 8 |
+### Institutional Operations & Partnerships (Phases 5 & 8)
+- **Multi-Tenant Workspaces & RBAC:** Complete tenant isolation across colleges, departments, and official campus positions (`PLATFORM_ADMIN`, `INSTITUTION_ADMIN`, `MEMBER`).
+- **Partner Verification & Sponsorship Prospectuses:** Tiered sponsorship requests with manual commercial status tracking.
+- **Cross-College Promotion Campaigns:** Multi-campus feed broadcasts with conspicuous "Featured — Sponsored" disclosures.
+- **Alumni CSV Directory Import:** Institutional CSV onboarding with pre-commit dry-run validation and strict zero-default consent guarantees.
+- **Auditable Pilot Analytics:** Real measurable operational metrics derived dynamically from database records.
 
 ---
 
-## 5. Demo Mode Specification
+## 4. Application Architecture
 
-### 5.1 Design Principles
-
-- Demo Mode is an **isolated presentation environment**, not a bypass of authentication or authorization.
-- All demo data flows through the **same backend API endpoints**, ORM models, and database tables as real data; there are no mock responses or hardcoded frontend arrays.
-- Synthetic records are clearly separated from real institutional data by `institution_id = "demo-inst-apex-tech-001"` and `extra_data["is_demo"] = true`.
-- **Pilot and sponsorship metrics** displayed in Demo Mode are explicitly badged as `DEMONSTRATION METRICS` and are calculated from the persisted synthetic records — they make no claim of real commercial revenue.
-
-### 5.2 Three-Mode Access Model
-
-| Mode | Entry Point | Authentication | Data Access |
-| --- | --- | --- | --- |
-| **Normal User Mode** | Email/password on Normal tab | Full JWT auth | Scoped to real institutional workspaces (no demo records) |
-| **Guest Mode** | "Continue as Guest" | None | Public opportunity listings only; institutional endpoints return HTTP 401/403 |
-| **Demo Mode** | Dedicated Demo tab | Full JWT auth (`is_demo: true`) | Isolated to `demo-inst-apex-tech-001`; cannot access or modify real tenant records |
-
-### 5.3 Demo Mode Activation
-
-Controlled by environment variables in `.env`:
-
-```env
-DEMO_MODE_ENABLED=true
-DEMO_USER_EMAIL=demo@eventsignal.local
-DEMO_USER_PASSWORD=<strong local secret — never commit>
+```
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                           FRONTEND (React 19 + TypeScript)                  │
+│   Vite Bundler · Tailwind CSS v4 · Dynamic SVG Avatars · React ErrorBoundary│
+│             3-Column Layout: Profile Sidebar · Main Content · Discovery     │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ HTTP / REST (apiClient with timeout)
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                            BACKEND (FastAPI 0.143)                          │
+│   ├── Ingestion Pipeline & SSRF Protection                                  │
+│   ├── Declarative Evidence Assessment Engine                                │
+│   ├── PBKDF2 Hashing & HS256 JWT Authentication                             │
+│   ├── Multi-Tenant Institutional RBAC Middleware                            │
+│   ├── Deterministic Gap-to-Helper Matching Engine                           │
+│   └── Idempotent Presentation Demo Service                                  │
+└──────────────────────────────────────┬──────────────────────────────────────┘
+                                       │ SQLAlchemy 2.0 ORM
+                                       ▼
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                             DATABASE & STORAGE                              │
+│   SQLite (Default Local) / PostgreSQL · 7 Linear Alembic Migrations         │
+│   [PLANNED] Cloudinary Cloud Media Service (Signed Uploads, CDN Delivery)  │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
-When `DEMO_MODE_ENABLED=false`:
-- The Demo tab is hidden on the landing page.
-- Demo login attempts return `403 Forbidden`.
-- Demo seeding/reset endpoints are disabled.
-- No demo records are seeded on startup.
+---
 
-### 5.4 Synthetic College Community
+## 5. Three-Mode Access Model & Presentation Demo Mode
 
-The demo institution **Apex Institute of Technology** (`demo-inst-apex-tech-001`) is populated by `backend/app/services/demo_service.py` on application startup:
+EventSignal enforces a strict 3-mode access boundary across the entire application:
 
-- **13 Academic Units & Clubs**: CSE, AI/DS, ECE, Design, Management departments; ACM Chapter, Robotics Club, Photography Society, Entrepreneurship Cell, Research Cell, Cultural Committee, Sports Council, Alumni Relations Cell.
-- **10 Official Campus Positions**: Club Presidents, Vice-Presidents, and Secretary roles with institutional appointment records.
-- **30 Synthetic Members**: Students across all years, student leaders, alumni mentors, and faculty advisors — each with a full profile, tags, and help offers where applicable.
-- **12 Curated Opportunities**: Hackathons, fellowships, internships, and research calls with structured `FieldEvidence` and `OpportunityAssessment` records.
-- **12 Active Help Offers**: Career guidance, technical mentorship, and research support offers across peer and alumni categories.
-- **4 Student Needs**: Declared challenges with eligibility-filtered helper matches and deterministic score explanations.
-- **3 Legacy Handovers**: Leadership transition records from outgoing to incoming club officers.
-- **3 Event Memories**: Institutional retrospectives capturing lessons, successes, and institutional knowledge.
-- **6 Follow-up Tasks**: Post-event commitments with priority classification and status tracking.
-- **3 Verified Partner Organizations**: Corporate sponsors with brand verification and prospectuses.
-- **3 Sponsorship Requests**: Tiered financial or in-kind sponsorship requests at varying lifecycle states.
-- **2 Cross-College Promotion Campaigns**: Active and approved promotional campaigns with "Featured — Sponsored" disclosure.
-- **1 Alumni Directory Import Job**: Committed CSV import record demonstrating the dry-run → commit workflow.
+| Mode | Authentication Mechanism | Tenant Scope | Access Permissions |
+| :--- | :--- | :--- | :--- |
+| **Normal User Mode** | Email/Password with PBKDF2-SHA256 & JWT | Real institutional workspace | Scoped strictly to user's authorized college; zero visibility into demo records. |
+| **Guest Mode** | Unauthenticated ("Continue as Guest") | Global public feed | Read-only browsing of public opportunities; all institutional endpoints return 401/403. |
+| **Demo Mode** | Dedicated JWT (`is_demo: true`) | `demo-inst-apex-tech-001` | Isolated to fictional **Apex Institute of Technology**; cannot mutate real data. |
 
-### 5.5 Seeding & Reset
-
-- Seeding is triggered automatically on backend startup when `DEMO_MODE_ENABLED=true`.
-- The `DemoService.seed_demo_environment(db, settings)` method uses **fixed UUIDs** and `db.merge()` to ensure fully idempotent behaviour — rerunning the seed updates existing records rather than creating duplicates.
-- Safe reset: `POST /api/v1/auth/demo/reset` deletes records scoped to `demo-inst-apex-tech-001` only, with no risk of touching real institutional data.
+### 5.1 Synthetic College Community (Apex Institute of Technology)
+When `DEMO_MODE_ENABLED=true`, the backend automatically seeds a realistic, fully interconnected 8-module dataset:
+- **13 Academic Units & Clubs:** Engineering departments, ACM chapter, Robotics club, E-Cell, etc.
+- **10 Official Campus Positions:** Club presidents, vice-presidents, and secretaries.
+- **30 Synthetic Members:** Fully profiled students, alumni mentors, and faculty advisors.
+- **12 Curated Opportunities:** Hackathons, fellowships, and internships with field-level evidence.
+- **12 Active Help Offers:** Multi-track mentorship offers.
+- **4 Student Needs & 3+ Helper Matches:** Real deterministic match scores with explanations.
+- **3 Handovers, 3 Event Memories, 6 Follow-Up Tasks:** Rich institutional continuity records.
+- **3 Corporate Partners, 3 Sponsorships, 2 Campaigns, 1 CSV Import Job.**
 
 ---
 
-## 6. Evidence, Privacy, and Security Rules
+## 6. Cloudinary Media Storage — Implementation Specification
 
-1. **Missing Information Is Not Fraud**: An opportunity missing a registration fee or venue is recorded as `NOT_FOUND` or `NEEDS_VERIFICATION`, never labelled fraudulent.
-2. **Conflicting Claims Must Be Explicit**: Where multiple sources disagree (e.g., different prize amounts or deadlines), status `SOURCES_DISAGREE` is recorded.
-3. **Extraction Failures Recorded Honestly**: Technical errors during extraction are recorded as `EXTRACTION_FAILED`, never disguised as successful nulls.
-4. **No Verification Without Process**: Profiles and opportunities remain unverified unless an authentic audit process was executed.
-5. **Self-Reported vs. Independently Verified**: Clear distinction in schemas and data presentation at all times.
-6. **No Synthetic Hallucinations in Production**: The system never fabricates real alumni profiles, qualifications, or opportunities. Synthetic data exists only in the isolated Demo Mode environment.
-7. **Explicit Connection Consent**: Connection requests cannot be routed to alumni profiles unless `willing_to_connect = true`.
-8. **Data Minimization**: Collect only what is necessary for matching and connection purposes.
-9. **Private By Default**: Student profiles default to `PRIVATE` visibility.
-10. **Clear Data Boundaries**: Explicit separation between source-published information, user-declared preferences, rule assessments, and unresolved uncertainty.
-11. **Demo Data Disclosure**: All demo metric panels and promotional materials carry a visible `DEMONSTRATION DATA` or `DEMONSTRATION METRICS` badge. No false commercial claims are made.
+### 6.1 Current Status: **Not Implemented (Outstanding Requirement)**
+- **Audit Finding:** The codebase contains 0 references to Cloudinary SDKs or credentials.
+- **Current Fallbacks:** All user avatars are generated dynamically via mathematical SVG identicons (`Avatar.tsx`). Opportunity and partner logos use inline SVG graphics or public URL strings.
+- **Classification:** Level 1 — Not Implemented.
 
----
+### 6.2 Proposed Cloudinary Architecture & Workflow
+For production deployment, Cloudinary will provide cloud storage, transformations, and global CDN delivery for event posters, memory photos, and partner logos:
 
-## 7. Explicit Exclusions from Initial MVP
+1. **Client Request:** An authorized user selects an image file. The client verifies size (≤ 5 MB) and MIME type (`image/jpeg`, `image/png`, `image/webp`).
+2. **Signature Request:** The client requests upload authorization from `POST /api/v1/media/sign-upload`.
+3. **Backend Authorization:** The backend verifies institutional membership and RBAC role, then generates an HMAC-SHA256 signature using `CLOUDINARY_API_SECRET` and a strict timestamp.
+4. **Direct Client Upload:** The client uploads directly to Cloudinary using the signature and public API key.
+5. **Persistence:** The client submits the returned `public_id` and `secure_url` to EventSignal's backend to associate the asset with the relevant entity.
 
-To preserve engineering focus and integrity, the following are explicitly out of scope:
-
-1. **Full Social Networking Feed**: No endless scroll, timeline feeds, vanity likes, or algorithmic engagement loops.
-2. **Real-Time Instant Messaging**: Connections initiate contact; real-time chat infrastructure is deferred until core match value is proven.
-3. **Unnecessary Microservices**: Monolithic, well-structured FastAPI service with clean modular boundaries.
-4. **Opaque Recommendation Models**: No black-box neural ranking without human-auditable reasons; all recommendations link to explicit attributes.
-5. **Mass Web Scraping of Personal Profiles**: No scraping of LinkedIn or personal student/alumni records without explicit user submission.
-6. **Unverified Credential Claims**: Self-reported claims are explicitly identified as self-reported; no fake "verified" badges.
-7. **Premature Production Infrastructure**: Lightweight, isolated local database (SQLite/Alembic) until deployment scale necessitates external clusters.
-8. **Automated External Email in Demo Mode**: No live SMTP dispatch during demo presentations; email integrations are graceful stubs.
+### 6.3 Acceptance Criteria for Cloudinary Implementation:
+- [ ] Backend declares `cloudinary>=1.40.0` in `requirements.txt`.
+- [ ] Server environment schema declares `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`.
+- [ ] Server never exposes `CLOUDINARY_API_SECRET` to the frontend or in API responses.
+- [ ] `POST /api/v1/media/sign-upload` enforces active institutional membership and tenant scoping.
+- [ ] Assets are organized under tenant folders: `eventsignal/{institution_id}/{resource_type}/`.
+- [ ] Delivered media URLs apply `f_auto,q_auto` responsive transformations.
+- [ ] Automated tests verify signature generation, unauthorized rejection, and URL association.
 
 ---
 
-## 8. Quality Gates
+## 7. Security, Privacy, and Ethical Constraints
 
-All capabilities must satisfy the following automated quality gates before release:
+1. **Passwords:** Hashed with PBKDF2-HMAC-SHA256 and unique per-user salts; plaintext passwords are never logged or stored.
+2. **Tokens:** Signed with HS256 and validated against server expiration times.
+3. **SSRF Hardening:** Private IP networks, link-local addresses, and non-HTTP schemes are rejected at the network layer.
+4. **Data Minimization & Privacy:** Student profiles default to `PRIVATE`. Student contact details are never exposed to scrapers or search engines.
+5. **Mandatory Consent Gates:** An alumnus or senior can never receive unsolicited connection requests unless `willing_to_connect = true`.
+6. **Paid Placement Transparency:** Any sponsored opportunity or cross-college campaign must carry conspicuous disclosure badges (`Featured — Sponsored`).
+7. **Demo Metric Honesty:** All metrics in Demo Mode carry explicit `DEMONSTRATION METRICS` labels and make no false claims of commercial revenue.
 
-| Gate | Tooling | Latest Result |
-| --- | --- | --- |
-| Backend unit & integration tests | Pytest | ✅ 226 tests passing |
-| Backend demo integration tests | Pytest (`test_demo.py`) | ✅ 12 tests passing (community, isolation, idempotency, sponsorships, matching) |
-| Frontend component & service tests | Vitest | ✅ 60 tests passing (12 files) |
-| TypeScript strict type checking | `tsc --noEmit` | ✅ 0 errors |
-| Frontend production build | Vite | ✅ 0 errors, ~501 kB JS bundle |
-| SSRF protection | Manual + test | ✅ Private IP ranges blocked |
-| Tenant isolation | Pytest security fixtures | ✅ Cross-tenant access returns HTTP 403 |
-| Demo mode isolation | Pytest + manual | ✅ Demo records invisible to normal tenants |
+---
+
+## 8. Explicit Exclusions from the MVP
+
+To maintain high technical rigor, the following capabilities are explicitly excluded from this MVP:
+
+1. **Infinite-Scroll Social Feeds:** No algorithmic engagement traps, vanity likes, or follower counts.
+2. **Real-Time WebRTC / WebSocket Chat:** Networking initiates structured contact; real-time messaging is deferred until purpose-grounded connection utility is proven.
+3. **Black-Box Neural Ranking:** No unexplainable deep-learning recommendation models; all matching relies on transparent, verifiable rule sets.
+4. **Unsanctioned Web Scraping:** No automated scraping of external personal student/alumni directories without explicit institutional consent.
+5. **Live Outbound Email / Payment Dispatch in Demo:** Transactional emails and payment transactions operate as graceful mock stubs during evaluator demonstrations.
+
+---
+
+## 9. Automated Quality Gates
+
+All releases and evaluator builds must satisfy the automated quality gates:
+
+| Quality Gate | Tooling | Target | Status |
+| :--- | :--- | :--- | :--- |
+| **Backend Pytest Suite** | `pytest` | 20 test files in `backend/tests/` | ✅ **229 / 229 Passing** |
+| **Frontend Vitest Suite** | `vitest` | 14 test files in `frontend/src/` | ✅ **71 / 71 Passing** |
+| **Strict TypeScript Check** | `tsc --noEmit` | Strict mode across `frontend/` | ✅ **0 Errors** |
+| **Production Build** | `vite build` | Production minification & assets | ✅ **PASS (556 kB JS)** |
+| **Linear Migration Chain** | Alembic | Migrations 0001 through 0007 | ✅ **Linear & Complete** |
+| **Tenant & SSRF Isolation** | Pytest security fixtures | Multi-tenant route dependencies | ✅ **Verified Secure** |
