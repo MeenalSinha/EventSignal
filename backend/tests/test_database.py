@@ -141,6 +141,8 @@ def test_metadata_registers_expected_tables() -> None:
         "sponsorship_requests",
         "promotion_campaigns",
         "alumni_import_jobs",
+        # Cloudinary media
+        "media_assets",
     }
     assert set(Base.metadata.tables) == expected
 

@@ -142,11 +142,16 @@ def _enrich_handover(h: LegacyHandover) -> LegacyHandoverRead:
 def _enrich_memory(m: EventMemory) -> EventMemoryRead:
     author = getattr(m, "author", None)
     opp = getattr(m, "opportunity", None)
+    raw_media = getattr(m, "media_assets", []) or []
+    media_list = raw_media if isinstance(raw_media, (list, tuple)) else [raw_media]
+    from app.services.media_service import to_media_asset_read
+
     return EventMemoryRead.model_validate(
         {
             **{col.key: getattr(m, col.key) for col in m.__table__.columns},
             "author_name": author.full_name if author else None,
             "opportunity_title": opp.title if opp else None,
+            "media_assets": [to_media_asset_read(a) for a in media_list],
         }
     )
 

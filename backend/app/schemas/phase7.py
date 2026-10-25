@@ -9,6 +9,8 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.media import MediaAssetRead
+
 # ---------------------------------------------------------------------------
 # StudentNeed schemas
 # ---------------------------------------------------------------------------
@@ -264,6 +266,7 @@ class EventMemoryRead(BaseModel):
     updated_at: datetime
     author_name: str | None = None
     opportunity_title: str | None = None
+    media_assets: list[MediaAssetRead] = Field(default_factory=list)
 
 
 class EventMemoryListResponse(BaseModel):

@@ -41,7 +41,11 @@ def list_opportunities(
     count_stmt = select(func.count()).select_from(Opportunity)
     query_stmt = (
         select(Opportunity)
-        .options(selectinload(Opportunity.sources), selectinload(Opportunity.evidence))
+        .options(
+            selectinload(Opportunity.sources),
+            selectinload(Opportunity.evidence),
+            selectinload(Opportunity.media_assets),
+        )
         .order_by(Opportunity.created_at.desc(), Opportunity.id)
         .limit(limit)
         .offset(offset)

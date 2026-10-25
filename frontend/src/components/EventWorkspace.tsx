@@ -3,6 +3,7 @@ import type { ResourceState } from "../hooks/useRemoteResource";
 import type { EventList } from "../types/events";
 import { attachOpportunitySource } from "../services/opportunityService";
 import { AssessmentPanel } from "./AssessmentPanel";
+import { MediaUploadWidget } from "./MediaUploadWidget";
 import { OpportunityIntakeForm } from "./OpportunityIntakeForm";
 import { StatePanel } from "./StatePanel";
 
@@ -14,6 +15,7 @@ interface Props {
 export function EventWorkspace({ state, onRetry }: Props) {
   const [showIntake, setShowIntake] = useState(false);
   const [addingSourceForId, setAddingSourceForId] = useState<string | null>(null);
+  const [mediaForId, setMediaForId] = useState<string | null>(null);
   const [newSourceUrl, setNewSourceUrl] = useState("");
   const [attachingSource, setAttachingSource] = useState(false);
   const [attachError, setAttachError] = useState<string | null>(null);
@@ -100,18 +102,42 @@ export function EventWorkspace({ state, onRetry }: Props) {
                     <p className="font-medium text-ink">{event.event_name ?? event.title ?? "Untitled event"}</p>
                     <p className="text-sm text-ink-soft">{event.organizer ?? "Organizer not stated"}</p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setAddingSourceForId(addingSourceForId === event.id ? null : event.id);
-                      setAttachError(null);
-                      setNewSourceUrl("");
-                    }}
-                    className="rounded border border-line bg-paper px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink hover:bg-paper-soft shrink-0"
-                  >
-                    {addingSourceForId === event.id ? "Cancel Add Source" : "+ Add Source"}
-                  </button>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMediaForId(mediaForId === event.id ? null : event.id);
+                      }}
+                      className="rounded border border-line bg-paper px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink hover:bg-paper-soft shrink-0"
+                    >
+                      {mediaForId === event.id ? "Close Media" : "Poster / Media"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAddingSourceForId(addingSourceForId === event.id ? null : event.id);
+                        setAttachError(null);
+                        setNewSourceUrl("");
+                      }}
+                      className="rounded border border-line bg-paper px-2.5 py-1 text-xs font-medium text-ink-soft hover:text-ink hover:bg-paper-soft shrink-0"
+                    >
+                      {addingSourceForId === event.id ? "Cancel Add Source" : "+ Add Source"}
+                    </button>
+                  </div>
                 </div>
+
+                {mediaForId === event.id && (
+                  <div className="mt-3 rounded-xl border border-line bg-canvas p-3.5">
+                    <MediaUploadWidget
+                      purpose="opportunity_poster"
+                      opportunityId={event.id}
+                      label="Event Poster / Promotional Media"
+                      compact
+                      onUploadSuccess={() => onRetry()}
+                      onDeleteSuccess={() => onRetry()}
+                    />
+                  </div>
+                )}
 
                 {addingSourceForId === event.id && (
                   <form onSubmit={(e) => handleAttachSource(e, event.id)} className="mt-3 rounded-lg border border-line bg-canvas p-3">

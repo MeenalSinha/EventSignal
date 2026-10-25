@@ -61,6 +61,7 @@ from app.models.helper_match import HelperMatch, MatchStatus
 from app.models.institution import Institution, InstitutionStatus, InstitutionVerificationStatus
 from app.models.legacy_handover import HandoverStatus, LegacyHandover
 from app.models.match_explanation import MatchedEntityType, MatchExplanation
+from app.models.media_asset import MediaAsset
 from app.models.membership import InstitutionMembership, InstitutionRole, MembershipStatus
 from app.models.opportunity import Opportunity, OpportunityType, ParticipationMode
 from app.models.opportunity_assessment import OpportunityAssessment
@@ -113,6 +114,7 @@ __all__ = [
     "MatchExplanation",
     "MatchStatus",
     "MatchedEntityType",
+    "MediaAsset",
     "MembershipStatus",
     "NeedStatus",
     "NeedUrgency",

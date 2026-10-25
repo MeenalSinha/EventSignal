@@ -141,6 +141,11 @@ class LegacyHandover(TimestampMixin, Base):
         cascade="all, delete-orphan",
         foreign_keys="FollowUpTask.handover_id",
     )
+    media_assets: Mapped[list[Any]] = relationship(
+        "MediaAsset",
+        back_populates="legacy_handover",
+        cascade="all, delete-orphan",
+    )
 
     __table_args__ = (
         Index("ix_legacy_handovers_inst_status", "institution_id", "status"),

@@ -164,6 +164,7 @@ graph TD
 1. **Foreign Key Integrity:** All synthetic demo records reference `institution_id = "demo-inst-apex-tech-001"` and `extra_data["is_demo"] = true`.
 2. **Idempotent Seeding:** `backend/app/services/demo_service.py` uses fixed UUIDs and SQLAlchemy `db.merge()` to ensure reseeding resets data cleanly without creating duplicates.
 3. **No Cross-Contamination:** Public feeds and all multi-tenant queries filter strictly by user institution memberships, preventing synthetic records from appearing in real tenant views.
+4. **Cloudinary Media Isolation:** Media uploads by demo users are scoped strictly to `eventsignal/inst_demo-inst-apex-tech-001/`. Demo users cannot associate or delete media belonging to real institutions. Reseeding demo data preserves foreign key integrity and never impacts production media assets.
 
 ---
 

@@ -84,6 +84,18 @@ class Settings(BaseSettings):
     demo_user_email: str | None = Field(default="demo@eventsignal.local")
     demo_user_password: str | None = Field(default="DemoSignal2026!Secure")
 
+    # Cloudinary secure media configuration
+    cloudinary_cloud_name: str | None = Field(default=None)
+    cloudinary_api_key: str | None = Field(default=None)
+    cloudinary_api_secret: str | None = Field(default=None)
+    cloudinary_upload_preset: str | None = Field(default=None)
+    cloudinary_enabled: bool = Field(default=False)
+    cloudinary_folder_prefix: str = Field(default="eventsignal")
+    cloudinary_max_file_size_bytes: int = Field(default=5_242_880, ge=100_000, le=25_000_000)
+    cloudinary_allowed_formats: Annotated[list[str], NoDecode] = Field(
+        default_factory=lambda: ["jpg", "jpeg", "png", "webp", "gif"]
+    )
+
     @model_validator(mode="after")
     def _validate_demo_configuration(self) -> Settings:
         if self.demo_mode_enabled:
@@ -105,6 +117,29 @@ class Settings(BaseSettings):
             if self.demo_user_email and "@" not in self.demo_user_email:
                 raise ValueError("DEMO_USER_EMAIL must be a valid email address.")
         return self
+
+    @model_validator(mode="after")
+    def _validate_cloudinary_configuration(self) -> Settings:
+        if self.cloudinary_enabled:
+            missing: list[str] = []
+            if not (self.cloudinary_cloud_name and self.cloudinary_cloud_name.strip()):
+                missing.append("CLOUDINARY_CLOUD_NAME")
+            if not (self.cloudinary_api_key and self.cloudinary_api_key.strip()):
+                missing.append("CLOUDINARY_API_KEY")
+            if not (self.cloudinary_api_secret and self.cloudinary_api_secret.strip()):
+                missing.append("CLOUDINARY_API_SECRET")
+            if missing:
+                raise ValueError(
+                    f"Cloudinary is enabled (CLOUDINARY_ENABLED=true) but missing required settings: {', '.join(missing)}"
+                )
+        return self
+
+    @field_validator("cloudinary_allowed_formats", mode="before")
+    @classmethod
+    def _split_formats(cls, value: object) -> object:
+        if isinstance(value, str):
+            return [item.strip().lower() for item in value.split(",") if item.strip()]
+        return value
 
     @field_validator("ingest_allowed_content_types", mode="before")
     @classmethod

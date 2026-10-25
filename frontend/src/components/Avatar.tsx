@@ -20,10 +20,11 @@ function getHash(str: string): number {
 
 export interface OpportunityAvatarProps {
   title: string;
-  opportunityType?: string | null;
-  organizer?: string | null;
-  size?: "sm" | "md" | "lg";
-  className?: string;
+  opportunityType?: string | null | undefined;
+  organizer?: string | null | undefined;
+  size?: "sm" | "md" | "lg" | undefined;
+  className?: string | undefined;
+  src?: string | null | undefined;
 }
 
 export const OpportunityAvatar: React.FC<OpportunityAvatarProps> = ({
@@ -32,7 +33,33 @@ export const OpportunityAvatar: React.FC<OpportunityAvatarProps> = ({
   organizer = "",
   size = "lg",
   className = "",
+  src = null,
 }) => {
+  const [imgError, setImgError] = React.useState(false);
+
+  if (src && !imgError) {
+    const sizeClasses =
+      size === "sm"
+        ? "h-10 w-10 rounded-xl"
+        : size === "md"
+        ? "h-16 w-16 rounded-xl"
+        : "h-24 w-24 sm:h-28 sm:w-28 rounded-2xl";
+    return (
+      <div
+        className={`relative shrink-0 overflow-hidden border border-slate-200/80 bg-slate-100 shadow-xs ${sizeClasses} ${className}`}
+        title={title}
+      >
+        <img
+          src={src}
+          alt={title}
+          className="h-full w-full object-cover"
+          onError={() => setImgError(true)}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
   const normType = (opportunityType || "event").toLowerCase();
   const seed = getHash(`${title}-${normType}-${organizer}`);
 
@@ -438,10 +465,11 @@ export const OpportunityAvatar: React.FC<OpportunityAvatarProps> = ({
 
 export interface UserAvatarProps {
   name: string;
-  role?: string | null;
-  size?: "xs" | "sm" | "md" | "lg" | "xl";
-  className?: string;
-  showBadge?: boolean;
+  role?: string | null | undefined;
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | undefined;
+  className?: string | undefined;
+  showBadge?: boolean | undefined;
+  src?: string | null | undefined;
 }
 
 export const UserAvatar: React.FC<UserAvatarProps> = ({
@@ -450,10 +478,17 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
   size = "md",
   className = "",
   showBadge = false,
+  src = null,
 }) => {
+  const [imgError, setImgError] = React.useState(false);
   const cleanName = (name || "Member").trim();
   const seed = getHash(cleanName);
   const normRole = (role || "member").toLowerCase();
+  const badgeColor = normRole.includes("alum")
+    ? "bg-purple-500"
+    : normRole.includes("faculty") || normRole.includes("mentor")
+    ? "bg-emerald-500"
+    : "bg-teal-500";
 
   // Palette combinations for user avatars
   const palettes = [
@@ -477,6 +512,28 @@ export const UserAvatar: React.FC<UserAvatarProps> = ({
 
   // Avatar persona style variant (0 to 5)
   const personaVariant = seed % 6;
+
+  if (src && !imgError) {
+    return (
+      <div
+        className={`relative inline-flex shrink-0 items-center justify-center rounded-full border-2 ${palette.border} bg-slate-100 shadow-2xs overflow-hidden ${sizeClasses[size]} ${className}`}
+        title={`${cleanName} (${role || "Member"})`}
+      >
+        <img
+          src={src}
+          alt={cleanName}
+          className="h-full w-full object-cover"
+          onError={() => setImgError(true)}
+          loading="lazy"
+        />
+        {showBadge && (
+          <span
+            className={`absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full ring-2 ring-white ${badgeColor}`}
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div

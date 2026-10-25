@@ -19,6 +19,7 @@ from pydantic import AfterValidator, BaseModel, ConfigDict, Field, model_validat
 from app.models.field_evidence import EvidenceStatus, ExtractionMethod
 from app.models.opportunity import OpportunityType, ParticipationMode
 from app.models.source_reference import SourceType
+from app.schemas.media import MediaAssetRead
 
 MAX_URL_LENGTH = 2048
 
@@ -139,8 +140,10 @@ class OpportunityRead(BaseModel):
     compensation: str | None
     application_url: str | None
     institution_id: str | None = None
+    poster_url: str | None = None
     sources: list[SourceReferenceRead]
     evidence: list[FieldEvidenceRead] = Field(default_factory=list)
+    media_assets: list[MediaAssetRead] = Field(default_factory=list)
     created_at: datetime
     updated_at: datetime
 

@@ -16,6 +16,7 @@ from app.api import (
     health,
     help_offers,
     institutions,
+    media,
     opportunities,
     phase7,
     phase8,
@@ -60,6 +61,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 with app.state.session_factory() as db:
                     DemoService.seed_demo_environment(db, settings)
                 logger.info("Demo environment prepared and verified")
+
+            if settings.cloudinary_enabled:
+                from app.services.media_service import configure_cloudinary
+                configure_cloudinary(settings)
+                logger.info("Cloudinary media integration initialized (%s)", settings.cloudinary_cloud_name)
         except (SQLAlchemyError, OSError):
             # Keep serving so /health can report the failure honestly.
             logger.exception("Database initialisation failed; health will report it")
@@ -97,5 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     v1.include_router(help_offers.compat_router)
     v1.include_router(phase7.router)
     v1.include_router(phase8.router)
+    v1.include_router(media.router)
+    v1.include_router(media.inst_router)
     app.include_router(v1)
     return app

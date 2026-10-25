@@ -1,4 +1,4 @@
-/** Opportunity and evidence collection types (Phase 3). */
+import type { MediaAsset } from "./media";
 
 export type OpportunityType =
   | "hackathon"
@@ -62,6 +62,8 @@ export interface Opportunity {
   skills_required: string | null;
   compensation: string | null;
   application_url: string | null;
+  poster_url?: string | null | undefined;
+  media_assets?: MediaAsset[] | undefined;
   sources: SourceReference[];
   evidence: FieldEvidence[];
   created_at: string;

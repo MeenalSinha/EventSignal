@@ -26,6 +26,7 @@ import type {
   StudentNeed,
 } from "../types/phase7";
 import { UserAvatar } from "./Avatar";
+import { MediaUploadWidget } from "./MediaUploadWidget";
 
 interface InstitutionOption {
   id: string;
@@ -1031,6 +1032,45 @@ export function LegacyMatchingPanel({
                       ))}
                     </div>
                   )}
+
+                  {/* Attached Cloudinary Media Gallery */}
+                  {m.media_assets && m.media_assets.length > 0 && (
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-[11px] font-semibold text-ink-soft">Event Media & Artifacts:</span>
+                      <div className="flex flex-wrap gap-2">
+                        {m.media_assets.map((asset) => (
+                          <a
+                            key={asset.id}
+                            href={asset.delivery_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="group/img relative block overflow-hidden rounded-xl border border-line bg-paper-warm hover:border-teal transition shadow-2xs"
+                            title={asset.alt_text || "Event photo"}
+                          >
+                            <img
+                              src={asset.thumbnail_url || asset.optimized_url || asset.delivery_url}
+                              alt={asset.alt_text || "Event photo"}
+                              className="h-16 w-24 object-cover group-hover/img:scale-105 transition duration-200"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Upload photo widget for this memory */}
+                  <div className="pt-2 border-t border-line/60">
+                    <MediaUploadWidget
+                      purpose="event_memory"
+                      institutionId={effectiveInstId}
+                      eventMemoryId={m.id}
+                      label="Attach Photo"
+                      helperText="Attach event photo or retrospective evidence"
+                      compact
+                      canDelete={false}
+                      onUploadSuccess={() => refreshData()}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

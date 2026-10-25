@@ -1,4 +1,5 @@
 /** Phase 7 types: Gap-to-Helper Matching & EventSignal Legacy. */
+import type { MediaAsset } from "./media";
 
 // ---------------------------------------------------------------------------
 // Student Needs
@@ -132,6 +133,7 @@ export interface EventMemory {
   updated_at: string;
   author_name: string | null;
   opportunity_title: string | null;
+  media_assets?: MediaAsset[];
 }
 
 export interface EventMemoryCreate {

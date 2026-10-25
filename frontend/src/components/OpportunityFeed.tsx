@@ -418,12 +418,13 @@ export function OpportunityFeed({
 
                 {/* Main Content Layout: Left Thumbnail + Right Information */}
                 <div className="flex flex-col sm:flex-row gap-4 items-start">
-                  {/* Left Thumbnail Illustration / Avatar */}
+                  {/* Left Thumbnail Illustration / Avatar / Cloudinary Poster */}
                   <OpportunityAvatar
                     title={displayTitle}
                     opportunityType={op.opportunity_type}
                     organizer={displayOrganizer}
                     size="lg"
+                    src={op.poster_url}
                   />
 
                   {/* Right Content */}

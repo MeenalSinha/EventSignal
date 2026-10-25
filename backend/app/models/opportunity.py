@@ -23,6 +23,7 @@ if TYPE_CHECKING:
     from app.models.event_memory import EventMemory
     from app.models.field_evidence import FieldEvidence
     from app.models.institution import Institution
+    from app.models.media_asset import MediaAsset
     from app.models.opportunity_assessment import OpportunityAssessment
     from app.models.source_reference import SourceReference
 
@@ -123,3 +124,15 @@ class Opportunity(TimestampMixin, Base):
         back_populates="opportunity",
         foreign_keys="[EventMemory.opportunity_id]",
     )
+    media_assets: Mapped[list[MediaAsset]] = relationship(
+        back_populates="opportunity",
+        cascade="all, delete-orphan",
+    )
+
+    @property
+    def poster_url(self) -> str | None:
+        """Return the secure URL of the primary opportunity poster if one is attached."""
+        for asset in self.media_assets:
+            if asset.media_purpose == "opportunity_poster" and asset.is_verified:
+                return asset.secure_url
+        return None

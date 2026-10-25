@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ingestOpportunity } from "../services/opportunityService";
 import type { OpportunityIngestResponse } from "../types/opportunity";
 import { EvidenceBadge } from "./EvidenceBadge";
+import { MediaUploadWidget } from "./MediaUploadWidget";
 
 interface Props {
   onIngestSuccess?: (result: OpportunityIngestResponse) => void;
@@ -221,6 +222,43 @@ export function OpportunityIntakeForm({ onIngestSuccess, onClose }: Props) {
                 </div>
               )}
             </div>
+          </div>
+
+          {/* Cloudinary Poster / Flyer Attachment */}
+          <div className="rounded-xl border border-line bg-canvas p-4">
+            <MediaUploadWidget
+              purpose="opportunity_poster"
+              opportunityId={result.opportunity.id}
+              currentImageUrl={result.opportunity.poster_url}
+              label="Attach Opportunity Flyer or Poster"
+              helperText="Upload official promotional banner or flyer directly to Cloudinary"
+              onUploadSuccess={(asset) => {
+                setResult((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        opportunity: {
+                          ...prev.opportunity,
+                          poster_url: asset.optimized_url || asset.delivery_url,
+                        },
+                      }
+                    : null
+                );
+              }}
+              onDeleteSuccess={() => {
+                setResult((prev) =>
+                  prev
+                    ? {
+                        ...prev,
+                        opportunity: {
+                          ...prev.opportunity,
+                          poster_url: null,
+                        },
+                      }
+                    : null
+                );
+              }}
+            />
           </div>
 
           {/* Source Provenance */}

@@ -7,6 +7,7 @@ import type {
   OpportunityIngestResponse,
   SourceReference,
 } from "../types/opportunity";
+import type { MediaAsset } from "../types/media";
 import { requestJson } from "./apiClient";
 import { invalid, isNullableString, isObject } from "./validation";
 
@@ -71,6 +72,8 @@ function parseOpportunity(val: unknown): Opportunity {
     skills_required: isNullableString(val.skills_required) ? val.skills_required : null,
     compensation: isNullableString(val.compensation) ? val.compensation : null,
     application_url: isNullableString(val.application_url) ? val.application_url : null,
+    poster_url: isNullableString(val.poster_url) ? val.poster_url : null,
+    media_assets: Array.isArray(val.media_assets) ? (val.media_assets as MediaAsset[]) : [],
     sources,
     evidence,
     created_at: String(val.created_at ?? ""),

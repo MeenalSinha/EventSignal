@@ -106,6 +106,12 @@ class EventMemory(TimestampMixin, Base):
         remote_side="EventMemory.id",
         foreign_keys=[superseded_by_id],
     )
+    media_assets: Mapped[list[Any]] = relationship(
+        "MediaAsset",
+        back_populates="event_memory",
+        cascade="all, delete-orphan",
+        uselist=True,
+    )
 
     __table_args__ = (
         Index("ix_event_memories_inst_current", "institution_id", "is_current"),
