@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -90,12 +90,11 @@ def login(
         ) from exc
 
     # If this account is designated as demo, verify demo mode is currently enabled
-    if user.extra_data and user.extra_data.get("is_demo") is True:
-        if not settings.demo_mode_enabled:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Demo mode is currently disabled by platform administrator.",
-            )
+    if user.extra_data and user.extra_data.get("is_demo") is True and not settings.demo_mode_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo mode is currently disabled by platform administrator.",
+        )
 
     token, expires_in = create_user_token(user, settings)
     return TokenResponse(

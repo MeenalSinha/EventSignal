@@ -9,6 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user
 from app.database import get_db
+from app.models.alumni_profile import ProfileVisibility as AlumniProfileVisibility
+from app.models.student_profile import ProfileVisibility as StudentProfileVisibility
 from app.models.user import User
 from app.schemas.profile import (
     AlumniProfileCreate,
@@ -204,7 +206,20 @@ def save_my_student_profile_compat(
     interests_val = ", ".join(interests_raw) if isinstance(interests_raw, list) else interests_raw
     goals_raw = data.get("career_goals")
     goals_val = ", ".join(goals_raw) if isinstance(goals_raw, list) else goals_raw
-    vis = data.get("visibility") or "institution_only"
+    vis_val = data.get("visibility")
+    if isinstance(vis_val, StudentProfileVisibility):
+        vis = vis_val
+    elif vis_val == "alumni_only":
+        vis = StudentProfileVisibility.ALUMNI_ONLY
+    elif vis_val == "private":
+        vis = StudentProfileVisibility.PRIVATE
+    elif vis_val in ("public", "institution_only") or not vis_val:
+        vis = StudentProfileVisibility.PUBLIC
+    else:
+        try:
+            vis = StudentProfileVisibility(str(vis_val))
+        except ValueError:
+            vis = StudentProfileVisibility.PRIVATE
     extra = {
         "headline": data.get("headline"),
         "bio": data.get("bio"),
@@ -280,7 +295,22 @@ def save_my_alumni_profile_compat(
     skills_val = ", ".join(skills_raw) if isinstance(skills_raw, list) else skills_raw
     topics_raw = data.get("mentoring_topics")
     topics_val = ", ".join(topics_raw) if isinstance(topics_raw, list) else topics_raw
-    vis = data.get("visibility") or "students_only"
+    vis_val = data.get("visibility")
+    if isinstance(vis_val, AlumniProfileVisibility):
+        vis = vis_val
+    elif vis_val in ("students_only", "institution_only"):
+        vis = AlumniProfileVisibility.STUDENTS_ONLY
+    elif vis_val == "public":
+        vis = AlumniProfileVisibility.PUBLIC
+    elif vis_val == "private":
+        vis = AlumniProfileVisibility.PRIVATE
+    elif not vis_val:
+        vis = AlumniProfileVisibility.STUDENTS_ONLY
+    else:
+        try:
+            vis = AlumniProfileVisibility(str(vis_val))
+        except ValueError:
+            vis = AlumniProfileVisibility.PRIVATE
     extra = {
         "current_title": data.get("current_title"),
         "current_organization": data.get("current_organization"),
@@ -337,7 +367,7 @@ def discover_members_compat(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="institution_id parameter or X-Institution-Id header is required",
         )
-    items, total = profile_service.discover_members(
+    items, _total = profile_service.discover_members(
         db,
         institution_id=inst_id,
         current_user=current_user,

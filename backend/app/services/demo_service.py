@@ -28,7 +28,8 @@ from sqlalchemy.orm import Session
 from app.core.config import Settings
 from app.core.security import hash_password
 from app.models.alumni_import import AlumniImportJob, ImportJobStatus
-from app.models.alumni_profile import AlumniProfile, ProfileVisibility as AlumniVisibility
+from app.models.alumni_profile import AlumniProfile
+from app.models.alumni_profile import ProfileVisibility as AlumniVisibility
 from app.models.campus_position import (
     AssignmentVerificationStatus,
     CampusPositionDefinition,
@@ -68,7 +69,8 @@ from app.models.sponsorship import (
     SupportType,
 )
 from app.models.student_need import NeedStatus, NeedUrgency, StudentNeed
-from app.models.student_profile import ProfileVisibility as StudentVisibility, StudentProfile
+from app.models.student_profile import ProfileVisibility as StudentVisibility
+from app.models.student_profile import StudentProfile
 from app.models.user import User
 
 logger = logging.getLogger(__name__)
@@ -348,7 +350,7 @@ class DemoService:
         ]
 
         # Provision Users & Memberships
-        for uid, email, full_name, m_role, is_demo in users_specs:
+        for uid, email, full_name, m_role, _is_demo in users_specs:
             u = db.scalar(select(User).where(User.id == uid))
             if not u:
                 existing_email_user = db.scalar(select(User).where(User.email == email))
@@ -1382,22 +1384,33 @@ class DemoService:
             ),
         ]
 
-        for tid, cuid, auid, title, desc, due, prio, src, hid, comp in tasks_data:
-            existing_task = db.scalar(select(FollowUpTask).where(FollowUpTask.id == tid))
+        for (
+            t_id,
+            t_cuid,
+            t_auid,
+            t_title,
+            t_desc,
+            t_due,
+            t_prio,
+            t_source,
+            t_handover_id,
+            t_completed,
+        ) in tasks_data:
+            existing_task = db.scalar(select(FollowUpTask).where(FollowUpTask.id == t_id))
             if not existing_task:
                 db.add(
                     FollowUpTask(
-                        id=tid,
+                        id=t_id,
                         institution_id=DEMO_INSTITUTION_ID,
-                        creator_user_id=cuid,
-                        assignee_user_id=auid,
-                        title=title,
-                        description=desc,
-                        due_date=due,
-                        priority=prio,
-                        source=src,
-                        handover_id=hid,
-                        is_completed=comp,
+                        creator_user_id=t_cuid,
+                        assignee_user_id=t_auid,
+                        title=t_title,
+                        description=t_desc,
+                        due_date=t_due,
+                        priority=t_prio,
+                        source=t_source,
+                        handover_id=t_handover_id,
+                        is_completed=t_completed,
                     )
                 )
         db.flush()
@@ -1533,7 +1546,7 @@ class DemoService:
         db.flush()
 
         # Promotion Campaigns
-        campaigns_data = [
+        campaigns_data: list[tuple[Any, ...]] = [
             (
                 DEMO_CAMPAIGN_ID,
                 DEMO_OPP_1_ID,
