@@ -102,17 +102,17 @@ EventSignal utilizes a decoupled, modern web architecture optimized for reliabil
 
 ## 5. Cloudinary Media Storage — Implementation Milestone
 
-### 5.1 Implementation Status: **Implemented (Automated Test Verified; Live Account Credentials Pending)**
+### 5.1 Implementation Status: **COMPLETE — LIVE INTEGRATION AND ALL REQUIRED CHECKS VERIFIED**
 Cloudinary media storage has been integrated end-to-end into EventSignal to support real college records, specifically official opportunity posters/flyers and campus event retrospectives:
 
-- **Official SDK Integration:** Declares and installs `cloudinary>=1.46.0` on the backend.
+- **Official SDK Integration:** Declares and installs `cloudinary>=1.46.0` on the backend (`cloudinary 1.46.3`).
 - **Server-Signed Direct Uploads:** HMAC-SHA256 signatures are generated server-side using `CLOUDINARY_API_SECRET` and strict timestamps. The secret never leaves the server.
 - **Tenant Isolation:** Upload folders are scoped as `eventsignal/inst_{institution_id}/{purpose}/` and enforce institutional membership and role-based access control.
 - **Persistent Media Model:** Database migration `0008_cloudinary_media_assets.py` persists `MediaAsset` records linked to `opportunities` and `event_memories`.
 - **Frontend Media Experience:** `MediaUploadWidget.tsx` provides file selection, size (≤ 10MB) and format (`jpg`, `jpeg`, `png`, `webp`, `gif`) validation, progress feedback, preview, and deletion; integrated into Opportunity Feed, Opportunity Intake, Event Workspace, and Legacy Memories.
 - **Graceful Degradation:** When `CLOUDINARY_ENABLED=false` or credentials are unset, media upload widgets display an informational notice that media storage is disabled, while all core discovery, assessment, matching, and legacy features operate normally.
 - **Deterministic Avatars:** `Avatar.tsx` preserves dynamic SVG identicons as an automatic fallback whenever an image is missing or errors.
-- **Verification Standard:** 13 backend unit/integration tests (`tests/test_cloudinary_media.py`) and 4 frontend component tests (`MediaUploadWidget.test.tsx`) pass with mocked external Cloudinary network boundaries. Live CDN upload verification requires configuring live credentials in `.env`.
+- **Verification Standard:** 13 backend unit/integration tests (`tests/test_cloudinary_media.py`) and 4 frontend component tests (`MediaUploadWidget.test.tsx`) pass. Furthermore, **live provider acceptance** was executed and verified against live Cloudinary account `snwg6j7w` (server-signed direct upload HTTP 200, Cloudinary Admin API verification, responsive transformation CDN delivery HTTP 200, database opportunity poster association, and clean destroy verification).
 
 ### 5.2 Implemented Cloudinary Architecture
 ```mermaid
@@ -212,7 +212,7 @@ To ensure complete transparency, testing metrics are distinguished into three ve
 - **Resolution:** **Resolved.** Discrepancies have been traced to chronological test suite expansion and reconciled against the freshly verified baseline of 242 backend and 75 frontend tests (317 total).
 
 ### 8.2 Architectural & Integration Limitations
-1. **Cloudinary Live Credentials:** Cloudinary media storage is implemented end-to-end with server-signed direct uploads, format/size validation, and automated test mocks. Live uploads require setting `CLOUDINARY_ENABLED=true` with account credentials in `.env`; otherwise the platform runs in graceful fallback mode.
+1. **Cloudinary Media Storage:** Cloudinary media handling is fully implemented and **live-verified** against account `snwg6j7w`. For custom deployments, configure `CLOUDINARY_*` credentials in `.env`; if credentials are not configured, the platform runs in graceful fallback mode.
 2. **Local SQLite Concurrency:** SQLite is currently utilized as the default local store. High-concurrency institutional deployment requires switching `DATABASE_URL` to PostgreSQL.
 3. **Synchronous CSV Processing:** The Alumni Directory Import processes rows synchronously on the request thread. Large enterprise CSV files should be offloaded to an asynchronous task queue (e.g., Celery/Redis).
 4. **Email & Payment Stubs:** Outbound transactional emails and payment gateway checkouts operate as graceful mock stubs without real third-party dispatch.

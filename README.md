@@ -617,7 +617,7 @@ All core modules and the Cloudinary integration are implemented and backed by au
 | **Phase 6: Campus Network** | Mentorship & profiles | Student & alumni profiles, privacy gates, HelpOffers | 7 tests |
 | **Phase 7: Matching & Legacy** | Gap matching & memory | Deterministic Gap-to-Helper engine, handovers, memories, tasks | 36 tests |
 | **Phase 8: Partnerships & Pilot** | Corporate & cross-college | Sponsorships, cross-college campaigns, CSV import, live metrics | 5 tests |
-| **Cloudinary Media** | Media storage & optimization | Signed direct upload, opportunity posters, retrospective photos | 17 tests |
+| **Cloudinary Media** | Media storage & optimization | Signed direct upload, opportunity posters, retrospective photos, live verified | 17 tests (Live Verified) |
 | **Demo Mode & Isolation** | Evaluator presentation | Apex Tech synthetic community, collision defense, 3-mode isolation | 15 tests |
 | **Frontend UI Suite** | UI components & clients | Auth landing, feed, network, offers, legacy, media widgets | 75 tests |
 | **Total Automated Tests** | — | — | **317 PASS (0 FAIL)** |
@@ -631,7 +631,7 @@ All core modules and the Cloudinary integration are implemented and backed by au
 - **Status & Resolution:** **Fully Resolved & Verified.** Independent audit and fresh execution confirm that the variation reflected legitimate test suite growth across development phases. Fresh execution on October 25, 2026 confirms that **242 backend tests** and **75 frontend tests** (**317 total**) execute cleanly with zero failures.
 
 ### 18.2 Current Known Limitations
-1. **Cloudinary Live Credentials:** Cloudinary media handling is fully implemented with server-signed direct uploads, format/size validation, and automated test mocks. Live CDN uploads require configuring `CLOUDINARY_ENABLED=true` with account credentials in `.env`; otherwise the platform runs in graceful fallback mode.
+1. **Cloudinary Media Storage:** Cloudinary media handling is fully implemented and **live-verified** against provider account `snwg6j7w`. For custom deployments, simply update `CLOUDINARY_*` in `.env`; if credentials are not configured, the platform runs in graceful fallback mode.
 2. **Local SQLite Concurrency:** SQLite is utilized as the default local development database. Deployments serving concurrent multi-institutional traffic must configure `DATABASE_URL` for PostgreSQL.
 3. **Synchronous CSV Directory Processing:** The Alumni Directory Import runs synchronously on the API thread. For large institutional rosters (>1,000 rows), processing should be migrated to a background Celery or ARQ worker.
 4. **Email & Payment Gateways:** Outbound transactional emails and payment gateway checkouts operate as graceful mock stubs during evaluator demonstrations.

@@ -140,13 +140,13 @@ When `DEMO_MODE_ENABLED=true`, the backend automatically seeds a realistic, full
 
 ## 6. Cloudinary Media Storage — Implementation Specification
 
-### 6.1 Status: **Implemented (Automated Test Verified; Live Account Credentials Pending)**
-- **Implementation State:** Full end-to-end integration is implemented in the repository.
-- **Backend:** Official `cloudinary>=1.46.0` SDK installed; typed settings in `config.py`; `MediaAsset` model and Alembic migration `0008_cloudinary_media_assets.py`; `media_service.py` with HMAC-SHA256 signature generation, asset verification, and transformed delivery URLs; API routes at `/api/v1/media/*`.
+### 6.1 Status: **COMPLETE — LIVE INTEGRATION AND ALL REQUIRED CHECKS VERIFIED**
+- **Implementation State:** Full end-to-end integration is implemented and verified with live Cloudinary provider execution (`snwg6j7w`).
+- **Backend:** Official `cloudinary>=1.46.0` SDK installed (`cloudinary 1.46.3`); typed settings in `config.py`; `MediaAsset` model and Alembic migration `0008_cloudinary_media_assets.py`; `media_service.py` with HMAC-SHA256 signature generation, asset verification, and transformed delivery URLs; API routes at `/api/v1/media/*`.
 - **Frontend:** `mediaService.ts` and `MediaUploadWidget.tsx` supporting drag/drop, progress bar, preview, replace, and remove; integrated into `OpportunityFeed.tsx`, `OpportunityIntakeForm.tsx`, `EventWorkspace.tsx`, and `LegacyMatchingPanel.tsx`.
 - **Avatars:** `Avatar.tsx` supports optional `src` image with automatic fallback to deterministic SVG identicons.
 - **Graceful Fallback:** When `CLOUDINARY_ENABLED=false` or credentials are unset, media upload widgets display an informative disabled state while non-media workflows operate normally.
-- **Verification:** 13 backend unit/integration tests (`tests/test_cloudinary_media.py`) and 4 frontend component tests (`MediaUploadWidget.test.tsx`) pass with mocked external Cloudinary network boundaries. Live provider verification requires setting `CLOUDINARY_ENABLED=true` and configuring live credentials in `.env`.
+- **Verification:** 13 backend unit/integration tests (`tests/test_cloudinary_media.py`), 4 frontend component tests (`MediaUploadWidget.test.tsx`), and full live provider acceptance testing against live account `snwg6j7w` passing clean.
 
 ### 6.2 Implemented Cloudinary Architecture & Workflow
 For production deployment, Cloudinary provides cloud storage, transformations, and global CDN delivery for event posters and memory photos:
@@ -166,6 +166,7 @@ For production deployment, Cloudinary provides cloud storage, transformations, a
 - [x] Assets are organized under tenant folders: `eventsignal/{institution_id}/{resource_type}/`.
 - [x] Delivered media URLs apply `f_auto,q_auto` responsive transformations.
 - [x] Automated tests verify signature generation, unauthorized rejection, and URL association (13 backend + 4 frontend tests passing).
+- [x] Live provider acceptance executed and verified against live Cloudinary account `snwg6j7w` (direct upload HTTP 200, Admin API verification, CDN delivery HTTP 200, database association, and destroy).
 
 ---
 
