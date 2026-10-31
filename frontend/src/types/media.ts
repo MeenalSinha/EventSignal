@@ -65,4 +65,5 @@ export interface MediaStatus {
   cloud_name: string | null;
   max_file_size_bytes: number;
   allowed_formats: string[];
+  folder_prefix?: string;
 }

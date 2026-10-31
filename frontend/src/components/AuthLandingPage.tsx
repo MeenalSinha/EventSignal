@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import type { UserProfile } from "../types/auth";
 import { loginUser, registerUser, fetchCurrentUser, fetchDemoStatus } from "../services/authService";
+import { CloudinaryStatusChecker } from "./CloudinaryStatusChecker";
 
 interface AuthLandingPageProps {
   onAuthSuccess: (profile: UserProfile) => void;
@@ -94,14 +95,17 @@ export function AuthLandingPage({
             </span>
           </div>
 
-          <button
-            type="button"
-            onClick={onContinueAsGuest}
-            className="flex items-center gap-1.5 rounded-lg border border-line bg-page px-3.5 py-1.5 text-xs font-semibold text-ink-soft hover:bg-card hover:text-ink hover:border-teal/40 transition"
-          >
-            <span>Continue as Guest</span>
-            <span aria-hidden="true">&rarr;</span>
-          </button>
+          <div className="flex items-center gap-2.5">
+            <CloudinaryStatusChecker variant="pill" />
+            <button
+              type="button"
+              onClick={onContinueAsGuest}
+              className="flex items-center gap-1.5 rounded-lg border border-line bg-page px-3.5 py-1.5 text-xs font-semibold text-ink-soft hover:bg-card hover:text-ink hover:border-teal/40 transition"
+            >
+              <span>Continue as Guest</span>
+              <span aria-hidden="true">&rarr;</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -165,6 +169,9 @@ export function AuthLandingPage({
                 </p>
               </div>
             </div>
+
+            {/* Cloudinary Integration & Connection Checker */}
+            <CloudinaryStatusChecker variant="card" className="mt-2" />
           </div>
 
           {/* Right Column: Authentication Card */}
